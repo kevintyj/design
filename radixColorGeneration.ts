@@ -4,6 +4,8 @@
 // Copyright (c) 2023 WorkOS, Inc.
 // https://github.com/radix-ui/themes/blob/main/LICENSE
 
+// biome-ignore-start lint/performance/noDynamicNamespaceImportAccess: <External library>
+
 import * as RadixColors from "@radix-ui/colors";
 import BezierEasing from "bezier-easing";
 import Color from "colorjs.io";
@@ -230,7 +232,7 @@ function getStep9Colors(
 function getButtonHoverColor(source: Color, scales: ArrayOf12<Color>[]) {
 	const [L, C, H] = source.coords;
 	const newL = L > 0.4 ? L - 0.03 / (L + 0.1) : L + 0.03 / (L + 0.1);
-	const newC = L > 0.4 && !isNaN(H) ? C * 0.93 + 0 : C;
+	const newC = L > 0.4 && !Number.isNaN(H) ? C * 0.93 + 0 : C;
 	const buttonHoverColor = new Color("oklch", [newL, newC, H]);
 
 	// Find closest in-scale color to donate the chroma and hue.
@@ -439,7 +441,7 @@ function getTextColor(background: Color) {
 	const white = new Color("oklch", [1, 0, 0]);
 
 	if (Math.abs(white.contrastAPCA(background)) < 40) {
-		const [L, C, H] = background.coords;
+		const [_L, C, H] = background.coords;
 		return new Color("oklch", [0.25, Math.max(0.08 * C, 0.04), H]);
 	}
 
@@ -500,9 +502,9 @@ function getAlphaColor(
 	}
 
 	const clampRgb = (n: number) =>
-		isNaN(n) ? 0 : Math.min(rgbPrecision, Math.max(0, n));
+		Number.isNaN(n) ? 0 : Math.min(rgbPrecision, Math.max(0, n));
 	const clampA = (n: number) =>
-		isNaN(n) ? 0 : Math.min(alphaPrecision, Math.max(0, n));
+		Number.isNaN(n) ? 0 : Math.min(alphaPrecision, Math.max(0, n));
 	const maxAlpha = targetAlpha ?? Math.max(alphaR, alphaG, alphaB);
 
 	const A = clampA(Math.ceil(maxAlpha * alphaPrecision)) / alphaPrecision;
@@ -676,3 +678,5 @@ function toOklchString(color: Color) {
 		.toString({ precision: 4 })
 		.replace(/(\S+)(.+)/, `oklch(${L}%$2`);
 }
+
+// biome-ignore-end lint/performance/noDynamicNamespaceImportAccess: <External library>
