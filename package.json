@@ -9,13 +9,18 @@
 	"scripts": {
 		"dev": "bun run --watch --hot --env-file=.env.development",
 		"start": "bun run --env-file=.env.development",
-		"build": "biome check --write --fix && bun build",
+		"build": "biome check && bun build",
 		"lint": "biome check",
-		"format": "biome format --write"
+		"format": "biome format --write",
+		"prepare": "husky",
+		"precommit": "biome check --write"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.1.1",
-		"@types/bun": "latest"
+		"@commitlint/cli": "^19.8.1",
+		"@commitlint/config-conventional": "^19.8.1",
+		"@types/bun": "latest",
+		"husky": "^9.1.7"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
