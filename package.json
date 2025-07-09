@@ -8,6 +8,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "bun run --watch --hot --env-file=.env.development",
+		"start": "bun run --env-file=.env.development",
 		"build": "biome check --write --fix && bun build",
 		"lint": "biome check",
 		"format": "biome format --write"
@@ -18,5 +19,10 @@
 	},
 	"peerDependencies": {
 		"typescript": "^5"
+	},
+	"dependencies": {
+		"@radix-ui/colors": "^3.0.0",
+		"bezier-easing": "^2.1.0",
+		"colorjs.io": "^0.5.2"
 	}
 }
