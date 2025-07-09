@@ -1,0 +1,22 @@
+{
+	"name": "design",
+	"description": "Design utils for kevin",
+	"author": "Kevin Taeyoon Jin <hello@kevintyj.com>",
+	"license": "BSD-3-Clause",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"dev": "bun run --watch --hot --env-file=.env.development",
+		"build": "biome check --write --fix && bun build",
+		"lint": "biome check",
+		"format": "biome format --write"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.1.1",
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	}
+}
