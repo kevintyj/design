@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { generateOverlayColors } from "@design/color-generation-core";
 
 // Import types (will be resolved when packages are built)
 export interface ColorScale {
@@ -17,6 +18,10 @@ export interface ColorScale {
 	accentSurface: string;
 	accentSurfaceWideGamut: string;
 	background: string;
+	overlays: {
+		black: string[];
+		white: string[];
+	};
 }
 
 export interface ColorSystem {
@@ -36,6 +41,7 @@ export interface GenerationConfig {
 	includeAlpha?: boolean;
 	includeWideGamut?: boolean;
 	includeGrayScale?: boolean;
+	includeOverlays?: boolean;
 }
 
 // CSS-specific configuration
@@ -45,6 +51,7 @@ export interface CSSGenerationConfig extends GenerationConfig {
 	generateCombinedFile?: boolean;
 	prefix?: string;
 	includeComments?: boolean;
+	variant?: "full" | "clean" | "hexa-only" | "p3-only";
 }
 
 // Default CSS generation configuration
@@ -53,10 +60,12 @@ export const defaultCSSConfig: Required<CSSGenerationConfig> = {
 	includeAlpha: true,
 	includeWideGamut: true,
 	includeGrayScale: true,
+	includeOverlays: true,
 	generateSeparateFiles: true,
 	generateCombinedFile: true,
 	prefix: "--color",
 	includeComments: true,
+	variant: "full",
 };
 
 /**
@@ -78,7 +87,7 @@ export function generateCSSForColorScale(
 	config: CSSGenerationConfig = {},
 ): string {
 	const fullConfig = { ...defaultCSSConfig, ...config };
-	const prefix = `${fullConfig.prefix}-${colorName}`;
+	const _prefix = `${fullConfig.prefix}-${colorName}`;
 
 	let css = "";
 
@@ -86,68 +95,329 @@ export function generateCSSForColorScale(
 		css += `/* ${colorName.toUpperCase()} - ${appearance} mode */\n`;
 	}
 
+	switch (fullConfig.variant) {
+		case "full":
+			css += generateFullColorScale(colorName, colorScale, fullConfig);
+			break;
+		case "clean":
+			css += generateCleanColorScale(colorName, colorScale, fullConfig);
+			break;
+		case "hexa-only":
+			css += generateHexaOnlyColorScale(colorName, colorScale, fullConfig);
+			break;
+		case "p3-only":
+			css += generateP3OnlyColorScale(colorName, colorScale, fullConfig);
+			break;
+	}
+
+	return css;
+}
+
+/**
+ * Generate full color scale (Version 1: current version without background duplication)
+ */
+function generateFullColorScale(
+	colorName: string,
+	colorScale: ColorScale,
+	config: Required<CSSGenerationConfig>,
+): string {
+	const prefix = `${config.prefix}-${colorName}`;
+	let css = "";
+
 	// Accent scale (regular)
 	colorScale.accentScale.forEach((color: string, index: number) => {
 		css += `${prefix}-${index + 1}: ${color};\n`;
 	});
 
 	// Alpha accent scale
-	if (fullConfig.includeAlpha) {
+	if (config.includeAlpha) {
 		colorScale.accentScaleAlpha.forEach((color: string, index: number) => {
 			css += `${prefix}-a${index + 1}: ${color};\n`;
 		});
 	}
 
 	// Wide gamut accent scale
-	if (fullConfig.includeWideGamut) {
+	if (config.includeWideGamut) {
 		colorScale.accentScaleWideGamut.forEach((color: string, index: number) => {
 			css += `${prefix}-p3-${index + 1}: ${color};\n`;
 		});
 	}
 
 	// Wide gamut alpha accent scale
-	if (fullConfig.includeAlpha && fullConfig.includeWideGamut) {
+	if (config.includeAlpha && config.includeWideGamut) {
 		colorScale.accentScaleAlphaWideGamut.forEach((color: string, index: number) => {
 			css += `${prefix}-p3-a${index + 1}: ${color};\n`;
 		});
 	}
 
-	// Gray scale (if enabled)
-	if (fullConfig.includeGrayScale) {
-		colorScale.grayScale.forEach((color: string, index: number) => {
-			css += `${prefix}-gray-${index + 1}: ${color};\n`;
-		});
-
-		if (fullConfig.includeAlpha) {
-			colorScale.grayScaleAlpha.forEach((color: string, index: number) => {
-				css += `${prefix}-gray-a${index + 1}: ${color};\n`;
-			});
-		}
-
-		if (fullConfig.includeWideGamut) {
-			colorScale.grayScaleWideGamut.forEach((color: string, index: number) => {
-				css += `${prefix}-gray-p3-${index + 1}: ${color};\n`;
-			});
-		}
-
-		if (fullConfig.includeAlpha && fullConfig.includeWideGamut) {
-			colorScale.grayScaleAlphaWideGamut.forEach((color: string, index: number) => {
-				css += `${prefix}-gray-p3-a${index + 1}: ${color};\n`;
-			});
-		}
-	}
+	// NOTE: Gray scale is now generated universally, not per color
 
 	// Special colors
 	css += `${prefix}-contrast: ${colorScale.accentContrast};\n`;
 	css += `${prefix}-surface: ${colorScale.accentSurface};\n`;
 
-	if (fullConfig.includeWideGamut) {
+	if (config.includeWideGamut) {
 		css += `${prefix}-surface-p3: ${colorScale.accentSurfaceWideGamut};\n`;
-		css += `${prefix}-gray-surface-p3: ${colorScale.graySurfaceWideGamut};\n`;
 	}
 
-	css += `${prefix}-gray-surface: ${colorScale.graySurface};\n`;
-	css += `${fullConfig.prefix}-background: ${colorScale.background};\n`;
+	return css;
+}
+
+/**
+ * Generate clean color scale (Version 2: without metadata but with background)
+ */
+function generateCleanColorScale(
+	colorName: string,
+	colorScale: ColorScale,
+	config: Required<CSSGenerationConfig>,
+): string {
+	const prefix = `${config.prefix}-${colorName}`;
+	let css = "";
+
+	// Accent scale (regular)
+	colorScale.accentScale.forEach((color: string, index: number) => {
+		css += `${prefix}-${index + 1}: ${color};\n`;
+	});
+
+	// Alpha accent scale
+	if (config.includeAlpha) {
+		colorScale.accentScaleAlpha.forEach((color: string, index: number) => {
+			css += `${prefix}-a${index + 1}: ${color};\n`;
+		});
+	}
+
+	// Wide gamut accent scale
+	if (config.includeWideGamut) {
+		colorScale.accentScaleWideGamut.forEach((color: string, index: number) => {
+			css += `${prefix}-p3-${index + 1}: ${color};\n`;
+		});
+	}
+
+	// Wide gamut alpha accent scale
+	if (config.includeAlpha && config.includeWideGamut) {
+		colorScale.accentScaleAlphaWideGamut.forEach((color: string, index: number) => {
+			css += `${prefix}-p3-a${index + 1}: ${color};\n`;
+		});
+	}
+
+	// NOTE: Gray scale is now generated universally, not per color
+	// NOTE: Special colors are removed from clean version
+
+	return css;
+}
+
+/**
+ * Generate universal overlays (only once, not per color)
+ */
+function generateUniversalOverlays(
+	_colorSystem: ColorSystem,
+	_appearance: "light" | "dark",
+	config: Required<CSSGenerationConfig>,
+): string {
+	if (!config.includeOverlays) return "";
+
+	// Only include overlays for appropriate variants
+	if (config.variant === "p3-only") {
+		// P3-only variant should not include overlays unless they're in P3 format
+		// Overlays are typically in HEXA format, so skip for P3-only
+		return "";
+	}
+
+	let css = "";
+
+	if (config.includeComments) {
+		css += `/* Universal overlays */\n`;
+	}
+
+	// Generate overlays using the overlay generation utility
+	const overlays = generateOverlayColors();
+
+	// Black overlays
+	overlays.black.forEach((color: string, index: number) => {
+		css += `${config.prefix}-overlay-black-${index + 1}: ${color};\n`;
+	});
+
+	// White overlays
+	overlays.white.forEach((color: string, index: number) => {
+		css += `${config.prefix}-overlay-white-${index + 1}: ${color};\n`;
+	});
+
+	return css;
+}
+
+/**
+ * Generate HEXA only color scale (Version 3: solid and alpha colors as HEXA)
+ */
+function generateHexaOnlyColorScale(
+	colorName: string,
+	colorScale: ColorScale,
+	config: Required<CSSGenerationConfig>,
+): string {
+	const prefix = `${config.prefix}-${colorName}`;
+	let css = "";
+
+	// Accent scale (regular HEXA only)
+	colorScale.accentScale.forEach((color: string, index: number) => {
+		// Only include HEX colors (filter out P3/OKLCH)
+		if (color.startsWith("#")) {
+			css += `${prefix}-${index + 1}: ${color};\n`;
+		}
+	});
+
+	// Alpha accent scale (HEXA with alpha only)
+	if (config.includeAlpha) {
+		colorScale.accentScaleAlpha.forEach((color: string, index: number) => {
+			// Only include HEX colors (filter out P3/OKLCH)
+			if (color.startsWith("#")) {
+				css += `${prefix}-a${index + 1}: ${color};\n`;
+			}
+		});
+	}
+
+	return css;
+}
+
+/**
+ * Generate P3 only color scale (Version 4: solid and alpha colors using P3)
+ */
+function generateP3OnlyColorScale(
+	colorName: string,
+	colorScale: ColorScale,
+	config: Required<CSSGenerationConfig>,
+): string {
+	const prefix = `${config.prefix}-${colorName}`;
+	let css = "";
+
+	// Wide gamut accent scale (P3)
+	colorScale.accentScaleWideGamut.forEach((color: string, index: number) => {
+		css += `${prefix}-${index + 1}: ${color};\n`;
+	});
+
+	// Wide gamut alpha accent scale (P3 with alpha)
+	if (config.includeAlpha) {
+		colorScale.accentScaleAlphaWideGamut.forEach((color: string, index: number) => {
+			css += `${prefix}-a${index + 1}: ${color};\n`;
+		});
+	}
+
+	// NOTE: Gray scale is now generated universally, not per color
+
+	return css;
+}
+
+/**
+ * Generate universal gray colors (only once, not per color)
+ */
+function generateUniversalGrayColors(
+	colorSystem: ColorSystem,
+	appearance: "light" | "dark",
+	config: Required<CSSGenerationConfig>,
+): string {
+	if (!config.includeGrayScale) return "";
+
+	const colorScales = appearance === "light" ? colorSystem.light : colorSystem.dark;
+	const firstColor = colorScales[colorSystem.colorNames[0]];
+
+	if (!firstColor) return "";
+
+	let css = "";
+
+	if (config.includeComments) {
+		css += `/* Universal gray colors */\n`;
+	}
+
+	// Generate based on variant
+	switch (config.variant) {
+		case "full":
+			// Gray scale (HEXA)
+			firstColor.grayScale.forEach((color: string, index: number) => {
+				css += `${config.prefix}-gray-${index + 1}: ${color};\n`;
+			});
+
+			if (config.includeAlpha) {
+				firstColor.grayScaleAlpha.forEach((color: string, index: number) => {
+					css += `${config.prefix}-gray-a${index + 1}: ${color};\n`;
+				});
+			}
+
+			if (config.includeWideGamut) {
+				firstColor.grayScaleWideGamut.forEach((color: string, index: number) => {
+					css += `${config.prefix}-gray-p3-${index + 1}: ${color};\n`;
+				});
+			}
+
+			if (config.includeAlpha && config.includeWideGamut) {
+				firstColor.grayScaleAlphaWideGamut.forEach((color: string, index: number) => {
+					css += `${config.prefix}-gray-p3-a${index + 1}: ${color};\n`;
+				});
+			}
+
+			// Gray surface colors
+			css += `${config.prefix}-gray-surface: ${firstColor.graySurface};\n`;
+			if (config.includeWideGamut) {
+				css += `${config.prefix}-gray-surface-p3: ${firstColor.graySurfaceWideGamut};\n`;
+			}
+			break;
+
+		case "clean":
+			// Gray scale (HEXA)
+			firstColor.grayScale.forEach((color: string, index: number) => {
+				css += `${config.prefix}-gray-${index + 1}: ${color};\n`;
+			});
+
+			if (config.includeAlpha) {
+				firstColor.grayScaleAlpha.forEach((color: string, index: number) => {
+					css += `${config.prefix}-gray-a${index + 1}: ${color};\n`;
+				});
+			}
+
+			if (config.includeWideGamut) {
+				firstColor.grayScaleWideGamut.forEach((color: string, index: number) => {
+					css += `${config.prefix}-gray-p3-${index + 1}: ${color};\n`;
+				});
+			}
+
+			if (config.includeAlpha && config.includeWideGamut) {
+				firstColor.grayScaleAlphaWideGamut.forEach((color: string, index: number) => {
+					css += `${config.prefix}-gray-p3-a${index + 1}: ${color};\n`;
+				});
+			}
+			break;
+
+		case "hexa-only":
+			// Only HEXA gray colors (filter out P3/OKLCH)
+			firstColor.grayScale.forEach((color: string, index: number) => {
+				if (color.startsWith("#")) {
+					css += `${config.prefix}-gray-${index + 1}: ${color};\n`;
+				}
+			});
+
+			if (config.includeAlpha) {
+				firstColor.grayScaleAlpha.forEach((color: string, index: number) => {
+					if (color.startsWith("#")) {
+						css += `${config.prefix}-gray-a${index + 1}: ${color};\n`;
+					}
+				});
+			}
+			break;
+
+		case "p3-only":
+			// Only P3 gray colors (filter out HEX)
+			firstColor.grayScaleWideGamut.forEach((color: string, index: number) => {
+				if (color.startsWith("oklch") || color.startsWith("color(display-p3")) {
+					css += `${config.prefix}-gray-${index + 1}: ${color};\n`;
+				}
+			});
+
+			if (config.includeAlpha) {
+				firstColor.grayScaleAlphaWideGamut.forEach((color: string, index: number) => {
+					if (color.startsWith("oklch") || color.startsWith("color(display-p3")) {
+						css += `${config.prefix}-gray-a${index + 1}: ${color};\n`;
+					}
+				});
+			}
+			break;
+	}
 
 	return css;
 }
@@ -164,19 +434,40 @@ export function generateCSSForColorSystem(
 
 	let css = "";
 
-	if (fullConfig.includeComments) {
+	if (fullConfig.includeComments && fullConfig.variant === "full") {
 		css += `/* Generated color scales - ${appearance} mode */\n`;
-		css += `/* Configuration: alpha=${fullConfig.includeAlpha}, wideGamut=${fullConfig.includeWideGamut}, grayScale=${fullConfig.includeGrayScale} */\n\n`;
+		css += `/* Configuration: alpha=${fullConfig.includeAlpha}, wideGamut=${fullConfig.includeWideGamut}, grayScale=${fullConfig.includeGrayScale}, overlays=${fullConfig.includeOverlays} */\n\n`;
 	}
 
 	const colorScales = appearance === "light" ? colorSystem.light : colorSystem.dark;
 
+	// Generate individual color scales (without gray)
 	for (const colorName of colorSystem.colorNames) {
 		const colorScale = colorScales[colorName];
 		if (colorScale) {
 			css += generateCSSForColorScale(colorName, colorScale, appearance, config);
 			css += "\n";
 		}
+	}
+
+	// Add universal gray colors (only once)
+	const grayCSS = generateUniversalGrayColors(colorSystem, appearance, fullConfig);
+	if (grayCSS) {
+		css += grayCSS;
+		css += "\n";
+	}
+
+	// Add universal overlays (for ALL variants)
+	const overlaysCSS = generateUniversalOverlays(colorSystem, appearance, fullConfig);
+	if (overlaysCSS) {
+		css += overlaysCSS;
+		css += "\n";
+	}
+
+	// Add background color only once at the end
+	const firstColor = colorScales[colorSystem.colorNames[0]];
+	if (firstColor) {
+		css += `${fullConfig.prefix}-background: ${firstColor.background};\n`;
 	}
 
 	return css;
@@ -192,39 +483,54 @@ export function generateCSSFiles(colorSystem: ColorSystem, config: CSSGeneration
 	// Ensure output directory exists
 	ensureDirectoryExists(outputDir);
 
-	// Generate CSS content
-	const lightCSS = `:root {\n${generateCSSForColorSystem(colorSystem, "light", fullConfig)}}`;
-	const darkCSS = `@media (prefers-color-scheme: dark) {\n  :root {\n${generateCSSForColorSystem(
-		colorSystem,
-		"dark",
-		fullConfig,
-	)
-		.split("\n")
-		.map((line) => (line ? `  ${line}` : line))
-		.join("\n")}  }\n}`;
-
-	// Generate combined CSS file with comprehensive documentation
-	const combinedCSS = generateCombinedCSS(lightCSS, darkCSS, colorSystem, fullConfig);
-
-	const files: Array<{ name: string; content: string }> = [];
-
-	// Generate separate files if requested
-	if (fullConfig.generateSeparateFiles) {
-		files.push({ name: "colors-light.css", content: lightCSS }, { name: "colors-dark.css", content: darkCSS });
-	}
-
-	// Generate combined file if requested
-	if (fullConfig.generateCombinedFile) {
-		files.push({ name: "colors-combined.css", content: combinedCSS });
-	}
-
-	// Write the files
 	const generatedFiles: string[] = [];
 
-	for (const file of files) {
-		const filePath = join(outputDir, file.name);
-		writeFileSync(filePath, file.content);
-		generatedFiles.push(filePath);
+	// Generate all four versions
+	const versions = [
+		{ variant: "full", suffix: "full" },
+		{ variant: "clean", suffix: "clean" },
+		{ variant: "hexa-only", suffix: "hexa" },
+		{ variant: "p3-only", suffix: "p3" },
+	] as const;
+
+	for (const version of versions) {
+		const versionConfig = { ...fullConfig, variant: version.variant };
+
+		// Generate CSS content for this version
+		const lightCSS = `:root {\n${generateCSSForColorSystem(colorSystem, "light", versionConfig)}}`;
+		const darkCSS = `@media (prefers-color-scheme: dark) {\n  :root {\n${generateCSSForColorSystem(
+			colorSystem,
+			"dark",
+			versionConfig,
+		)
+			.split("\n")
+			.map((line) => (line ? `  ${line}` : line))
+			.join("\n")}  }\n}`;
+
+		// Generate combined CSS file
+		const combinedCSS = generateCombinedCSS(lightCSS, darkCSS, colorSystem, versionConfig, version.suffix);
+
+		const files: Array<{ name: string; content: string }> = [];
+
+		// Generate separate files if requested
+		if (fullConfig.generateSeparateFiles) {
+			files.push(
+				{ name: `colors-${version.suffix}-light.css`, content: lightCSS },
+				{ name: `colors-${version.suffix}-dark.css`, content: darkCSS },
+			);
+		}
+
+		// Generate combined file if requested
+		if (fullConfig.generateCombinedFile) {
+			files.push({ name: `colors-${version.suffix}-combined.css`, content: combinedCSS });
+		}
+
+		// Write the files
+		for (const file of files) {
+			const filePath = join(outputDir, file.name);
+			writeFileSync(filePath, file.content);
+			generatedFiles.push(filePath);
+		}
 	}
 
 	return generatedFiles;
@@ -238,9 +544,12 @@ function generateCombinedCSS(
 	darkCSS: string,
 	_colorSystem: ColorSystem,
 	config: Required<CSSGenerationConfig>,
+	suffix: string,
 ): string {
-	const docComments = config.includeComments
-		? `
+	let docComments = "";
+
+	if (config.includeComments && config.variant === "full") {
+		docComments = `
 /* 
 Color Scale Usage Guide:
 
@@ -274,17 +583,33 @@ ${
 
 `
 		: ""
+}${
+	config.includeOverlays
+		? `Overlays:
+- ${config.prefix}-{name}-overlay-black-{1-12}: Black overlay variants
+- ${config.prefix}-{name}-overlay-white-{1-12}: White overlay variants
+
+`
+		: ""
 }Examples:
 - Primary button: background-color: var(${config.prefix}-blue-9);
 - Subtle background: background-color: var(${config.prefix}-blue-1);
 - Hover state: background-color: var(${config.prefix}-blue-10);
 - Text on colored bg: color: var(${config.prefix}-blue-contrast);
 ${config.includeAlpha ? `- Semi-transparent overlay: background-color: var(${config.prefix}-blue-a9);` : ""}
-*/`
-		: "";
+*/`;
+	}
 
-	return `/* Auto-generated color scales */
-/* Generated with: includeAlpha=${config.includeAlpha}, includeWideGamut=${config.includeWideGamut}, includeGrayScale=${config.includeGrayScale} */
+	const versionDescription =
+		{
+			full: "Complete color system with all variants",
+			clean: "Clean color system without metadata",
+			hexa: "HEXA solid and alpha colors only",
+			p3: "P3 solid and alpha colors only",
+		}[suffix] || "Color system";
+
+	return `/* Auto-generated color scales - ${versionDescription} */
+/* Generated with: alpha=${config.includeAlpha}, wideGamut=${config.includeWideGamut}, grayScale=${config.includeGrayScale}, overlays=${config.includeOverlays} */
 
 /* Light mode (default) */
 ${lightCSS}

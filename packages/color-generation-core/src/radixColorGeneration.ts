@@ -9,6 +9,7 @@
 import * as RadixColors from "@radix-ui/colors";
 import BezierEasing from "bezier-easing";
 import Color from "colorjs.io";
+import { generateOverlayColors } from "./overlayGeneration";
 
 type ArrayOf12<T> = [T, T, T, T, T, T, T, T, T, T, T, T];
 const arrayOf12 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
@@ -190,8 +191,8 @@ export const generateRadixColors = ({
 			? getAlphaColorP3(accentScaleWideGamut[1], backgroundHex, 0.8)
 			: getAlphaColorP3(accentScaleWideGamut[1], backgroundHex, 0.5);
 
-	// Generate overlay colors
-	const overlays = generateOverlays();
+	// Generate universal overlays
+	const overlays = generateOverlayColors();
 
 	return {
 		accentScale: accentScaleHex,
@@ -212,6 +213,8 @@ export const generateRadixColors = ({
 		accentSurfaceWideGamut: accentSurfaceWideGamutString,
 
 		background: backgroundHex,
+
+		// Add universal overlays
 		overlays,
 	};
 };
@@ -632,21 +635,6 @@ function toOklchString(color: Color) {
 		.to("oklch")
 		.toString({ precision: 4 })
 		.replace(/(\S+)(.+)/, `oklch(${L}%$2`);
-}
-
-// Generate overlay colors (black and white with alpha transparency)
-function generateOverlays(): { black: string[]; white: string[] } {
-	const blackOpacities = [0x03, 0x05, 0x0a, 0x12, 0x17, 0x1c, 0x24, 0x38, 0x6e, 0x78, 0x8f, 0xe8];
-	const whiteOpacities = [0x00, 0x03, 0x08, 0x0d, 0x14, 0x1f, 0x2b, 0x3d, 0x61, 0x70, 0x96, 0xeb];
-
-	const blackOverlays = blackOpacities.map((opacity) => `#${opacity.toString(16).padStart(2, "0")}000000`);
-
-	const whiteOverlays = whiteOpacities.map((opacity) => `#${opacity.toString(16).padStart(2, "0")}ffffff`);
-
-	return {
-		black: blackOverlays,
-		white: whiteOverlays,
-	};
 }
 
 // biome-ignore-end lint/performance/noDynamicNamespaceImportAccess: <External library>

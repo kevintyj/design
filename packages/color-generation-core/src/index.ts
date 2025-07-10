@@ -215,5 +215,12 @@ export function validateColorInput(colorInput: ColorInput): void {
 	}
 }
 
+// Export overlay generation utilities
+export {
+	generateOverlayColors,
+	generateOverlayColorsForFormat,
+	getOverlayAlphas,
+	getOverlayColor,
+} from "./overlayGeneration";
 // Re-export the radix color generation function for advanced use cases
 export { generateRadixColors } from "./radixColorGeneration";

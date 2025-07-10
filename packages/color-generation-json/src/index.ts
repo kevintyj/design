@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { generateOverlayColors } from "@design/color-generation-core";
 
 // Import types (will be resolved when packages are built)
 export interface ColorScale {
@@ -17,7 +18,6 @@ export interface ColorScale {
 	accentSurface: string;
 	accentSurfaceWideGamut: string;
 	background: string;
-	// Add overlay support
 	overlays: {
 		black: string[];
 		white: string[];
@@ -120,7 +120,7 @@ export function generateMetadataJSON(colorSystem: ColorSystem, config: JSONGener
 }
 
 /**
- * Generate flat JSON format (all colors at root level) - WITH gray scales as normal colors
+ * Generate flat JSON format (all colors at root level) - WITH universal gray scale
  */
 export function generateFlatJSON(
 	colorSystem: ColorSystem,
@@ -161,45 +161,60 @@ export function generateFlatJSON(
 			});
 		}
 
-		// Add gray scale as normal colors
-		if (fullConfig.includeGrayScale) {
-			colorScale.grayScale.forEach((color: string, index: number) => {
-				result[`${colorName}-gray-${index + 1}`] = color;
-			});
-
-			if (fullConfig.includeAlpha) {
-				colorScale.grayScaleAlpha.forEach((color: string, index: number) => {
-					result[`${colorName}-gray-a${index + 1}`] = color;
-				});
-			}
-
-			if (fullConfig.includeWideGamut) {
-				colorScale.grayScaleWideGamut.forEach((color: string, index: number) => {
-					result[`${colorName}-gray-p3-${index + 1}`] = color;
-				});
-			}
-
-			if (fullConfig.includeAlpha && fullConfig.includeWideGamut) {
-				colorScale.grayScaleAlphaWideGamut.forEach((color: string, index: number) => {
-					result[`${colorName}-gray-p3-a${index + 1}`] = color;
-				});
-			}
-		}
-
 		// Add special colors
 		result[`${colorName}-contrast`] = colorScale.accentContrast;
 		result[`${colorName}-surface`] = colorScale.accentSurface;
 
-		if (fullConfig.includeGrayScale) {
-			result[`${colorName}-gray-surface`] = colorScale.graySurface;
-		}
-
 		if (fullConfig.includeWideGamut) {
 			result[`${colorName}-surface-p3`] = colorScale.accentSurfaceWideGamut;
-			if (fullConfig.includeGrayScale) {
-				result[`${colorName}-gray-surface-p3`] = colorScale.graySurfaceWideGamut;
+		}
+	}
+
+	// Add universal gray scale (only once)
+	if (fullConfig.includeGrayScale) {
+		const firstColor = colorScales[colorSystem.colorNames[0]];
+		if (firstColor) {
+			firstColor.grayScale.forEach((color: string, index: number) => {
+				result[`gray-${index + 1}`] = color;
+			});
+
+			if (fullConfig.includeAlpha) {
+				firstColor.grayScaleAlpha.forEach((color: string, index: number) => {
+					result[`gray-a${index + 1}`] = color;
+				});
+			}
+
+			if (fullConfig.includeWideGamut) {
+				firstColor.grayScaleWideGamut.forEach((color: string, index: number) => {
+					result[`gray-p3-${index + 1}`] = color;
+				});
+			}
+
+			if (fullConfig.includeAlpha && fullConfig.includeWideGamut) {
+				firstColor.grayScaleAlphaWideGamut.forEach((color: string, index: number) => {
+					result[`gray-p3-a${index + 1}`] = color;
+				});
+			}
+
+			result["gray-surface"] = firstColor.graySurface;
+			if (fullConfig.includeWideGamut) {
+				result["gray-surface-p3"] = firstColor.graySurfaceWideGamut;
 			}
 		}
+	}
+
+	// Add universal overlays (only once, not per color) - FIXED
+	if (fullConfig.includeOverlays) {
+		// Generate overlays using the overlay generation utility
+		const overlays = generateOverlayColors();
+
+		overlays.black.forEach((color: string, index: number) => {
+			result[`overlay-black-${index + 1}`] = color;
+		});
+
+		overlays.white.forEach((color: string, index: number) => {
+			result[`overlay-white-${index + 1}`] = color;
+		});
 	}
 
 	// Add background color
@@ -212,7 +227,7 @@ export function generateFlatJSON(
 }
 
 /**
- * Generate nested JSON format (colors grouped by name) - WITH gray scales as normal colors
+ * Generate nested JSON format (colors grouped by name) - WITH universal gray scale
  */
 export function generateNestedJSON(
 	colorSystem: ColorSystem,
@@ -248,29 +263,50 @@ export function generateNestedJSON(
 		}
 
 		result[colorName] = colorGroup;
+	}
 
-		// Gray scale as a separate color (treated like normal color)
-		if (fullConfig.includeGrayScale) {
+	// Add universal gray scale (only once)
+	if (fullConfig.includeGrayScale) {
+		const firstColor = colorScales[colorSystem.colorNames[0]];
+		if (firstColor) {
 			const grayGroup: any = {
-				scale: colorScale.grayScale,
-				surface: colorScale.graySurface,
+				scale: firstColor.grayScale,
+				surface: firstColor.graySurface,
 			};
 
 			if (fullConfig.includeAlpha) {
-				grayGroup.alpha = colorScale.grayScaleAlpha;
+				grayGroup.alpha = firstColor.grayScaleAlpha;
 			}
 
 			if (fullConfig.includeWideGamut) {
-				grayGroup.p3 = colorScale.grayScaleWideGamut;
-				grayGroup.surfaceP3 = colorScale.graySurfaceWideGamut;
+				grayGroup.p3 = firstColor.grayScaleWideGamut;
+				grayGroup.surfaceP3 = firstColor.graySurfaceWideGamut;
 			}
 
 			if (fullConfig.includeAlpha && fullConfig.includeWideGamut) {
-				grayGroup.p3Alpha = colorScale.grayScaleAlphaWideGamut;
+				grayGroup.p3Alpha = firstColor.grayScaleAlphaWideGamut;
 			}
 
-			result[`${colorName}-gray`] = grayGroup;
+			result.gray = grayGroup;
 		}
+	}
+
+	// Add universal overlays (only black and white, not per color) - FIXED
+	if (fullConfig.includeOverlays) {
+		const overlays = generateOverlayColors();
+
+		result.overlay = {
+			black: {},
+			white: {},
+		};
+
+		overlays.black.forEach((color: string, index: number) => {
+			result.overlay.black[index + 1] = color;
+		});
+
+		overlays.white.forEach((color: string, index: number) => {
+			result.overlay.white[index + 1] = color;
+		});
 	}
 
 	// Add background color
@@ -283,7 +319,140 @@ export function generateNestedJSON(
 }
 
 /**
- * Generate design tokens format (following design token spec) - WITH gray scales as normal colors
+ * Generate collections format JSON (your requested format) - WITH universal gray scale
+ */
+export function generateCollectionsJSON(colorSystem: ColorSystem, config: JSONGenerationConfig = {}): CollectionOutput {
+	const fullConfig = { ...defaultJSONConfig, ...config };
+
+	const collection: CollectionFormat = {
+		name: fullConfig.collectionName || "Generated Colors",
+		modes: ["light", "dark"],
+		variables: {
+			solid: {},
+			alpha: {},
+			overlays: {
+				black: {},
+				white: {},
+			},
+		},
+	};
+
+	// Generate solid colors (accent colors only)
+	for (const colorName of colorSystem.colorNames) {
+		collection.variables.solid[colorName] = {};
+
+		for (let i = 1; i <= 12; i++) {
+			const lightColor = colorSystem.light[colorName]?.accentScale[i - 1];
+			const darkColor = colorSystem.dark[colorName]?.accentScale[i - 1];
+
+			if (lightColor && darkColor) {
+				collection.variables.solid[colorName][i.toString()] = {
+					type: "color",
+					values: {
+						light: lightColor,
+						dark: darkColor,
+					},
+				};
+			}
+		}
+	}
+
+	// Add universal gray colors (only once)
+	if (fullConfig.includeGrayScale) {
+		collection.variables.solid.gray = {};
+
+		for (let i = 1; i <= 12; i++) {
+			const lightColor = colorSystem.light[colorSystem.colorNames[0]]?.grayScale[i - 1];
+			const darkColor = colorSystem.dark[colorSystem.colorNames[0]]?.grayScale[i - 1];
+
+			if (lightColor && darkColor) {
+				collection.variables.solid.gray[i.toString()] = {
+					type: "color",
+					values: {
+						light: lightColor,
+						dark: darkColor,
+					},
+				};
+			}
+		}
+	}
+
+	// Generate alpha colors (accent colors only)
+	if (fullConfig.includeAlpha) {
+		for (const colorName of colorSystem.colorNames) {
+			collection.variables.alpha[colorName] = {};
+
+			for (let i = 1; i <= 12; i++) {
+				const lightColor = colorSystem.light[colorName]?.accentScaleAlpha[i - 1];
+				const darkColor = colorSystem.dark[colorName]?.accentScaleAlpha[i - 1];
+
+				if (lightColor && darkColor) {
+					collection.variables.alpha[colorName][i.toString()] = {
+						type: "color",
+						values: {
+							light: lightColor,
+							dark: darkColor,
+						},
+					};
+				}
+			}
+		}
+
+		// Add universal gray alpha colors (only once)
+		if (fullConfig.includeGrayScale) {
+			collection.variables.alpha.gray = {};
+
+			for (let i = 1; i <= 12; i++) {
+				const lightColor = colorSystem.light[colorSystem.colorNames[0]]?.grayScaleAlpha[i - 1];
+				const darkColor = colorSystem.dark[colorSystem.colorNames[0]]?.grayScaleAlpha[i - 1];
+
+				if (lightColor && darkColor) {
+					collection.variables.alpha.gray[i.toString()] = {
+						type: "color",
+						values: {
+							light: lightColor,
+							dark: darkColor,
+						},
+					};
+				}
+			}
+		}
+	}
+
+	// Generate universal overlays (only black and white, not per color) - FIXED
+	if (fullConfig.includeOverlays) {
+		const overlays = generateOverlayColors();
+
+		// Black overlays (universal, same for light and dark)
+		overlays.black.forEach((color: string, index: number) => {
+			collection.variables.overlays.black[(index + 1).toString()] = {
+				type: "color",
+				values: {
+					light: color,
+					dark: color,
+				},
+			};
+		});
+
+		// White overlays (universal, same for light and dark)
+		overlays.white.forEach((color: string, index: number) => {
+			collection.variables.overlays.white[(index + 1).toString()] = {
+				type: "color",
+				values: {
+					light: color,
+					dark: color,
+				},
+			};
+		});
+	}
+
+	return {
+		collections: [collection],
+	};
+}
+
+/**
+ * Generate design tokens format (following design token spec) - WITH universal gray scale
  */
 export function generateDesignTokensJSON(
 	colorSystem: ColorSystem,
@@ -362,14 +531,17 @@ export function generateDesignTokensJSON(
 				type: "color",
 			};
 		}
+	}
 
-		// Gray scale as a separate color token (treated like normal color)
-		if (fullConfig.includeGrayScale) {
-			tokens.color[`${colorName}-gray`] = {};
+	// Add universal gray scale (only once)
+	if (fullConfig.includeGrayScale) {
+		const firstColor = colorScales[colorSystem.colorNames[0]];
+		if (firstColor) {
+			tokens.color.gray = {};
 
 			// Main gray scale
-			colorScale.grayScale.forEach((color: string, index: number) => {
-				tokens.color[`${colorName}-gray`][index + 1] = {
+			firstColor.grayScale.forEach((color: string, index: number) => {
+				tokens.color.gray[index + 1] = {
 					value: color,
 					type: "color",
 				};
@@ -377,9 +549,9 @@ export function generateDesignTokensJSON(
 
 			// Alpha variants
 			if (fullConfig.includeAlpha) {
-				tokens.color[`${colorName}-gray`].alpha = {};
-				colorScale.grayScaleAlpha.forEach((color: string, index: number) => {
-					tokens.color[`${colorName}-gray`].alpha[index + 1] = {
+				tokens.color.gray.alpha = {};
+				firstColor.grayScaleAlpha.forEach((color: string, index: number) => {
+					tokens.color.gray.alpha[index + 1] = {
 						value: color,
 						type: "color",
 					};
@@ -388,9 +560,9 @@ export function generateDesignTokensJSON(
 
 			// Wide gamut variants
 			if (fullConfig.includeWideGamut) {
-				tokens.color[`${colorName}-gray`].p3 = {};
-				colorScale.grayScaleWideGamut.forEach((color: string, index: number) => {
-					tokens.color[`${colorName}-gray`].p3[index + 1] = {
+				tokens.color.gray.p3 = {};
+				firstColor.grayScaleWideGamut.forEach((color: string, index: number) => {
+					tokens.color.gray.p3[index + 1] = {
 						value: color,
 						type: "color",
 					};
@@ -399,9 +571,9 @@ export function generateDesignTokensJSON(
 
 			// Wide gamut alpha variants
 			if (fullConfig.includeAlpha && fullConfig.includeWideGamut) {
-				tokens.color[`${colorName}-gray`].p3Alpha = {};
-				colorScale.grayScaleAlphaWideGamut.forEach((color: string, index: number) => {
-					tokens.color[`${colorName}-gray`].p3Alpha[index + 1] = {
+				tokens.color.gray.p3Alpha = {};
+				firstColor.grayScaleAlphaWideGamut.forEach((color: string, index: number) => {
+					tokens.color.gray.p3Alpha[index + 1] = {
 						value: color,
 						type: "color",
 					};
@@ -409,18 +581,44 @@ export function generateDesignTokensJSON(
 			}
 
 			// Surface colors
-			tokens.color[`${colorName}-gray`].surface = {
-				value: colorScale.graySurface,
+			tokens.color.gray.surface = {
+				value: firstColor.graySurface,
 				type: "color",
 			};
 
 			if (fullConfig.includeWideGamut) {
-				tokens.color[`${colorName}-gray`].surfaceP3 = {
-					value: colorScale.graySurfaceWideGamut,
+				tokens.color.gray.surfaceP3 = {
+					value: firstColor.graySurfaceWideGamut,
 					type: "color",
 				};
 			}
 		}
+	}
+
+	// Add universal overlays (only black and white, not per color) - FIXED
+	if (fullConfig.includeOverlays) {
+		const overlays = generateOverlayColors();
+
+		tokens.color.overlay = {
+			black: {},
+			white: {},
+		};
+
+		// Black overlays
+		overlays.black.forEach((color: string, index: number) => {
+			tokens.color.overlay.black[index + 1] = {
+				value: color,
+				type: "color",
+			};
+		});
+
+		// White overlays
+		overlays.white.forEach((color: string, index: number) => {
+			tokens.color.overlay.white[index + 1] = {
+				value: color,
+				type: "color",
+			};
+		});
 	}
 
 	// Add background
@@ -436,7 +634,7 @@ export function generateDesignTokensJSON(
 }
 
 /**
- * Generate Tailwind config format
+ * Generate Tailwind config format - WITH universal gray scale
  */
 export function generateTailwindJSON(colorSystem: ColorSystem, config: JSONGenerationConfig = {}): any {
 	const fullConfig = { ...defaultJSONConfig, ...config };
@@ -464,18 +662,45 @@ export function generateTailwindJSON(colorSystem: ColorSystem, config: JSONGener
 			tailwindConfig.theme.extend.colors[colorName].contrast = lightScale.accentContrast;
 			tailwindConfig.theme.extend.colors[colorName].surface = lightScale.accentSurface;
 		}
+	}
 
-		// Gray scale as a separate color
-		if (fullConfig.includeGrayScale && lightScale) {
-			tailwindConfig.theme.extend.colors[`${colorName}-gray`] = {};
+	// Add universal gray scale (only once)
+	if (fullConfig.includeGrayScale) {
+		const firstLightColor = colorSystem.light[colorSystem.colorNames[0]];
+		if (firstLightColor) {
+			tailwindConfig.theme.extend.colors.gray = {};
 
-			lightScale.grayScale.forEach((color: string, index: number) => {
-				tailwindConfig.theme.extend.colors[`${colorName}-gray`][index + 1] = color;
+			firstLightColor.grayScale.forEach((color: string, index: number) => {
+				tailwindConfig.theme.extend.colors.gray[index + 1] = color;
 			});
 
-			tailwindConfig.theme.extend.colors[`${colorName}-gray`].DEFAULT = lightScale.grayScale[8]; // Step 9 (index 8)
-			tailwindConfig.theme.extend.colors[`${colorName}-gray`].surface = lightScale.graySurface;
+			tailwindConfig.theme.extend.colors.gray.DEFAULT = firstLightColor.grayScale[8]; // Step 9 (index 8)
+			tailwindConfig.theme.extend.colors.gray.surface = firstLightColor.graySurface;
 		}
+	}
+
+	// Add universal overlays (only black and white, not per color) - FIXED
+	if (fullConfig.includeOverlays) {
+		const overlays = generateOverlayColors();
+
+		tailwindConfig.theme.extend.colors.overlay = {
+			black: {},
+			white: {},
+		};
+
+		// Black overlays
+		overlays.black.forEach((color: string, index: number) => {
+			tailwindConfig.theme.extend.colors.overlay.black[index + 1] = color;
+		});
+
+		// White overlays
+		overlays.white.forEach((color: string, index: number) => {
+			tailwindConfig.theme.extend.colors.overlay.white[index + 1] = color;
+		});
+
+		// Add default overlay colors (middle steps)
+		tailwindConfig.theme.extend.colors.overlay.black.DEFAULT = overlays.black[8]; // Step 9
+		tailwindConfig.theme.extend.colors.overlay.white.DEFAULT = overlays.white[8]; // Step 9
 	}
 
 	// Add background
@@ -485,107 +710,6 @@ export function generateTailwindJSON(colorSystem: ColorSystem, config: JSONGener
 	}
 
 	return tailwindConfig;
-}
-
-/**
- * Generate collections format JSON (your requested format)
- */
-export function generateCollectionsJSON(colorSystem: ColorSystem, config: JSONGenerationConfig = {}): CollectionOutput {
-	const fullConfig = { ...defaultJSONConfig, ...config };
-
-	const collection: CollectionFormat = {
-		name: fullConfig.collectionName || "Generated Colors",
-		modes: ["light", "dark"],
-		variables: {
-			solid: {},
-			alpha: {},
-			overlays: {
-				black: {},
-				white: {},
-			},
-		},
-	};
-
-	// Generate solid colors
-	for (const colorName of colorSystem.colorNames) {
-		collection.variables.solid[colorName] = {};
-
-		// Generate 12 steps for each color
-		for (let i = 1; i <= 12; i++) {
-			const lightColor = colorSystem.light[colorName]?.accentScale[i - 1];
-			const darkColor = colorSystem.dark[colorName]?.accentScale[i - 1];
-
-			if (lightColor && darkColor) {
-				collection.variables.solid[colorName][i.toString()] = {
-					type: "color",
-					values: {
-						light: lightColor,
-						dark: darkColor,
-					},
-				};
-			}
-		}
-	}
-
-	// Generate alpha colors
-	if (fullConfig.includeAlpha) {
-		for (const colorName of colorSystem.colorNames) {
-			collection.variables.alpha[colorName] = {};
-
-			// Generate 12 steps for each color
-			for (let i = 1; i <= 12; i++) {
-				const lightColor = colorSystem.light[colorName]?.accentScaleAlpha[i - 1];
-				const darkColor = colorSystem.dark[colorName]?.accentScaleAlpha[i - 1];
-
-				if (lightColor && darkColor) {
-					collection.variables.alpha[colorName][i.toString()] = {
-						type: "color",
-						values: {
-							light: lightColor,
-							dark: darkColor,
-						},
-					};
-				}
-			}
-		}
-	}
-
-	// Generate overlays
-	if (fullConfig.includeOverlays) {
-		const firstColorName = colorSystem.colorNames[0];
-		if (firstColorName) {
-			const lightOverlays = colorSystem.light[firstColorName]?.overlays;
-			const darkOverlays = colorSystem.dark[firstColorName]?.overlays;
-
-			if (lightOverlays && darkOverlays) {
-				// Black overlays
-				for (let i = 1; i <= 12; i++) {
-					collection.variables.overlays.black[i.toString()] = {
-						type: "color",
-						values: {
-							light: lightOverlays.black[i - 1],
-							dark: darkOverlays.black[i - 1],
-						},
-					};
-				}
-
-				// White overlays
-				for (let i = 1; i <= 12; i++) {
-					collection.variables.overlays.white[i.toString()] = {
-						type: "color",
-						values: {
-							light: lightOverlays.white[i - 1],
-							dark: darkOverlays.white[i - 1],
-						},
-					};
-				}
-			}
-		}
-	}
-
-	return {
-		collections: [collection],
-	};
 }
 
 /**
