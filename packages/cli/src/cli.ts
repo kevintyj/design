@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
-import { existsSync, rmSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import {
 	type ColorInput,
 	type GenerationConfig,
@@ -37,6 +37,14 @@ interface CLIConfig {
 	collectionName?: string;
 }
 
+// Figma-specific configuration
+interface FigmaConfig {
+	input: string;
+	output: string;
+	collectionName: string;
+	verbose: boolean;
+}
+
 // Default configuration
 const defaultConfig: CLIConfig = {
 	input: "colors.ts",
@@ -52,6 +60,14 @@ const defaultConfig: CLIConfig = {
 	cleanOutput: true,
 	forceClean: false,
 	collectionName: "Astell Color System",
+};
+
+// Default Figma configuration
+const defaultFigmaConfig: FigmaConfig = {
+	input: "colors.ts",
+	output: "./output/figma-colors.json",
+	collectionName: "Design System Colors",
+	verbose: false,
 };
 
 /**
@@ -377,6 +393,90 @@ async function generateColors(config: CLIConfig): Promise<void> {
 }
 
 /**
+ * Generate Figma-compatible JSON from color definitions
+ */
+async function generateFigmaJSON(config: FigmaConfig): Promise<void> {
+	const spinner = ora("Generating Figma JSON configuration...").start();
+
+	try {
+		// Load color definitions
+		const inputFile = findColorFile(config.input);
+		validateInputFile(inputFile);
+
+		const colorInput = await loadColorDefinitions(inputFile);
+		validateColorInput(colorInput);
+
+		// Resolve output path and ensure directory exists
+		const outputPath = resolve(config.output);
+		const outputDir = dirname(outputPath);
+
+		// Check if file already exists and prompt user
+		const fileExists = existsSync(outputPath);
+		if (fileExists) {
+			spinner.stop();
+			const confirmed = await promptUser(
+				`The file already exists: ${outputPath}\nThis will overwrite the existing file.`,
+			);
+			if (!confirmed) {
+				console.log(chalk.yellow("Operation canceled. Existing file will remain unchanged."));
+				process.exit(0);
+			}
+			spinner.start("Generating Figma JSON configuration...");
+		}
+
+		// Ensure output directory exists
+		if (!existsSync(outputDir)) {
+			mkdirSync(outputDir, { recursive: true });
+			if (config.verbose) {
+				spinner.info(`Created output directory: ${outputDir}`);
+				spinner.start("Generating Figma JSON configuration...");
+			}
+		}
+
+		// Create structure matching colors.ts format
+		const figmaConfig = {
+			constantsLight: {
+				gray: colorInput.constants.light.gray,
+				background: colorInput.constants.light.background,
+			},
+			constantsDark: {
+				gray: colorInput.constants.dark.gray,
+				background: colorInput.constants.dark.background,
+			},
+			light: { ...colorInput.light },
+			dark: { ...colorInput.dark },
+		};
+
+		// Write the JSON file (this will overwrite existing file)
+		writeFileSync(outputPath, JSON.stringify(figmaConfig, null, 2), { encoding: "utf8" });
+
+		const actionText = fileExists ? "replaced" : "generated";
+		spinner.succeed(`Figma JSON configuration ${actionText}!`);
+
+		if (config.verbose) {
+			console.log(chalk.bold("\n📄 Generated file:"));
+			console.log(`  ${outputPath}`);
+			if (fileExists) {
+				console.log(chalk.yellow("  (Previous file was replaced)"));
+			}
+		}
+
+		console.log(chalk.bold("\n🎨 Configuration details:"));
+		console.log(`  Constants: ${Object.keys(colorInput.constants.light).length} per mode`);
+		console.log(`  Colors: ${Object.keys(colorInput.light).length} per mode`);
+		console.log(`  Modes: Light, Dark`);
+
+		console.log(chalk.bold("\n📋 Usage:"));
+		console.log("  1. Import this JSON file into your application");
+		console.log("  2. Use the constants and color objects as needed");
+		console.log("  3. Structure matches colors.ts export format");
+	} catch (error) {
+		spinner.fail(`Error: ${error instanceof Error ? error.message : String(error)}`);
+		process.exit(1);
+	}
+}
+
+/**
  * Parse comma-separated formats
  */
 function parseFormats(value: string): ("css" | "json" | "all")[] {
@@ -540,6 +640,26 @@ program
 			spinner.fail(`Validation failed: ${error instanceof Error ? error.message : String(error)}`);
 			process.exit(1);
 		}
+	});
+
+// Figma JSON export command
+program
+	.command("figma")
+	.alias("fig")
+	.description("Generate Figma-compatible JSON configuration")
+	.option("-i, --input <file>", "Input color definition file", defaultFigmaConfig.input)
+	.option("-o, --output <file>", "Output JSON file", defaultFigmaConfig.output)
+	.option("-c, --collection <n>", "Collection name in Figma", defaultFigmaConfig.collectionName)
+	.option("-v, --verbose", "Verbose output")
+	.action(async (options: any) => {
+		const config: FigmaConfig = {
+			input: options.input,
+			output: options.output,
+			collectionName: options.collection,
+			verbose: options.verbose || false,
+		};
+
+		await generateFigmaJSON(config);
 	});
 
 // Handle unknown commands

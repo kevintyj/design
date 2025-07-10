@@ -251,13 +251,13 @@ bun run clean
 1. Edit your `colors.ts` file to add new colors:
 
 ```typescript
-export const _light = {
+export const light = {
   // ... existing colors
   brand: '#FF6B35',      // Add new color
   accent: '#4ECDC4'
 };
 
-export const _dark = {
+export const dark = {
   // ... existing colors  
   brand: '#FF7F59',      // Add dark variant
   accent: '#45B7B8'

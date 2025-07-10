@@ -1,0 +1,50 @@
+{
+	"name": "@design/figma-plugin",
+	"version": "1.0.0",
+	"description": "Figma plugin for color management and variable import/export",
+	"main": "dist/code.js",
+	"scripts": {
+		"build": "webpack --mode production",
+		"dev": "webpack --watch --mode development",
+		"lint": "biome check src/",
+		"format": "biome format --write src/"
+	},
+	"dependencies": {
+		"@design/color-generation-core": "workspace:*",
+		"@design/color-generation-css": "workspace:*",
+		"@design/color-generation-json": "workspace:*",
+		"@figma/plugin-typings": "^1.115.0",
+		"@headlessui/react": "^2.2.0",
+		"jszip": "^3.10.1",
+		"lucide-react": "^0.525.0",
+		"path-browserify": "^1.0.1",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0"
+	},
+	"devDependencies": {
+		"@types/react": "^19.0.0",
+		"@types/react-dom": "^19.0.0",
+		"@tailwindcss/postcss": "^4.0.0",
+		"css-loader": "^6.7.3",
+		"html-webpack-plugin": "^5.5.0",
+		"postcss": "^8.4.21",
+		"postcss-loader": "^7.0.2",
+		"react-dev-utils": "^12.0.1",
+		"style-loader": "^3.3.2",
+		"tailwindcss": "^4.0.0",
+		"ts-loader": "^9.4.2",
+		"typescript": "^5.8.3",
+		"url-loader": "^4.1.1",
+		"webpack": "^5.76.0",
+		"webpack-cli": "^5.0.1"
+	},
+	"keywords": [
+		"figma",
+		"plugin",
+		"colors",
+		"design-system",
+		"variables"
+	],
+	"author": "Design System Team",
+	"license": "MIT"
+}

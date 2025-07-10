@@ -1,14 +1,14 @@
-export const _constantsLight = {
+export const constantsLight = {
 	gray: "#878780",
 	background: "#FFFFFF",
 };
 
-export const _constantsDark = {
+export const constantsDark = {
 	gray: "#6F6D66",
 	background: "#0F0F0E",
 };
 
-export const _light = {
+export const light = {
 	blaze: "#FC4B32",
 	autumn: "#311318",
 	pink: "#F9486F",
@@ -20,7 +20,7 @@ export const _light = {
 	violet: "#5B5BD6",
 };
 
-export const _dark = {
+export const dark = {
 	blaze: "#FD563D",
 	autumn: "#30181B",
 	pink: "#F55776",
