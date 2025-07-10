@@ -1,10 +1,24 @@
 # dependencies (bun install)
 node_modules
+**/node_modules
 
-# output
+# build output
 out
 dist
+**/dist
 *.tgz
+
+# monorepo build artifacts
+packages/*/dist
+packages/*/build
+packages/*/*.tsbuildinfo
+
+# generated color files
+output/
+colors-*.css
+colors-*.json
+*-colors.css
+*-colors.json
 
 # code coverage
 coverage
@@ -12,8 +26,8 @@ coverage
 
 # logs
 logs
-_.log
-report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+*.log
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # dotenv environment variable files
 .env
@@ -26,9 +40,32 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .eslintcache
 .cache
 *.tsbuildinfo
+.turbo
+
+# TypeScript
+*.d.ts.map
+tsconfig.tsbuildinfo
 
 # IntelliJ based IDEs
 .idea
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# Editor files
+.vscode/settings.json
+.cursor/
+
+# Temporary files
+*.tmp
+*.temp
+test-*.ts
+validate-*.ts
+
+# OS generated files
+Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db

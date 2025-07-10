@@ -1,0 +1,46 @@
+{
+	"name": "@design/color-generation-json",
+	"version": "1.0.0",
+	"description": "JSON generation utilities for color scales",
+	"main": "dist/index.js",
+	"module": "dist/index.mjs",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "bun build src/index.ts --outdir dist --target bun && bun run build:types",
+		"build:types": "tsc --emitDeclarationOnly --outDir dist",
+		"dev": "bun --watch src/index.ts",
+		"test": "bun test",
+		"lint": "biome check src/",
+		"format": "biome format --write src/"
+	},
+	"dependencies": {
+		"@design/color-generation-core": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"@types/node": "^20.0.0",
+		"typescript": "^5.0.0"
+	},
+	"keywords": [
+		"json",
+		"colors",
+		"design-system",
+		"color-scales",
+		"typescript"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/your-username/design-system",
+		"directory": "packages/color-generation-json"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	}
+}

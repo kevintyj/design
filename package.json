@@ -1,33 +1,50 @@
 {
-	"name": "design",
-	"description": "Design utils for kevin",
-	"author": "Kevin Taeyoon Jin <hello@kevintyj.com>",
-	"license": "BSD-3-Clause",
-	"module": "index.ts",
-	"type": "module",
+	"name": "@design/monorepo",
+	"version": "1.0.0",
+	"description": "Comprehensive color generation system based on Radix UI colors",
 	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
 	"scripts": {
-		"dev": "bun run --watch --hot --env-file=.env.development",
-		"start": "bun run --env-file=.env.development",
-		"build": "biome check && bun build",
-		"lint": "biome check",
-		"format": "biome format --write",
-		"prepare": "husky",
-		"precommit": "biome check --write"
+		"build": "bun run --filter='./packages/*' build",
+		"dev": "bun run --filter='./packages/*' dev",
+		"test": "bun run --filter='./packages/*' test",
+		"lint": "bun run --filter='./packages/*' lint",
+		"clean": "rm -rf packages/*/dist packages/*/node_modules",
+		"precommit": "bun run --filter='./packages/*' format",
+		"colors": "bun packages/cli/src/cli.ts",
+		"colors:quick": "bun packages/cli/src/cli.ts quick",
+		"colors:generate": "bun packages/cli/src/cli.ts generate",
+		"colors:list": "bun packages/cli/src/cli.ts list",
+		"colors:validate": "bun packages/cli/src/cli.ts validate",
+		"example:basic": "bun packages/examples/src/basic.ts",
+		"example:advanced": "bun packages/examples/src/advanced.ts",
+		"prepare": "husky"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.1.1",
+		"@biomejs/biome": "^2.1.1",
 		"@commitlint/cli": "^19.8.1",
 		"@commitlint/config-conventional": "^19.8.1",
-		"@types/bun": "latest",
-		"husky": "^9.1.7"
+		"@types/bun": "^1.2.18",
+		"husky": "^9.1.7",
+		"typescript": "^5.8.3"
 	},
-	"peerDependencies": {
-		"typescript": "^5"
+	"engines": {
+		"bun": ">=1.0.0"
 	},
-	"dependencies": {
-		"@radix-ui/colors": "^3.0.0",
-		"bezier-easing": "^2.1.0",
-		"colorjs.io": "^0.5.2"
-	}
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/your-username/design-system"
+	},
+	"keywords": [
+		"design-system",
+		"colors",
+		"radix-ui",
+		"css-variables",
+		"monorepo",
+		"typescript"
+	],
+	"author": "Your Name",
+	"license": "MIT"
 }

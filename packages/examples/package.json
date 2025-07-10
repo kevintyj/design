@@ -1,0 +1,37 @@
+{
+	"name": "@design/examples",
+	"version": "1.0.0",
+	"description": "Example usage of the design color generation system",
+	"private": true,
+	"scripts": {
+		"basic": "bun src/basic.ts",
+		"advanced": "bun src/advanced.ts",
+		"css-only": "bun src/css-only.ts",
+		"json-only": "bun src/json-only.ts",
+		"custom-config": "bun src/custom-config.ts",
+		"all": "bun run basic && bun run advanced && bun run css-only && bun run json-only"
+	},
+	"dependencies": {
+		"@design/color-generation-core": "workspace:*",
+		"@design/color-generation-css": "workspace:*",
+		"@design/color-generation-json": "workspace:*",
+		"@design/cli": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"@types/node": "^20.0.0",
+		"typescript": "^5.0.0"
+	},
+	"keywords": [
+		"examples",
+		"colors",
+		"design-system",
+		"demo"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/your-username/design-system",
+		"directory": "packages/examples"
+	},
+	"license": "MIT"
+}

@@ -1,0 +1,46 @@
+{
+	"name": "@design/color-generation-css",
+	"version": "1.0.0",
+	"description": "CSS generation utilities for color scales",
+	"main": "dist/index.js",
+	"module": "dist/index.mjs",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "bun build src/index.ts --outdir dist --target bun && bun run build:types",
+		"build:types": "tsc --emitDeclarationOnly --outDir dist",
+		"dev": "bun --watch src/index.ts",
+		"test": "bun test",
+		"lint": "biome check src/",
+		"format": "biome format --write src/"
+	},
+	"dependencies": {
+		"@design/color-generation-core": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"@types/node": "^20.0.0",
+		"typescript": "^5.0.0"
+	},
+	"keywords": [
+		"css",
+		"colors",
+		"design-system",
+		"css-variables",
+		"typescript"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/your-username/design-system",
+		"directory": "packages/color-generation-css"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	}
+}

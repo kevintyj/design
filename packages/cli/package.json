@@ -1,0 +1,46 @@
+{
+	"name": "@design/cli",
+	"version": "1.0.0",
+	"description": "CLI tool for generating color scales from color definitions",
+	"main": "dist/index.js",
+	"bin": {
+		"design-colors": "./dist/cli.js",
+		"generate-colors": "./dist/cli.js"
+	},
+	"scripts": {
+		"build": "bun build src/cli.ts --outdir dist --target bun && chmod +x dist/cli.js",
+		"dev": "bun --watch src/cli.ts",
+		"test": "bun test",
+		"lint": "biome check src/",
+		"format": "biome format --write src/"
+	},
+	"dependencies": {
+		"@design/color-generation-core": "workspace:*",
+		"@design/color-generation-css": "workspace:*",
+		"@design/color-generation-json": "workspace:*",
+		"commander": "^11.0.0",
+		"chalk": "^5.3.0",
+		"ora": "^7.0.1"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"@types/node": "^20.0.0",
+		"typescript": "^5.0.0"
+	},
+	"keywords": [
+		"cli",
+		"colors",
+		"design-system",
+		"color-generation",
+		"radix-ui"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/your-username/design-system",
+		"directory": "packages/cli"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	}
+}
