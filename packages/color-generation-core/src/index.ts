@@ -35,6 +35,10 @@ export interface ColorScale {
 	accentSurface: string;
 	accentSurfaceWideGamut: string;
 	background: string;
+	overlays: {
+		black: string[];
+		white: string[];
+	};
 }
 
 // Configuration interface for generation options
@@ -42,6 +46,7 @@ export interface GenerationConfig {
 	includeAlpha?: boolean;
 	includeWideGamut?: boolean;
 	includeGrayScale?: boolean;
+	includeOverlays?: boolean;
 }
 
 // Complete color system output
@@ -63,6 +68,7 @@ export const defaultConfig: Required<GenerationConfig> = {
 	includeAlpha: true,
 	includeWideGamut: true,
 	includeGrayScale: true,
+	includeOverlays: true,
 };
 
 /**

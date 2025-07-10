@@ -17,6 +17,11 @@ export interface ColorScale {
 	accentSurface: string;
 	accentSurfaceWideGamut: string;
 	background: string;
+	// Add overlay support
+	overlays: {
+		black: string[];
+		white: string[];
+	};
 }
 
 export interface ColorSystem {
@@ -36,15 +41,33 @@ export interface GenerationConfig {
 	includeAlpha?: boolean;
 	includeWideGamut?: boolean;
 	includeGrayScale?: boolean;
+	includeOverlays?: boolean;
 }
 
 // JSON-specific configuration
 export interface JSONGenerationConfig extends GenerationConfig {
 	outputDir?: string;
-	format?: "flat" | "nested" | "tokens" | "tailwind" | "all";
+	format?: "flat" | "nested" | "tokens" | "tailwind" | "collections" | "all";
 	includeMetadata?: boolean;
 	prettyPrint?: boolean;
 	fileExtension?: string;
+	separateMetadata?: boolean;
+	collectionName?: string;
+}
+
+// Add the new collection format interface
+export interface CollectionFormat {
+	name: string;
+	modes: string[];
+	variables: {
+		solid: Record<string, Record<string, { type: string; values: Record<string, string> }>>;
+		alpha: Record<string, Record<string, { type: string; values: Record<string, string> }>>;
+		overlays: Record<string, Record<string, { type: string; values: Record<string, string> }>>;
+	};
+}
+
+export interface CollectionOutput {
+	collections: CollectionFormat[];
 }
 
 // Default JSON generation configuration
@@ -53,10 +76,13 @@ export const defaultJSONConfig: Required<JSONGenerationConfig> = {
 	includeAlpha: true,
 	includeWideGamut: true,
 	includeGrayScale: true,
+	includeOverlays: true,
 	format: "all",
 	includeMetadata: true,
 	prettyPrint: true,
 	fileExtension: ".json",
+	separateMetadata: true,
+	collectionName: "Generated Colors",
 };
 
 /**
@@ -69,7 +95,32 @@ function ensureDirectoryExists(dirPath: string): void {
 }
 
 /**
- * Generate flat JSON format (all colors at root level)
+ * Generate comprehensive metadata JSON for all formats and modes
+ */
+export function generateMetadataJSON(colorSystem: ColorSystem, config: JSONGenerationConfig = {}): any {
+	const fullConfig = { ...defaultJSONConfig, ...config };
+
+	return {
+		generatedAt: new Date().toISOString(),
+		totalColors: colorSystem.colorNames.length,
+		totalScales: colorSystem.metadata.totalScales,
+		colorNames: colorSystem.colorNames,
+		sourceColors: colorSystem.sourceColors,
+		modes: ["light", "dark"],
+		formats: fullConfig.format === "all" ? ["flat", "nested", "tokens", "tailwind"] : [fullConfig.format],
+		config: {
+			includeAlpha: fullConfig.includeAlpha,
+			includeWideGamut: fullConfig.includeWideGamut,
+			includeGrayScale: fullConfig.includeGrayScale,
+			format: fullConfig.format,
+			prettyPrint: fullConfig.prettyPrint,
+		},
+		systemMetadata: colorSystem.metadata,
+	};
+}
+
+/**
+ * Generate flat JSON format (all colors at root level) - WITH gray scales as normal colors
  */
 export function generateFlatJSON(
 	colorSystem: ColorSystem,
@@ -110,7 +161,7 @@ export function generateFlatJSON(
 			});
 		}
 
-		// Add gray scale
+		// Add gray scale as normal colors
 		if (fullConfig.includeGrayScale) {
 			colorScale.grayScale.forEach((color: string, index: number) => {
 				result[`${colorName}-gray-${index + 1}`] = color;
@@ -138,11 +189,16 @@ export function generateFlatJSON(
 		// Add special colors
 		result[`${colorName}-contrast`] = colorScale.accentContrast;
 		result[`${colorName}-surface`] = colorScale.accentSurface;
-		result[`${colorName}-gray-surface`] = colorScale.graySurface;
+
+		if (fullConfig.includeGrayScale) {
+			result[`${colorName}-gray-surface`] = colorScale.graySurface;
+		}
 
 		if (fullConfig.includeWideGamut) {
 			result[`${colorName}-surface-p3`] = colorScale.accentSurfaceWideGamut;
-			result[`${colorName}-gray-surface-p3`] = colorScale.graySurfaceWideGamut;
+			if (fullConfig.includeGrayScale) {
+				result[`${colorName}-gray-surface-p3`] = colorScale.graySurfaceWideGamut;
+			}
 		}
 	}
 
@@ -156,7 +212,7 @@ export function generateFlatJSON(
 }
 
 /**
- * Generate nested JSON format (colors grouped by name)
+ * Generate nested JSON format (colors grouped by name) - WITH gray scales as normal colors
  */
 export function generateNestedJSON(
 	colorSystem: ColorSystem,
@@ -171,6 +227,7 @@ export function generateNestedJSON(
 		const colorScale = colorScales[colorName];
 		if (!colorScale) continue;
 
+		// Main color group
 		const colorGroup: any = {
 			scale: colorScale.accentScale,
 			contrast: colorScale.accentContrast,
@@ -190,27 +247,30 @@ export function generateNestedJSON(
 			colorGroup.p3Alpha = colorScale.accentScaleAlphaWideGamut;
 		}
 
+		result[colorName] = colorGroup;
+
+		// Gray scale as a separate color (treated like normal color)
 		if (fullConfig.includeGrayScale) {
-			colorGroup.gray = {
+			const grayGroup: any = {
 				scale: colorScale.grayScale,
 				surface: colorScale.graySurface,
 			};
 
 			if (fullConfig.includeAlpha) {
-				colorGroup.gray.alpha = colorScale.grayScaleAlpha;
+				grayGroup.alpha = colorScale.grayScaleAlpha;
 			}
 
 			if (fullConfig.includeWideGamut) {
-				colorGroup.gray.p3 = colorScale.grayScaleWideGamut;
-				colorGroup.gray.surfaceP3 = colorScale.graySurfaceWideGamut;
+				grayGroup.p3 = colorScale.grayScaleWideGamut;
+				grayGroup.surfaceP3 = colorScale.graySurfaceWideGamut;
 			}
 
 			if (fullConfig.includeAlpha && fullConfig.includeWideGamut) {
-				colorGroup.gray.p3Alpha = colorScale.grayScaleAlphaWideGamut;
+				grayGroup.p3Alpha = colorScale.grayScaleAlphaWideGamut;
 			}
-		}
 
-		result[colorName] = colorGroup;
+			result[`${colorName}-gray`] = grayGroup;
+		}
 	}
 
 	// Add background color
@@ -223,7 +283,7 @@ export function generateNestedJSON(
 }
 
 /**
- * Generate design tokens format (following design token spec)
+ * Generate design tokens format (following design token spec) - WITH gray scales as normal colors
  */
 export function generateDesignTokensJSON(
 	colorSystem: ColorSystem,
@@ -241,6 +301,7 @@ export function generateDesignTokensJSON(
 		const colorScale = colorScales[colorName];
 		if (!colorScale) continue;
 
+		// Main color tokens
 		tokens.color[colorName] = {};
 
 		// Main scale
@@ -273,6 +334,17 @@ export function generateDesignTokensJSON(
 			});
 		}
 
+		// Wide gamut alpha variants
+		if (fullConfig.includeAlpha && fullConfig.includeWideGamut) {
+			tokens.color[colorName].p3Alpha = {};
+			colorScale.accentScaleAlphaWideGamut.forEach((color: string, index: number) => {
+				tokens.color[colorName].p3Alpha[index + 1] = {
+					value: color,
+					type: "color",
+				};
+			});
+		}
+
 		// Special colors
 		tokens.color[colorName].contrast = {
 			value: colorScale.accentContrast,
@@ -284,20 +356,70 @@ export function generateDesignTokensJSON(
 			type: "color",
 		};
 
-		// Gray scale
+		if (fullConfig.includeWideGamut) {
+			tokens.color[colorName].surfaceP3 = {
+				value: colorScale.accentSurfaceWideGamut,
+				type: "color",
+			};
+		}
+
+		// Gray scale as a separate color token (treated like normal color)
 		if (fullConfig.includeGrayScale) {
-			tokens.color[colorName].gray = {};
+			tokens.color[`${colorName}-gray`] = {};
+
+			// Main gray scale
 			colorScale.grayScale.forEach((color: string, index: number) => {
-				tokens.color[colorName].gray[index + 1] = {
+				tokens.color[`${colorName}-gray`][index + 1] = {
 					value: color,
 					type: "color",
 				};
 			});
 
-			tokens.color[colorName].gray.surface = {
+			// Alpha variants
+			if (fullConfig.includeAlpha) {
+				tokens.color[`${colorName}-gray`].alpha = {};
+				colorScale.grayScaleAlpha.forEach((color: string, index: number) => {
+					tokens.color[`${colorName}-gray`].alpha[index + 1] = {
+						value: color,
+						type: "color",
+					};
+				});
+			}
+
+			// Wide gamut variants
+			if (fullConfig.includeWideGamut) {
+				tokens.color[`${colorName}-gray`].p3 = {};
+				colorScale.grayScaleWideGamut.forEach((color: string, index: number) => {
+					tokens.color[`${colorName}-gray`].p3[index + 1] = {
+						value: color,
+						type: "color",
+					};
+				});
+			}
+
+			// Wide gamut alpha variants
+			if (fullConfig.includeAlpha && fullConfig.includeWideGamut) {
+				tokens.color[`${colorName}-gray`].p3Alpha = {};
+				colorScale.grayScaleAlphaWideGamut.forEach((color: string, index: number) => {
+					tokens.color[`${colorName}-gray`].p3Alpha[index + 1] = {
+						value: color,
+						type: "color",
+					};
+				});
+			}
+
+			// Surface colors
+			tokens.color[`${colorName}-gray`].surface = {
 				value: colorScale.graySurface,
 				type: "color",
 			};
+
+			if (fullConfig.includeWideGamut) {
+				tokens.color[`${colorName}-gray`].surfaceP3 = {
+					value: colorScale.graySurfaceWideGamut,
+					type: "color",
+				};
+			}
 		}
 	}
 
@@ -310,15 +432,6 @@ export function generateDesignTokensJSON(
 		};
 	}
 
-	if (fullConfig.includeMetadata) {
-		tokens.$metadata = {
-			generatedAt: new Date().toISOString(),
-			mode: appearance,
-			totalColors: colorSystem.colorNames.length,
-			config: fullConfig,
-		};
-	}
-
 	return tokens;
 }
 
@@ -326,7 +439,7 @@ export function generateDesignTokensJSON(
  * Generate Tailwind config format
  */
 export function generateTailwindJSON(colorSystem: ColorSystem, config: JSONGenerationConfig = {}): any {
-	const _fullConfig = { ...defaultJSONConfig, ...config };
+	const fullConfig = { ...defaultJSONConfig, ...config };
 
 	const tailwindConfig: any = {
 		theme: {
@@ -337,6 +450,7 @@ export function generateTailwindJSON(colorSystem: ColorSystem, config: JSONGener
 	};
 
 	for (const colorName of colorSystem.colorNames) {
+		// Main color
 		tailwindConfig.theme.extend.colors[colorName] = {};
 
 		// Light mode colors (default)
@@ -350,6 +464,18 @@ export function generateTailwindJSON(colorSystem: ColorSystem, config: JSONGener
 			tailwindConfig.theme.extend.colors[colorName].contrast = lightScale.accentContrast;
 			tailwindConfig.theme.extend.colors[colorName].surface = lightScale.accentSurface;
 		}
+
+		// Gray scale as a separate color
+		if (fullConfig.includeGrayScale && lightScale) {
+			tailwindConfig.theme.extend.colors[`${colorName}-gray`] = {};
+
+			lightScale.grayScale.forEach((color: string, index: number) => {
+				tailwindConfig.theme.extend.colors[`${colorName}-gray`][index + 1] = color;
+			});
+
+			tailwindConfig.theme.extend.colors[`${colorName}-gray`].DEFAULT = lightScale.grayScale[8]; // Step 9 (index 8)
+			tailwindConfig.theme.extend.colors[`${colorName}-gray`].surface = lightScale.graySurface;
+		}
 	}
 
 	// Add background
@@ -359,6 +485,107 @@ export function generateTailwindJSON(colorSystem: ColorSystem, config: JSONGener
 	}
 
 	return tailwindConfig;
+}
+
+/**
+ * Generate collections format JSON (your requested format)
+ */
+export function generateCollectionsJSON(colorSystem: ColorSystem, config: JSONGenerationConfig = {}): CollectionOutput {
+	const fullConfig = { ...defaultJSONConfig, ...config };
+
+	const collection: CollectionFormat = {
+		name: fullConfig.collectionName || "Generated Colors",
+		modes: ["light", "dark"],
+		variables: {
+			solid: {},
+			alpha: {},
+			overlays: {
+				black: {},
+				white: {},
+			},
+		},
+	};
+
+	// Generate solid colors
+	for (const colorName of colorSystem.colorNames) {
+		collection.variables.solid[colorName] = {};
+
+		// Generate 12 steps for each color
+		for (let i = 1; i <= 12; i++) {
+			const lightColor = colorSystem.light[colorName]?.accentScale[i - 1];
+			const darkColor = colorSystem.dark[colorName]?.accentScale[i - 1];
+
+			if (lightColor && darkColor) {
+				collection.variables.solid[colorName][i.toString()] = {
+					type: "color",
+					values: {
+						light: lightColor,
+						dark: darkColor,
+					},
+				};
+			}
+		}
+	}
+
+	// Generate alpha colors
+	if (fullConfig.includeAlpha) {
+		for (const colorName of colorSystem.colorNames) {
+			collection.variables.alpha[colorName] = {};
+
+			// Generate 12 steps for each color
+			for (let i = 1; i <= 12; i++) {
+				const lightColor = colorSystem.light[colorName]?.accentScaleAlpha[i - 1];
+				const darkColor = colorSystem.dark[colorName]?.accentScaleAlpha[i - 1];
+
+				if (lightColor && darkColor) {
+					collection.variables.alpha[colorName][i.toString()] = {
+						type: "color",
+						values: {
+							light: lightColor,
+							dark: darkColor,
+						},
+					};
+				}
+			}
+		}
+	}
+
+	// Generate overlays
+	if (fullConfig.includeOverlays) {
+		const firstColorName = colorSystem.colorNames[0];
+		if (firstColorName) {
+			const lightOverlays = colorSystem.light[firstColorName]?.overlays;
+			const darkOverlays = colorSystem.dark[firstColorName]?.overlays;
+
+			if (lightOverlays && darkOverlays) {
+				// Black overlays
+				for (let i = 1; i <= 12; i++) {
+					collection.variables.overlays.black[i.toString()] = {
+						type: "color",
+						values: {
+							light: lightOverlays.black[i - 1],
+							dark: darkOverlays.black[i - 1],
+						},
+					};
+				}
+
+				// White overlays
+				for (let i = 1; i <= 12; i++) {
+					collection.variables.overlays.white[i.toString()] = {
+						type: "color",
+						values: {
+							light: lightOverlays.white[i - 1],
+							dark: darkOverlays.white[i - 1],
+						},
+					};
+				}
+			}
+		}
+	}
+
+	return {
+		collections: [collection],
+	};
 }
 
 /**
@@ -373,7 +600,9 @@ export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerati
 
 	const generatedFiles: string[] = [];
 	const formats =
-		fullConfig.format === "all" ? (["flat", "nested", "tokens", "tailwind"] as const) : ([fullConfig.format] as const);
+		fullConfig.format === "all"
+			? (["flat", "nested", "tokens", "tailwind", "collections"] as const)
+			: ([fullConfig.format] as const);
 
 	for (const format of formats) {
 		switch (format) {
@@ -431,18 +660,24 @@ export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerati
 				generatedFiles.push(join(outputDir, `tailwind-colors${fullConfig.fileExtension}`));
 				break;
 			}
+
+			case "collections": {
+				// Generate collections format
+				const collectionsData = generateCollectionsJSON(colorSystem, fullConfig);
+				const collectionsFilePath = join(outputDir, `collections${fullConfig.fileExtension}`);
+				writeJSONFile(collectionsFilePath, collectionsData, fullConfig);
+				generatedFiles.push(collectionsFilePath);
+				break;
+			}
 		}
 	}
 
-	// Generate complete color system export
-	if (fullConfig.includeMetadata) {
-		const completeSystem = {
-			...colorSystem,
-			config: fullConfig,
-		};
+	// Generate single metadata file if enabled
+	if (fullConfig.includeMetadata && fullConfig.separateMetadata) {
+		const metadata = generateMetadataJSON(colorSystem, fullConfig);
 
-		writeJSONFile(join(outputDir, `colors-complete${fullConfig.fileExtension}`), completeSystem, fullConfig);
-		generatedFiles.push(join(outputDir, `colors-complete${fullConfig.fileExtension}`));
+		writeJSONFile(join(outputDir, `metadata${fullConfig.fileExtension}`), metadata, fullConfig);
+		generatedFiles.push(join(outputDir, `metadata${fullConfig.fileExtension}`));
 	}
 
 	return generatedFiles;
@@ -462,7 +697,7 @@ function writeJSONFile(filePath: string, data: any, config: Required<JSONGenerat
  */
 export function convertToJSON(
 	colorSystem: ColorSystem,
-	format: "flat" | "nested" | "tokens" | "tailwind",
+	format: "flat" | "nested" | "tokens" | "tailwind" | "collections",
 	appearance?: "light" | "dark",
 	config: JSONGenerationConfig = {},
 ): any {
@@ -481,6 +716,9 @@ export function convertToJSON(
 
 		case "tailwind":
 			return generateTailwindJSON(colorSystem, config);
+
+		case "collections":
+			return generateCollectionsJSON(colorSystem, config);
 
 		default:
 			throw new Error(`Unknown format: ${format}`);
