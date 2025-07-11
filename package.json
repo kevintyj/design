@@ -7,11 +7,15 @@
 		"packages/*"
 	],
 	"scripts": {
-		"build": "bun run --filter='./packages/*' build",
+		"build": "bun build.ts",
+		"build:package": "bun build.ts package",
+		"build:clean": "bun build.ts clean",
+		"build:list": "bun build.ts list",
+		"build:legacy": "bun run --filter='./packages/*' build",
 		"dev": "bun run --filter='./packages/*' dev",
 		"test": "bun run --filter='./packages/*' test",
 		"lint": "bun run --filter='./packages/*' lint",
-		"clean": "rm -rf packages/*/dist packages/*/node_modules",
+		"clean": "bun build.ts clean",
 		"precommit": "bun run --filter='./packages/*' format",
 		"colors": "bun packages/cli/src/cli.ts",
 		"colors:figma": "bun packages/cli/src/cli.ts figma",

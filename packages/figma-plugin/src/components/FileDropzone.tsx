@@ -20,7 +20,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
 }) => {
 	return (
 		<div>
-			<label htmlFor={id} className="block text-sm font-medium text-gray-11">
+			<label htmlFor={id} className="block text-sm font-medium text-gray-12">
 				{label}
 				<div className="border-1 border-dashed border-gray-7 p-6 text-center hover:border-blaze-7 hover:bg-blaze-2 transition-all duration-200 ease-in-out group cursor-pointer mt-3">
 					<div className="space-y-2">

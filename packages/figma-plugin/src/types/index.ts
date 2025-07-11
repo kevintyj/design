@@ -22,10 +22,17 @@ export interface FigmaVariable {
 
 export type Tab = "configure" | "export" | "variables";
 
+export interface UserPreferences {
+	saveColorSystem: boolean;
+	autoGenerateOnLoad: boolean;
+}
+
 export interface PluginMessage {
 	type: string;
 	data?: any;
 	error?: string;
+	preference?: boolean;
+	preferences?: UserPreferences;
 }
 
 export interface ExportData {

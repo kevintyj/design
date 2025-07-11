@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 interface StatusMessageProps {
 	message: string;
+	messageKey?: number;
 	type?: "info" | "success" | "warning" | "error";
 	onDismiss?: () => void;
 	dismissible?: boolean;
@@ -12,6 +13,7 @@ type AnimationState = "entering" | "visible" | "exiting" | "hidden";
 
 export const StatusMessage: React.FC<StatusMessageProps> = ({
 	message,
+	messageKey,
 	type = "info",
 	onDismiss,
 	dismissible = true,
@@ -29,7 +31,6 @@ export const StatusMessage: React.FC<StatusMessageProps> = ({
 
 		// Wait for exit animation to complete before calling onDismiss
 		animationTimeoutRef.current = setTimeout(() => {
-			setAnimationState("hidden");
 			if (onDismiss) {
 				onDismiss();
 			}
@@ -38,7 +39,10 @@ export const StatusMessage: React.FC<StatusMessageProps> = ({
 
 	// Reset component state when a new message arrives
 	useEffect(() => {
-		if (message && message !== previousMessage) {
+		if (message || messageKey || previousMessage === "") {
+			console.log("message", message);
+			console.log("messageKey", messageKey);
+			console.log("previousMessage", previousMessage);
 			// Clear any existing timers
 			if (timerRef.current) {
 				clearTimeout(timerRef.current);
@@ -50,11 +54,13 @@ export const StatusMessage: React.FC<StatusMessageProps> = ({
 			// Reset all state for new message
 			setAnimationState("entering");
 			setIsHovered(false);
-			setPreviousMessage(message);
+			if (previousMessage !== "") {
+				setPreviousMessage(message);
+			}
 		} else if (!message) {
 			setPreviousMessage("");
 		}
-	}, [message, previousMessage]);
+	}, [message, messageKey, previousMessage]);
 
 	// Handle entrance animation
 	useEffect(() => {
@@ -95,7 +101,7 @@ export const StatusMessage: React.FC<StatusMessageProps> = ({
 				clearTimeout(timerRef.current);
 			}
 		};
-	}, [message, animationState, isHovered, handleDismiss, dismissible]);
+	}, [message, dismissible, isHovered, handleDismiss, animationState]);
 
 	// Cleanup timers on unmount
 	useEffect(() => {

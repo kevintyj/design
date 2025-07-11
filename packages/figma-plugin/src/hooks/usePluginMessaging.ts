@@ -1,14 +1,20 @@
 import { useCallback, useEffect } from "react";
-import type { ColorSystem, ExportData, PluginMessage } from "../types";
+import type { ColorSystem, ExportData, PluginMessage, UserPreferences } from "../types";
 import { downloadFile, downloadZip } from "../utils/download";
 
 interface UsePluginMessagingProps {
 	setIsLoading: (loading: boolean) => void;
 	setMessage: (message: string) => void;
 	colorSystem: ColorSystem | null;
+	onClientStorageLoaded?: (data: { preferences: UserPreferences | null; colorSystem: ColorSystem | null }) => void;
 }
 
-export const usePluginMessaging = ({ setIsLoading, setMessage, colorSystem }: UsePluginMessagingProps) => {
+export const usePluginMessaging = ({
+	setIsLoading,
+	setMessage,
+	colorSystem,
+	onClientStorageLoaded,
+}: UsePluginMessagingProps) => {
 	const handleExportDownload = useCallback(
 		async (data: ExportData) => {
 			try {
@@ -23,7 +29,7 @@ export const usePluginMessaging = ({ setIsLoading, setMessage, colorSystem }: Us
 
 	useEffect(() => {
 		const handleMessage = (event: MessageEvent) => {
-			const { type, data, error }: PluginMessage = event.data.pluginMessage || {};
+			const { type, data, error, preference }: PluginMessage = event.data.pluginMessage || {};
 
 			setIsLoading(false);
 
@@ -47,6 +53,21 @@ export const usePluginMessaging = ({ setIsLoading, setMessage, colorSystem }: Us
 				case "variables-imported":
 					setMessage("Figma variables imported successfully!");
 					break;
+				case "color-system-generated":
+					setMessage("Color system generated successfully!");
+					break;
+				case "client-storage-loaded":
+					console.log("Client storage loaded message received:", {
+						preferences: data.preferences,
+						colorSystem: data.colorSystem,
+					});
+					if (onClientStorageLoaded) {
+						onClientStorageLoaded({
+							preferences: data.preferences || null,
+							colorSystem: data.colorSystem || null,
+						});
+					}
+					break;
 				default:
 					if (data) {
 						setMessage(JSON.stringify(data));
@@ -56,9 +77,10 @@ export const usePluginMessaging = ({ setIsLoading, setMessage, colorSystem }: Us
 
 		window.addEventListener("message", handleMessage);
 		return () => window.removeEventListener("message", handleMessage);
-	}, [handleExportDownload, setIsLoading, setMessage]);
+	}, [handleExportDownload, setIsLoading, setMessage, onClientStorageLoaded]);
 
 	const sendPluginMessage = useCallback((type: string, data?: any) => {
+		console.log("Sending message:", { type, data });
 		parent.postMessage(
 			{
 				pluginMessage: { type, data },
