@@ -5,7 +5,7 @@
 	"main": "dist/code.js",
 	"scripts": {
 		"build": "webpack --mode production",
-		"dev": "webpack --watch --mode production",
+		"dev": "webpack --watch --progress --mode development",
 		"lint": "biome check src/",
 		"format": "biome format --write src/"
 	},
@@ -13,6 +13,7 @@
 		"@design/color-generation-core": "workspace:*",
 		"@design/color-generation-css": "workspace:*",
 		"@design/color-generation-json": "workspace:*",
+		"@design/figma-to-json": "workspace:*",
 		"@figma/plugin-typings": "^1.115.0",
 		"@headlessui/react": "^2.2.0",
 		"jszip": "^3.10.1",

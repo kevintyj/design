@@ -1,11 +1,6 @@
 /// <reference types="@figma/plugin-typings" />
 
-// Import types and utilities from our color generation packages
-import {
-	type ColorScale,
-	generateCollectionsJSON,
-	type ColorSystem as JSONColorSystem,
-} from "@design/color-generation-json";
+import { exportFigmaVariablesAsCollections, exportFigmaVariablesRaw } from "@design/figma-to-json";
 
 interface ColorDefinition {
 	[colorName: string]: string;
@@ -48,9 +43,6 @@ figma.ui.onmessage = async (msg) => {
 				break;
 			case "export-json":
 				await handleJSONExport(msg.data);
-				break;
-			case "export-figma-variables":
-				await handleFigmaVariablesExport();
 				break;
 			case "export-figma-variables-collections":
 				await handleFigmaVariablesExportAsCollections();
@@ -143,7 +135,8 @@ async function handleColorImport(colorSystem: ColorSystem) {
 	try {
 		// Create or find a collection for our color system
 		const collectionName = "Design System Colors";
-		let collection = figma.variables.getLocalVariableCollections().find((c) => c.name === collectionName);
+		const collections = await figma.variables.getLocalVariableCollectionsAsync();
+		let collection = collections.find((c) => c.name === collectionName);
 
 		if (!collection) {
 			collection = figma.variables.createVariableCollection(collectionName);
@@ -305,7 +298,7 @@ function _hexToRgb(hex: string): RGB | RGBA {
 }
 
 // Convert RGB to hex
-function rgbToHex(rgb: RGB): string {
+function _rgbToHex(rgb: RGB): string {
 	const toHex = (c: number) => {
 		const hex = Math.round(c * 255).toString(16);
 		return hex.length === 1 ? `0${hex}` : hex;
@@ -367,229 +360,24 @@ async function handleJSONExport(colorSystem: ColorSystem) {
 	}
 }
 
-// Export current Figma variables
-async function handleFigmaVariablesExport() {
-	try {
-		const collections = figma.variables.getLocalVariableCollections();
-		const variables = figma.variables.getLocalVariables();
-
-		const exportData: {
-			collections: any[];
-			variables: FigmaVariableExport[];
-		} = {
-			collections: [],
-			variables: [],
-		};
-
-		// Export collections
-		for (const collection of collections) {
-			exportData.collections.push({
-				id: collection.id,
-				name: collection.name,
-				modes: collection.modes.map((mode) => ({
-					modeId: mode.modeId,
-					name: mode.name,
-				})),
-			});
-		}
-
-		// Export variables (focusing on color variables for now)
-		for (const variable of variables) {
-			if (variable.resolvedType === "COLOR") {
-				const collection = collections.find((c) => c.id === variable.variableCollectionId);
-
-				const exportVariable: FigmaVariableExport = {
-					id: variable.id,
-					name: variable.name,
-					variableCollectionId: variable.variableCollectionId,
-					resolvedType: variable.resolvedType,
-					valuesByMode: {},
-					collection: collection
-						? {
-								id: collection.id,
-								name: collection.name,
-								modes: collection.modes.map((mode) => ({
-									modeId: mode.modeId,
-									name: mode.name,
-								})),
-							}
-						: undefined,
-				};
-
-				// Get values for each mode
-				for (const collection of collections) {
-					if (collection.id === variable.variableCollectionId) {
-						for (const mode of collection.modes) {
-							try {
-								const value = variable.valuesByMode[mode.modeId];
-								if (value && typeof value === "object" && "r" in value) {
-									exportVariable.valuesByMode[mode.modeId] = rgbToHex(value as RGB);
-								}
-							} catch (error) {
-								console.error(`Failed to export value for variable ${variable.name} in mode ${mode.name}:`, error);
-							}
-						}
-					}
-				}
-
-				exportData.variables.push(exportVariable);
-			}
-		}
-
-		figma.ui.postMessage({
-			type: "variables-exported",
-			data: exportData,
-		});
-	} catch (error) {
-		throw new Error(`Failed to export Figma variables: ${error}`);
-	}
-}
-
-// Convert Figma variables to ColorSystem format for use with generateCollectionsJSON
-function convertFigmaVariablesToColorSystem(
-	collections: VariableCollection[],
-	variables: Variable[],
-): JSONColorSystem | null {
-	if (collections.length === 0 || variables.length === 0) return null;
-
-	// Find light and dark modes
-	const mainCollection = collections[0];
-	const lightMode = mainCollection.modes.find((m) => m.name.toLowerCase() === "light");
-	const darkMode = mainCollection.modes.find((m) => m.name.toLowerCase() === "dark");
-
-	if (!lightMode || !darkMode) return null;
-
-	// Extract color variables by mode
-	const lightColors: Record<string, string> = {};
-	const darkColors: Record<string, string> = {};
-	const colorNames: string[] = [];
-
-	for (const variable of variables) {
-		if (variable.resolvedType === "COLOR" && variable.variableCollectionId === mainCollection.id) {
-			// Skip overlay and alpha variables for now
-			if (variable.name.startsWith("overlay-") || variable.name.includes("-alpha")) continue;
-
-			// Get light and dark values
-			const lightValue = variable.valuesByMode[lightMode.modeId];
-			const darkValue = variable.valuesByMode[darkMode.modeId];
-
-			if (
-				lightValue &&
-				darkValue &&
-				typeof lightValue === "object" &&
-				"r" in lightValue &&
-				typeof darkValue === "object" &&
-				"r" in darkValue
-			) {
-				const lightHex = rgbToHex(lightValue as RGB);
-				const darkHex = rgbToHex(darkValue as RGB);
-
-				// Skip background and gray as they'll be handled as constants
-				if (variable.name === "background" || variable.name === "gray") continue;
-
-				lightColors[variable.name] = lightHex;
-				darkColors[variable.name] = darkHex;
-
-				if (!colorNames.includes(variable.name)) {
-					colorNames.push(variable.name);
-				}
-			}
-		}
-	}
-
-	// Get background and gray constants
-	const backgroundVariable = variables.find((v) => v.name === "background");
-	const grayVariable = variables.find((v) => v.name === "gray");
-
-	const lightBackground = backgroundVariable?.valuesByMode[lightMode.modeId];
-	const _darkBackground = backgroundVariable?.valuesByMode[darkMode.modeId];
-	const lightGray = grayVariable?.valuesByMode[lightMode.modeId];
-	const _darkGray = grayVariable?.valuesByMode[darkMode.modeId];
-
-	// Create minimal ColorScale for each color
-	const createColorScale = (color: string): ColorScale => ({
-		accentScale: [color], // Single color instead of 12-step scale
-		accentScaleAlpha: [color],
-		accentScaleWideGamut: [color],
-		accentScaleAlphaWideGamut: [color],
-		accentContrast: color,
-		grayScale: lightGray && typeof lightGray === "object" && "r" in lightGray ? [rgbToHex(lightGray as RGB)] : [color],
-		grayScaleAlpha:
-			lightGray && typeof lightGray === "object" && "r" in lightGray ? [rgbToHex(lightGray as RGB)] : [color],
-		grayScaleWideGamut:
-			lightGray && typeof lightGray === "object" && "r" in lightGray ? [rgbToHex(lightGray as RGB)] : [color],
-		grayScaleAlphaWideGamut:
-			lightGray && typeof lightGray === "object" && "r" in lightGray ? [rgbToHex(lightGray as RGB)] : [color],
-		graySurface: lightGray && typeof lightGray === "object" && "r" in lightGray ? rgbToHex(lightGray as RGB) : color,
-		graySurfaceWideGamut:
-			lightGray && typeof lightGray === "object" && "r" in lightGray ? rgbToHex(lightGray as RGB) : color,
-		accentSurface: color,
-		accentSurfaceWideGamut: color,
-		background:
-			lightBackground && typeof lightBackground === "object" && "r" in lightBackground
-				? rgbToHex(lightBackground as RGB)
-				: "#ffffff",
-		overlays: {
-			black: [],
-			white: [],
-		},
-	});
-
-	// Build light and dark ColorScale maps
-	const lightColorScales: Record<string, ColorScale> = {};
-	const darkColorScales: Record<string, ColorScale> = {};
-
-	for (const colorName of colorNames) {
-		lightColorScales[colorName] = createColorScale(lightColors[colorName]);
-		darkColorScales[colorName] = createColorScale(darkColors[colorName]);
-	}
-
-	return {
-		light: lightColorScales,
-		dark: darkColorScales,
-		colorNames,
-		sourceColors: Object.fromEntries(colorNames.map((name) => [name, lightColors[name]])),
-		metadata: {
-			generatedAt: new Date().toISOString(),
-			totalColors: colorNames.length,
-			totalScales: colorNames.length,
-			config: {},
-		},
-	};
-}
-
-// Export current Figma variables as collections format using @design/color-generation-json
+// Export current Figma variables as collections format using @design/figma-to-json
 async function handleFigmaVariablesExportAsCollections() {
 	try {
-		const collections = figma.variables.getLocalVariableCollections();
-		const variables = figma.variables.getLocalVariables();
-
-		if (collections.length === 0 || variables.length === 0) {
-			figma.ui.postMessage({
-				type: "error",
-				error: "No variables found to export",
-			});
-			return;
-		}
-
-		// Convert Figma variables to ColorSystem format
-		const colorSystem = convertFigmaVariablesToColorSystem(collections, variables);
-
-		if (!colorSystem) {
-			figma.ui.postMessage({
-				type: "error",
-				error: "Could not convert variables to color system format. Ensure you have Light and Dark modes.",
-			});
-			return;
-		}
-
-		// Use the official generateCollectionsJSON function
-		const collectionsData = generateCollectionsJSON(colorSystem, {
-			collectionName: collections[0]?.name || "Generated Colors",
-			includeAlpha: true,
-			includeGrayScale: true,
-			includeOverlays: true,
+		// Use the new package to export all collections with full transparency support
+		const collectionsData = await exportFigmaVariablesAsCollections({
+			includeAllVariableTypes: false, // Only colors for now
+			preserveVariableStructure: true,
+			includeMetadata: true,
+			prettyPrint: true,
 		});
+
+		if (collectionsData.collections.length === 0) {
+			figma.ui.postMessage({
+				type: "error",
+				error: "No color variables found to export",
+			});
+			return;
+		}
 
 		figma.ui.postMessage({
 			type: "variables-exported-collections",
@@ -603,74 +391,11 @@ async function handleFigmaVariablesExportAsCollections() {
 	}
 }
 
-// Export current Figma variables as raw format (existing functionality)
+// Export current Figma variables as raw format with full transparency support
 async function handleFigmaVariablesExportRaw() {
 	try {
-		const collections = figma.variables.getLocalVariableCollections();
-		const variables = figma.variables.getLocalVariables();
-
-		const exportData: {
-			collections: any[];
-			variables: FigmaVariableExport[];
-		} = {
-			collections: [],
-			variables: [],
-		};
-
-		// Export collections
-		for (const collection of collections) {
-			exportData.collections.push({
-				id: collection.id,
-				name: collection.name,
-				modes: collection.modes.map((mode) => ({
-					modeId: mode.modeId,
-					name: mode.name,
-				})),
-			});
-		}
-
-		// Export variables (focusing on color variables for now)
-		for (const variable of variables) {
-			if (variable.resolvedType === "COLOR") {
-				const collection = collections.find((c) => c.id === variable.variableCollectionId);
-
-				const exportVariable: FigmaVariableExport = {
-					id: variable.id,
-					name: variable.name,
-					variableCollectionId: variable.variableCollectionId,
-					resolvedType: variable.resolvedType,
-					valuesByMode: {},
-					collection: collection
-						? {
-								id: collection.id,
-								name: collection.name,
-								modes: collection.modes.map((mode) => ({
-									modeId: mode.modeId,
-									name: mode.name,
-								})),
-							}
-						: undefined,
-				};
-
-				// Get values for each mode
-				for (const collection of collections) {
-					if (collection.id === variable.variableCollectionId) {
-						for (const mode of collection.modes) {
-							try {
-								const value = variable.valuesByMode[mode.modeId];
-								if (value && typeof value === "object" && "r" in value) {
-									exportVariable.valuesByMode[mode.modeId] = rgbToHex(value as RGB);
-								}
-							} catch (error) {
-								console.error(`Failed to export value for variable ${variable.name} in mode ${mode.name}:`, error);
-							}
-						}
-					}
-				}
-
-				exportData.variables.push(exportVariable);
-			}
-		}
+		// Use the new package to export with full information including transparency
+		const exportData = await exportFigmaVariablesRaw();
 
 		figma.ui.postMessage({
 			type: "variables-exported-raw",
@@ -693,7 +418,8 @@ async function handleFigmaVariablesImport(variablesData: any) {
 		const collectionMap = new Map<string, VariableCollection>();
 
 		for (const importCollection of importCollections) {
-			let collection = figma.variables.getLocalVariableCollections().find((c) => c.name === importCollection.name);
+			const localCollections = await figma.variables.getLocalVariableCollectionsAsync();
+			let collection = localCollections.find((c) => c.name === importCollection.name);
 
 			if (!collection) {
 				collection = figma.variables.createVariableCollection(importCollection.name);

@@ -1,0 +1,49 @@
+{
+	"name": "@design/figma-to-json",
+	"version": "1.0.0",
+	"description": "Utilities for converting Figma variables to JSON collections format",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "rm -rf dist && bun build src/index.ts --target=browser --outfile=dist/index.js --format=esm && bun run build:types",
+		"build:types": "tsc src/index.ts --declaration --emitDeclarationOnly --outDir dist --moduleResolution node --esModuleInterop --skipLibCheck",
+		"dev": "bun --watch src/index.ts",
+		"test": "bun test",
+		"lint": "biome check src/",
+		"format": "biome format --write src/"
+	},
+	"keywords": [
+		"figma",
+		"json",
+		"variables",
+		"collections",
+		"design-tokens",
+		"transparency",
+		"rgba"
+	],
+	"devDependencies": {
+		"@figma/plugin-typings": "^1.115.0",
+		"@types/bun": "latest",
+		"@types/node": "^20.0.0",
+		"typescript": "^5.0.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/your-username/design-system",
+		"directory": "packages/figma-to-json"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	}
+}

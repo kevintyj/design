@@ -67,8 +67,8 @@ const BUILD_ORDER: BuildGroup[] = [
 	},
 	{
 		name: "Extension Packages",
-		packages: ["color-generation-css", "color-generation-json"],
-		description: "CSS and JSON output formatters",
+		packages: ["color-generation-css", "color-generation-json", "figma-to-json"],
+		description: "CSS and JSON output formatters, Figma integration",
 	},
 	{
 		name: "Application Packages",
@@ -88,6 +88,10 @@ const PACKAGE_CONFIGS: PackageConfigs = {
 		needsCleanup: true,
 	},
 	"color-generation-json": {
+		hasTypes: true,
+		needsCleanup: true,
+	},
+	"figma-to-json": {
 		hasTypes: true,
 		needsCleanup: true,
 	},

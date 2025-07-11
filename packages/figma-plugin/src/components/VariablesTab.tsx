@@ -1,3 +1,4 @@
+import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
 import type React from "react";
 import { FileDropzone } from "./FileDropzone";
 
@@ -8,6 +9,8 @@ interface VariablesTabProps {
 	onImportVariables: (event: React.ChangeEvent<HTMLInputElement>) => void;
 	parsedVariables?: any;
 	onConfirmImport: () => void;
+	generatedColorSystem?: ColorSystemCore | null;
+	onImportFromGeneratedColors?: () => void;
 }
 
 export const VariablesTab: React.FC<VariablesTabProps> = ({
@@ -17,6 +20,8 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 	onImportVariables,
 	parsedVariables,
 	onConfirmImport,
+	generatedColorSystem,
+	onImportFromGeneratedColors,
 }) => {
 	return (
 		<div className="py-3 px-5">
@@ -59,20 +64,55 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 				{/* Import Variables */}
 				<div className="border-t border-gray-6 pt-6">
 					<h3 className="text-sm font-medium text-gray-12 mb-3">Import Variables</h3>
-					<p className="text-xs text-gray-11 mb-3">
-						Import variables from color-generation-json collections, other collections formats, or raw Figma variables
-						JSON. The system will automatically detect the format and validate before importing.
-					</p>
-					<FileDropzone
-						id="variables-file-upload"
-						accept=".json"
-						onChange={onImportVariables}
-						label=""
-						primaryText="Click to upload or drag & drop"
-						secondaryText="Generated Collections JSON, Other Collections JSON, or Raw Variables JSON files"
-					/>
 
-					{/* Preview and Import Section */}
+					{/* Import from Generated Colors */}
+					{generatedColorSystem && onImportFromGeneratedColors && (
+						<div className="mb-6">
+							<h4 className="text-sm font-medium text-gray-12 mb-2">Import from Generated Colors</h4>
+							<p className="text-xs text-gray-11 mb-3">
+								Import variables directly from your currently generated color system. This will create variables for all
+								colors including gray scales, accent colors, surfaces, and alpha variants.
+							</p>
+							<div className="text-xs text-gray-11 space-y-1 mb-3">
+								<p>
+									• <strong>Colors:</strong> {generatedColorSystem.colorNames.join(", ")}
+								</p>
+								<p>
+									• <strong>Total scales:</strong> {generatedColorSystem.metadata.totalScales}
+								</p>
+								<p>
+									• <strong>Modes:</strong> Light, Dark
+								</p>
+							</div>
+							<button
+								type="button"
+								onClick={onImportFromGeneratedColors}
+								disabled={isLoading}
+								className="btn bg-teal-9 hover:bg-teal-10 text-[white] border-teal-11"
+							>
+								{isLoading ? "Importing..." : "Import Generated Colors as Variables"}
+							</button>
+						</div>
+					)}
+
+					{/* Import from File */}
+					<div className={generatedColorSystem ? "border-t border-gray-6 pt-4" : ""}>
+						<h4 className="text-sm font-medium text-gray-12 mb-3">Import from File</h4>
+						<p className="text-xs text-gray-11 mb-3">
+							Import variables from color-generation-json collections, other collections formats, or raw Figma variables
+							JSON. The system will automatically detect the format and validate before importing.
+						</p>
+						<FileDropzone
+							id="variables-file-upload"
+							accept=".json"
+							onChange={onImportVariables}
+							label=""
+							primaryText="Click to upload or drag & drop"
+							secondaryText="Generated Collections JSON, Other Collections JSON, or Raw Variables JSON files"
+						/>
+					</div>
+
+					{/* Preview and Import Section - keep the original logic */}
 					{parsedVariables && (
 						<div className="mt-4 p-4 border border-gray-6 rounded bg-gray-2">
 							<h4 className="text-sm font-medium text-gray-12 mb-2">Preview Import</h4>
@@ -102,6 +142,9 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 					)}
 
 					<div className="mt-3 text-xs text-gray-10 space-y-1">
+						<p>
+							• <strong>Generated Colors:</strong> Import directly from your current generated color system
+						</p>
 						<p>
 							• <strong>Color Generation JSON:</strong> Generated collections.json files from the color-generation-json
 							package

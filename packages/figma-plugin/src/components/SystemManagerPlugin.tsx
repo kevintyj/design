@@ -57,6 +57,88 @@ const returnGeneratedColorSystem = async (colorSystem: ColorSystem) => {
 	return generatedColorSystem;
 };
 
+// Helper function to convert SimpleCollectionFormat to raw Figma format (moved from useFileHandling for reuse)
+function _convertSimpleCollectionToRawFormat(data: any): any {
+	const collection = data.collections;
+	const collectionId = `collection-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+	// Create modes from the collection modes
+	const modes = collection.modes.map((mode: string, index: number) => ({
+		modeId: `mode-${index}`,
+		name: mode.toLowerCase(),
+	}));
+
+	const rawFormat: {
+		collections: any[];
+		variables: any[];
+	} = {
+		collections: [
+			{
+				id: collectionId,
+				name: collection.name,
+				modes: modes,
+			},
+		],
+		variables: [],
+	};
+
+	// Helper function to add variables from a variable group
+	const addVariables = (variables: any, prefix: string = "") => {
+		Object.entries(variables).forEach(([key, value]: [string, any]) => {
+			if (value && typeof value === "object") {
+				// Check if this is a variable definition (has type and values)
+				if (value.type && value.values) {
+					const variableName = prefix ? `${prefix}/${key}` : key;
+					const variableId = `${variableName.replace(/[/\s]/g, "-")}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+
+					// Create valuesByMode from the values object
+					const valuesByMode: any = {};
+					modes.forEach((mode: { modeId: string; name: string }) => {
+						const modeValue = value.values[mode.name];
+						if (modeValue !== undefined) {
+							valuesByMode[mode.modeId] = modeValue;
+						}
+					});
+
+					rawFormat.variables.push({
+						id: variableId,
+						name: variableName,
+						variableCollectionId: collectionId,
+						resolvedType: value.type.toUpperCase(),
+						valuesByMode: valuesByMode,
+						collection: {
+							id: collectionId,
+							name: collection.name,
+							modes: modes,
+						},
+					});
+				} else {
+					// Recursively process nested objects
+					const newPrefix = prefix ? `${prefix}/${key}` : key;
+					addVariables(value, newPrefix);
+				}
+			}
+		});
+	};
+
+	// Process solid variables
+	if (collection.variables.solid) {
+		addVariables(collection.variables.solid, "solid");
+	}
+
+	// Process alpha variables
+	if (collection.variables.alpha) {
+		addVariables(collection.variables.alpha, "alpha");
+	}
+
+	// Process overlay variables
+	if (collection.variables.overlays) {
+		addVariables(collection.variables.overlays, "overlays");
+	}
+
+	return rawFormat;
+}
+
 export const SystemManagerPlugin: React.FC = () => {
 	const [activeTab, setActiveTab] = useState<Tab>("configure");
 	const [colorSystem, setColorSystem] = useState<ColorSystem | null>(null);
@@ -169,13 +251,23 @@ export const SystemManagerPlugin: React.FC = () => {
 		[setMessageWithKey, sendPluginMessage, colorSystem],
 	);
 
-	const { handleFileUpload, handleFigmaVariablesUpload, handleImportToFigma } = useFileHandling({
-		setColorSystem,
-		setIsLoading,
-		setMessage: setMessageWithKey,
-		sendPluginMessage,
-		setParsedVariables,
-	});
+	const { handleFileUpload, handleFigmaVariablesUpload, handleImportToFigma, handleImportFromGeneratedColors } =
+		useFileHandling({
+			setColorSystem,
+			setIsLoading,
+			setMessage: setMessageWithKey,
+			sendPluginMessage,
+			setParsedVariables,
+		});
+
+	// Create a handler that passes the generated color system
+	const handleImportFromGeneratedColorsWithSystem = useCallback(() => {
+		if (!generatedColorSystem) {
+			setMessageWithKey("No generated color system available to import.");
+			return;
+		}
+		handleImportFromGeneratedColors(generatedColorSystem);
+	}, [generatedColorSystem, handleImportFromGeneratedColors, setMessageWithKey]);
 
 	// Handle export as CSS
 	const handleExportCSS = useCallback(() => {
@@ -384,6 +476,8 @@ export const SystemManagerPlugin: React.FC = () => {
 						onImportVariables={handleFigmaVariablesUpload}
 						parsedVariables={parsedVariables}
 						onConfirmImport={handleConfirmImport}
+						generatedColorSystem={generatedColorSystem}
+						onImportFromGeneratedColors={handleImportFromGeneratedColorsWithSystem}
 					/>
 				);
 			case "preferences":

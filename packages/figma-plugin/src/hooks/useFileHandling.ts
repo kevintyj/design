@@ -1,3 +1,6 @@
+import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
+import { generateCollectionsJSON } from "@design/color-generation-json";
+import { convertSimpleCollectionOutputToRawFormat, isSimpleCollectionOutputFormat } from "@design/figma-to-json";
 import { useCallback } from "react";
 import type { ColorSystem } from "../types";
 
@@ -161,7 +164,12 @@ function isCollectionsFormat(data: any): boolean {
 		return true;
 	}
 
-	// Check for SimpleCollectionFormat from color-generation-json
+	// Check for SimpleCollectionOutput format (array of collections from figma-to-json)
+	if (isSimpleCollectionOutputFormat(data)) {
+		return true;
+	}
+
+	// Check for SimpleCollectionFormat from color-generation-json (single collection)
 	if (isSimpleCollectionFormat(data)) {
 		return true;
 	}
@@ -318,7 +326,12 @@ function convertOldCollectionsToRawFormat(collectionsData: any): any {
 
 // Helper function to convert collections format to raw Figma format (handles both old and new formats)
 function convertCollectionsToRawFormat(collectionsData: any): any {
-	// Check if it's the SimpleCollectionFormat from color-generation-json
+	// Check if it's the SimpleCollectionOutput format (array of collections)
+	if (isSimpleCollectionOutputFormat(collectionsData)) {
+		return convertSimpleCollectionOutputToRawFormat(collectionsData);
+	}
+
+	// Check if it's the SimpleCollectionFormat from color-generation-json (single collection)
 	if (isSimpleCollectionFormat(collectionsData)) {
 		return convertSimpleCollectionToRawFormat(collectionsData);
 	}
@@ -499,6 +512,43 @@ export const useFileHandling = ({
 		[setIsLoading, setMessage, setParsedVariables],
 	);
 
+	const handleImportFromGeneratedColors = useCallback(
+		(generatedColorSystem: ColorSystemCore) => {
+			if (!generatedColorSystem) {
+				setMessage("No generated color system available to import.");
+				return;
+			}
+
+			setIsLoading(true);
+			try {
+				// Convert generated color system to collections format
+				const collectionsConfig = generateCollectionsJSON(generatedColorSystem, {
+					collectionName: "Generated Colors",
+					includeAlpha: true,
+					includeGrayScale: true,
+					includeOverlays: true,
+					prettyPrint: true,
+				});
+
+				// Convert collections format to raw format for variable import
+				const rawFormat = convertCollectionsToRawFormat(collectionsConfig);
+
+				// Set the parsed variables for preview and import
+				if (setParsedVariables) {
+					setParsedVariables(rawFormat);
+					setMessage(
+						`Generated colors prepared for import! Found ${rawFormat.variables.length} color variables from ${generatedColorSystem.colorNames.length} color scales. Review and click "Import to Figma" to proceed.`,
+					);
+				}
+			} catch (error) {
+				setMessage(`Error preparing generated colors for import: ${error}`);
+			} finally {
+				setIsLoading(false);
+			}
+		},
+		[setIsLoading, setMessage, setParsedVariables],
+	);
+
 	const handleImportToFigma = useCallback(
 		(parsedVariables: any) => {
 			if (!parsedVariables) {
@@ -516,5 +566,6 @@ export const useFileHandling = ({
 		handleFileUpload,
 		handleFigmaVariablesUpload,
 		handleImportToFigma, // Add this new function
+		handleImportFromGeneratedColors, // Add this new function
 	};
 };

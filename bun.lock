@@ -93,6 +93,7 @@
         "@design/color-generation-core": "workspace:*",
         "@design/color-generation-css": "workspace:*",
         "@design/color-generation-json": "workspace:*",
+        "@design/figma-to-json": "workspace:*",
         "@figma/plugin-typings": "^1.115.0",
         "@headlessui/react": "^2.2.0",
         "jszip": "^3.10.1",
@@ -127,6 +128,16 @@
         "url-loader": "^4.1.1",
         "webpack": "^5.76.0",
         "webpack-cli": "^5.0.1",
+      },
+    },
+    "packages/figma-to-json": {
+      "name": "@design/figma-to-json",
+      "version": "1.0.0",
+      "devDependencies": {
+        "@figma/plugin-typings": "^1.115.0",
+        "@types/bun": "latest",
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0",
       },
     },
   },
@@ -408,6 +419,8 @@
     "@design/examples": ["@design/examples@workspace:packages/examples"],
 
     "@design/figma-plugin": ["@design/figma-plugin@workspace:packages/figma-plugin"],
+
+    "@design/figma-to-json": ["@design/figma-to-json@workspace:packages/figma-to-json"],
 
     "@discoveryjs/json-ext": ["@discoveryjs/json-ext@0.5.7", "", {}, "sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw=="],
 
