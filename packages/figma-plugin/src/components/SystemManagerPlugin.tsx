@@ -152,6 +152,7 @@ export const SystemManagerPlugin: React.FC = () => {
 		saveColorSystem: false,
 		autoGenerateOnLoad: false,
 	});
+	const [parsedVariables, setParsedVariables] = useState<any>(null);
 
 	// Wrapper function that increments messageKey every time a message is set
 	const setMessageWithKey = useCallback((newMessage: string) => {
@@ -252,11 +253,12 @@ export const SystemManagerPlugin: React.FC = () => {
 		[setMessageWithKey, sendPluginMessage, colorSystem],
 	);
 
-	const { handleFileUpload, handleFigmaVariablesUpload } = useFileHandling({
+	const { handleFileUpload, handleFigmaVariablesUpload, handleImportToFigma } = useFileHandling({
 		setColorSystem,
 		setIsLoading,
 		setMessage: setMessageWithKey,
 		sendPluginMessage,
+		setParsedVariables,
 	});
 
 	// Handle export as CSS
@@ -280,9 +282,21 @@ export const SystemManagerPlugin: React.FC = () => {
 	}, [colorSystem, sendPluginMessage, setMessageWithKey]);
 
 	// Handle Figma variables export
-	const handleExportFigmaVariables = useCallback(() => {
+	const _handleExportFigmaVariables = useCallback(() => {
 		setIsLoading(true);
 		sendPluginMessage("export-figma-variables");
+	}, [sendPluginMessage]);
+
+	// Handle Figma variables export as collections format
+	const handleExportFigmaVariablesAsCollections = useCallback(() => {
+		setIsLoading(true);
+		sendPluginMessage("export-figma-variables-collections");
+	}, [sendPluginMessage]);
+
+	// Handle Figma variables export as raw format
+	const handleExportFigmaVariablesRaw = useCallback(() => {
+		setIsLoading(true);
+		sendPluginMessage("export-figma-variables-raw");
 	}, [sendPluginMessage]);
 
 	const handleGenerateColorSystem = useCallback(async () => {
@@ -382,6 +396,11 @@ export const SystemManagerPlugin: React.FC = () => {
 		}
 	}, [generatedColorSystem, setMessageWithKey]);
 
+	const handleConfirmImport = useCallback(() => {
+		handleImportToFigma(parsedVariables);
+		setParsedVariables(null); // Clear after import
+	}, [handleImportToFigma, parsedVariables]);
+
 	const renderTabContent = () => {
 		switch (activeTab) {
 			case "configure":
@@ -413,8 +432,11 @@ export const SystemManagerPlugin: React.FC = () => {
 				return (
 					<VariablesTab
 						isLoading={isLoading}
-						onExportVariables={handleExportFigmaVariables}
+						onExportVariablesAsCollections={handleExportFigmaVariablesAsCollections}
+						onExportVariablesRaw={handleExportFigmaVariablesRaw}
 						onImportVariables={handleFigmaVariablesUpload}
+						parsedVariables={parsedVariables}
+						onConfirmImport={handleConfirmImport}
 					/>
 				);
 			case "preferences":

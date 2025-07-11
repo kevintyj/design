@@ -45,10 +45,15 @@ export const usePluginMessaging = ({
 				case "export-complete":
 					handleExportDownload(data);
 					break;
-				case "variables-exported":
-					// Trigger download of the exported variables
+				case "variables-exported-collections":
+					// Trigger download of the exported variables in collections format
+					downloadFile(JSON.stringify(data, null, 2), "collections.json", "application/json");
+					setMessage("Figma variables exported as collections JSON successfully!");
+					break;
+				case "variables-exported-raw":
+					// Trigger download of the exported variables in raw format
 					downloadFile(JSON.stringify(data, null, 2), "figma-variables.json", "application/json");
-					setMessage("Figma variables exported successfully!");
+					setMessage("Figma variables exported as raw JSON successfully!");
 					break;
 				case "variables-imported":
 					setMessage("Figma variables imported successfully!");
