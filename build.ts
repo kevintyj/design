@@ -195,15 +195,14 @@ function displayBuildSummary(summary: BuildSummary): void {
 		// Sort packages by build time (slowest first)
 		const sortedPackages = [...summary.builtPackages].sort((a, b) => b.duration - a.duration);
 
-		sortedPackages.forEach((pkg, index) => {
+		sortedPackages.forEach((pkg, _index) => {
 			const config = PACKAGE_CONFIGS[pkg.name];
 			const typeInfo = config?.hasTypes ? "TS" : "JS";
 			const buildTool = config?.usesWebpack ? "Webpack" : "Bun";
 			const timeColor = pkg.duration > 5000 ? COLORS.red : pkg.duration > 2000 ? COLORS.yellow : COLORS.green;
-			const rankEmoji = index === 0 ? "🐌" : index === 1 ? "🚶" : "🏃";
 
 			console.log(
-				`  ${rankEmoji} ${pkg.name} ${COLORS.dim}(${typeInfo}, ${buildTool})${COLORS.reset} - ${timeColor}${formatDuration(pkg.duration)}${COLORS.reset}`,
+				`  ${pkg.name} ${COLORS.dim}(${typeInfo}, ${buildTool})${COLORS.reset} - ${timeColor}${formatDuration(pkg.duration)}${COLORS.reset}`,
 			);
 		});
 

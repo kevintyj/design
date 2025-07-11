@@ -12,6 +12,16 @@ export interface ColorSystem {
 	};
 }
 
+export interface SpacingDefinition {
+	[spacingName: string]: number;
+}
+
+export interface SpacingSystem {
+	spacing: SpacingDefinition;
+	multiplier: number;
+	remValue?: number;
+}
+
 export interface FigmaVariable {
 	id: string;
 	name: string;
@@ -20,11 +30,13 @@ export interface FigmaVariable {
 	valuesByMode: { [modeId: string]: any };
 }
 
-export type Tab = "configure" | "export" | "variables" | "preferences";
+export type Tab = "color" | "spacing" | "export" | "variables" | "preferences";
 
 export interface UserPreferences {
 	saveColorSystem: boolean;
 	autoGenerateOnLoad: boolean;
+	saveSpacingSystem: boolean;
+	autoGenerateSpacingOnLoad: boolean;
 }
 
 export interface PluginMessage {

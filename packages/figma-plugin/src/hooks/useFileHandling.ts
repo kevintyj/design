@@ -2,14 +2,15 @@ import type { ColorSystem as ColorSystemCore } from "@design/color-generation-co
 import { generateCollectionsJSON } from "@design/color-generation-json";
 import { convertSimpleCollectionOutputToRawFormat, isSimpleCollectionOutputFormat } from "@design/figma-to-json";
 import { useCallback } from "react";
-import type { ColorSystem } from "../types";
+import type { ColorSystem, SpacingSystem } from "../types";
 
 interface UseFileHandlingProps {
 	setColorSystem: (system: ColorSystem | null) => void;
+	setSpacingSystem: (system: SpacingSystem | null) => void;
 	setIsLoading: (loading: boolean) => void;
 	setMessage: (message: string) => void;
 	sendPluginMessage: (type: string, data?: any) => void;
-	setParsedVariables?: (variables: any) => void; // Add this new prop
+	setParsedVariables?: (variables: any) => void;
 }
 
 // Interface for the figma-colors.json format
@@ -47,6 +48,47 @@ function isValidColorSystem(data: any): data is ColorSystem {
 		data.constants.light &&
 		data.constants.dark
 	);
+}
+
+// Helper function to validate SpacingSystem format
+function isValidSpacingSystem(data: any): data is SpacingSystem {
+	return (
+		data &&
+		typeof data === "object" &&
+		data.spacing &&
+		typeof data.spacing === "object" &&
+		typeof data.multiplier === "number" &&
+		data.multiplier > 0
+	);
+}
+
+// Helper function to transform various spacing file formats
+function _transformSpacingFormat(data: any): SpacingSystem | null {
+	// Check if it's already in the correct format
+	if (isValidSpacingSystem(data)) {
+		return data;
+	}
+
+	// Check if it's a TypeScript/JavaScript export format
+	if (data.spacing && (data.spacingMultiplier || data.multiplier)) {
+		return {
+			spacing: data.spacing,
+			multiplier: data.spacingMultiplier || data.multiplier,
+			remValue: data.remValue,
+		};
+	}
+
+	// Check if it's a direct spacing definitions object (legacy format)
+	if (typeof data === "object" && !data.spacing && !data.multiplier) {
+		// Assume it's a direct spacing object, use default multiplier
+		return {
+			spacing: data,
+			multiplier: 4, // Default 4px multiplier
+			remValue: 16,
+		};
+	}
+
+	return null;
 }
 
 // Helper function to detect color-generation-json collections format specifically
@@ -421,12 +463,13 @@ function processVariableCategory(
 
 export const useFileHandling = ({
 	setColorSystem,
+	setSpacingSystem,
 	setIsLoading,
 	setMessage,
 	sendPluginMessage,
 	setParsedVariables,
 }: UseFileHandlingProps) => {
-	const handleFileUpload = useCallback(
+	const handleColorFileUpload = useCallback(
 		(event: React.ChangeEvent<HTMLInputElement>) => {
 			const file = event.target.files?.[0];
 			if (!file) return;
@@ -469,6 +512,72 @@ export const useFileHandling = ({
 		},
 		[setColorSystem, setIsLoading, setMessage],
 	);
+
+	const _handleSpacingFileUpload = useCallback(
+		(event: React.ChangeEvent<HTMLInputElement>) => {
+			const file = event.target.files?.[0];
+			if (!file) return;
+
+			setIsLoading(true);
+			const reader = new FileReader();
+
+			reader.onload = (e) => {
+				try {
+					const content = e.target?.result as string;
+
+					if (file.name.endsWith(".json")) {
+						// Parse JSON file
+						const parsed = JSON.parse(content);
+
+						// Try to transform various spacing formats
+						const transformedSpacing = _transformSpacingFormat(parsed);
+						if (transformedSpacing) {
+							// Validate the transformed spacing system
+							try {
+								// Validate the spacing system manually since import might have issues
+								if (!transformedSpacing.spacing || typeof transformedSpacing.spacing !== "object") {
+									throw new Error("Spacing definitions must be an object");
+								}
+								if (Object.keys(transformedSpacing.spacing).length === 0) {
+									throw new Error("Spacing definitions cannot be empty");
+								}
+								if (typeof transformedSpacing.multiplier !== "number" || transformedSpacing.multiplier <= 0) {
+									throw new Error("Multiplier must be a positive number");
+								}
+								// Validate spacing values
+								for (const [name, value] of Object.entries(transformedSpacing.spacing)) {
+									if (typeof value !== "number" || value < 0) {
+										throw new Error(`Invalid spacing value for "${name}": must be a non-negative number`);
+									}
+								}
+								setSpacingSystem(transformedSpacing);
+								setMessage("Spacing system loaded successfully!");
+							} catch (validationError) {
+								setMessage(`Invalid spacing system: ${validationError}`);
+							}
+						} else {
+							setMessage(
+								"Invalid spacing system format. Please ensure the JSON file contains spacing definitions and multiplier.",
+							);
+						}
+					} else if (file.name.endsWith(".ts") || file.name.endsWith(".js")) {
+						// For TypeScript/JavaScript files, we'll need to parse the exports
+						setMessage("TypeScript/JavaScript file parsing not yet implemented. Please use JSON format.");
+					}
+				} catch (error) {
+					setMessage(`Error parsing file: ${error}`);
+				} finally {
+					setIsLoading(false);
+				}
+			};
+
+			reader.readAsText(file);
+		},
+		[setSpacingSystem, setIsLoading, setMessage],
+	);
+
+	// Legacy handleFileUpload for backward compatibility (defaults to color)
+	const handleFileUpload = handleColorFileUpload;
 
 	const handleFigmaVariablesUpload = useCallback(
 		(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -588,6 +697,8 @@ export const useFileHandling = ({
 
 	return {
 		handleFileUpload,
+		handleColorFileUpload,
+		handleSpacingFileUpload: _handleSpacingFileUpload,
 		handleFigmaVariablesUpload,
 		handleImportToFigma, // Add this new function
 		handleImportFromGeneratedColors, // Add this new function

@@ -39,7 +39,7 @@ const colorList = (colorSystem: ColorSystem) => {
 	});
 };
 
-export const ConfigureTab: React.FC<ConfigureTabProps> = ({
+export const ColorConfigureTab: React.FC<ConfigureTabProps> = ({
 	colorSystem,
 	generatedColorSystem,
 	isLoading,
@@ -62,6 +62,10 @@ export const ConfigureTab: React.FC<ConfigureTabProps> = ({
 	return (
 		<div className="py-3 px-5">
 			<h2 className="text-base font-serif font-medium text-gray-12">Configure color system</h2>
+			<p className="text-sm text-gray-11 pt-1 pb-3">
+				Upload a colors-figma.json file or TypeScript/JavaScript file containing color definitions. For spacing
+				configuration, use the <strong>Spacing</strong> tab.
+			</p>
 
 			<div className="space-y-3 pt-4">
 				<div className="flex gap-2">
@@ -82,7 +86,7 @@ export const ConfigureTab: React.FC<ConfigureTabProps> = ({
 							onChange={handleFileUpload}
 							label="Load Color System File"
 							primaryText={colorSystem ? "Click to replace or drag & drop" : "Click to upload or drag & drop"}
-							secondaryText="JSON, TypeScript, or JavaScript files"
+							secondaryText="colors-figma.json, TypeScript, or JavaScript files"
 						/>
 					</div>
 				</div>

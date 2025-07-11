@@ -456,14 +456,15 @@ export function generateCollectionsSpacingJSON(
 		// Raw numeric values
 		result.collections.variables.spacing[name] = createSpacingVariable(value);
 
-		// Px string values
+		// Px values as numbers (not strings)
 		if (fullConfig.includePx && pxValues[name]) {
-			result.collections.variables["spacing-px"][name] = createSpacingVariable(pxValues[name], "string");
+			result.collections.variables["spacing-px"][name] = createSpacingVariable(value, "number");
 		}
 
-		// Rem string values
+		// Rem values as numbers (not strings)
 		if (fullConfig.includeRem && remValues[name]) {
-			result.collections.variables["spacing-rem"][name] = createSpacingVariable(remValues[name], "string");
+			const remValue = value / fullConfig.remBase;
+			result.collections.variables["spacing-rem"][name] = createSpacingVariable(remValue, "number");
 		}
 	}
 

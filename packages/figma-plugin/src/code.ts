@@ -15,6 +15,12 @@ interface ColorSystem {
 	};
 }
 
+interface SpacingSystem {
+	spacing: { [key: string]: number };
+	multiplier: number;
+	remValue?: number;
+}
+
 interface FigmaVariableExport {
 	id: string;
 	name: string;
@@ -44,6 +50,12 @@ figma.ui.onmessage = async (msg) => {
 			case "export-json":
 				await handleJSONExport(msg.data);
 				break;
+			case "export-spacing-css":
+				await handleSpacingCSSExport(msg.data);
+				break;
+			case "export-spacing-json":
+				await handleSpacingJSONExport(msg.data);
+				break;
 			case "export-figma-variables-collections":
 				await handleFigmaVariablesExportAsCollections();
 				break;
@@ -59,9 +71,16 @@ figma.ui.onmessage = async (msg) => {
 
 					const preferencesKey = msg.data.preferencesKey;
 					const colorSystemKey = msg.data.colorSystemKey;
+					const spacingSystemKey = msg.data.spacingSystemKey;
 					const generatedColorsKey = msg.data.generatedColorsKey;
 
-					console.log("Loading client storage with keys:", preferencesKey, colorSystemKey, generatedColorsKey);
+					console.log(
+						"Loading client storage with keys:",
+						preferencesKey,
+						colorSystemKey,
+						spacingSystemKey,
+						generatedColorsKey,
+					);
 
 					if (!preferencesKey || !colorSystemKey) {
 						console.error("Missing required keys:", { preferencesKey, colorSystemKey });
@@ -70,6 +89,7 @@ figma.ui.onmessage = async (msg) => {
 
 					const preferences = await figma.clientStorage.getAsync(preferencesKey);
 					const colorSystem = await figma.clientStorage.getAsync(colorSystemKey);
+					const spacingSystem = spacingSystemKey ? await figma.clientStorage.getAsync(spacingSystemKey) : null;
 					const generatedColors = generatedColorsKey ? await figma.clientStorage.getAsync(generatedColorsKey) : null;
 
 					figma.ui.postMessage({
@@ -77,6 +97,7 @@ figma.ui.onmessage = async (msg) => {
 						data: {
 							preferences: preferences || null,
 							colorSystem: colorSystem || null,
+							spacingSystem: spacingSystem || null,
 							generatedColors: generatedColors || null,
 						},
 					});
@@ -89,6 +110,13 @@ figma.ui.onmessage = async (msg) => {
 					await figma.clientStorage.setAsync(msg.data.key, msg.data.colorSystem);
 				} catch (error) {
 					console.error("Error saving color system:", error);
+				}
+				break;
+			case "save-spacing-system":
+				try {
+					await figma.clientStorage.setAsync(msg.data.key, msg.data.spacingSystem);
+				} catch (error) {
+					console.error("Error saving spacing system:", error);
 				}
 				break;
 			case "save-generated-colors":
@@ -110,6 +138,13 @@ figma.ui.onmessage = async (msg) => {
 					await figma.clientStorage.deleteAsync(msg.data.key);
 				} catch (error) {
 					console.error("Error removing color system:", error);
+				}
+				break;
+			case "remove-spacing-system":
+				try {
+					await figma.clientStorage.deleteAsync(msg.data.key);
+				} catch (error) {
+					console.error("Error removing spacing system:", error);
 				}
 				break;
 			case "remove-generated-colors":
@@ -528,5 +563,70 @@ async function handleFigmaVariablesImport(variablesData: any) {
 		});
 	} catch (error) {
 		throw new Error(`Failed to import Figma variables: ${error}`);
+	}
+}
+
+// Handle Spacing CSS export
+async function handleSpacingCSSExport(spacingSystem: SpacingSystem) {
+	try {
+		// Generate basic CSS for spacing system
+		const spacingEntries = Object.entries(spacingSystem.spacing);
+		const multiplier = spacingSystem.multiplier || 4;
+		const remValue = spacingSystem.remValue || 16;
+
+		let cssContent = `:root {\n`;
+
+		// Add spacing variables in px
+		spacingEntries.forEach(([key, value]) => {
+			const pxValue = value * multiplier;
+			cssContent += `  --spacing-${key}: ${pxValue}px;\n`;
+		});
+
+		// Add spacing variables in rem
+		spacingEntries.forEach(([key, value]) => {
+			const pxValue = value * multiplier;
+			const remValueCalc = pxValue / remValue;
+			cssContent += `  --spacing-${key}-rem: ${remValueCalc}rem;\n`;
+		});
+
+		cssContent += `}\n\n`;
+
+		// Add utility classes
+		cssContent += `/* Spacing utility classes */\n`;
+		spacingEntries.forEach(([key, value]) => {
+			const pxValue = value * multiplier;
+			cssContent += `.space-${key} { gap: ${pxValue}px; }\n`;
+			cssContent += `.p-${key} { padding: ${pxValue}px; }\n`;
+			cssContent += `.m-${key} { margin: ${pxValue}px; }\n`;
+		});
+
+		figma.ui.postMessage({
+			type: "export-complete",
+			data: {
+				content: cssContent,
+				filename: "spacing.css",
+				type: "css",
+			},
+		});
+	} catch (error) {
+		throw new Error(`Failed to export spacing CSS: ${error}`);
+	}
+}
+
+// Handle Spacing JSON export
+async function handleSpacingJSONExport(spacingSystem: SpacingSystem) {
+	try {
+		const jsonContent = JSON.stringify(spacingSystem, null, 2);
+
+		figma.ui.postMessage({
+			type: "export-complete",
+			data: {
+				content: jsonContent,
+				filename: "spacing.json",
+				type: "json",
+			},
+		});
+	} catch (error) {
+		throw new Error(`Failed to export spacing JSON: ${error}`);
 	}
 }

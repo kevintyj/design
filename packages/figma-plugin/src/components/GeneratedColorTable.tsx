@@ -260,6 +260,14 @@ const GeneratedColorTable: React.FC<GeneratedColorTableProps> = ({ generatedColo
 					darkBackgroundColor={dark[colorName].background}
 				/>
 			))}
+			<div className="mt-3 pt-3 border-t border-gray-6">
+				<div className="text-xs text-gray-11">
+					<div className="flex justify-between">
+						<span>Generation completed:</span>
+						<span className="font-mono">{new Date(generatedColorSystem.metadata.generatedAt).toLocaleString()}</span>
+					</div>
+				</div>
+			</div>
 		</div>
 	);
 };

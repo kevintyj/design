@@ -1,12 +1,16 @@
 import { useCallback, useEffect } from "react";
-import type { ColorSystem, ExportData, PluginMessage, UserPreferences } from "../types";
+import type { ColorSystem, ExportData, PluginMessage, SpacingSystem, UserPreferences } from "../types";
 import { downloadFile, downloadZip } from "../utils/download";
 
 interface UsePluginMessagingProps {
 	setIsLoading: (loading: boolean) => void;
 	setMessage: (message: string) => void;
 	colorSystem: ColorSystem | null;
-	onClientStorageLoaded?: (data: { preferences: UserPreferences | null; colorSystem: ColorSystem | null }) => void;
+	onClientStorageLoaded?: (data: {
+		preferences: UserPreferences | null;
+		colorSystem: ColorSystem | null;
+		spacingSystem: SpacingSystem | null;
+	}) => void;
 }
 
 export const usePluginMessaging = ({
@@ -70,6 +74,7 @@ export const usePluginMessaging = ({
 						onClientStorageLoaded({
 							preferences: data.preferences || null,
 							colorSystem: data.colorSystem || null,
+							spacingSystem: data.spacingSystem || null,
 						});
 					}
 					break;
