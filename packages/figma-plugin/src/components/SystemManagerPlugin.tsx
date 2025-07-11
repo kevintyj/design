@@ -25,50 +25,57 @@ export const SystemManagerPlugin: React.FC = () => {
 	const [colorSystem, setColorSystem] = useState<ColorSystem | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [message, setMessage] = useState<string>("");
+	const [messageKey, setMessageKey] = useState(0);
+
+	// Wrapper function that increments messageKey every time a message is set
+	const setMessageWithKey = useCallback((newMessage: string) => {
+		setMessageKey((prev) => prev + 1);
+		setMessage(newMessage);
+	}, []);
 
 	const { sendPluginMessage } = usePluginMessaging({
 		setIsLoading,
-		setMessage,
+		setMessage: setMessageWithKey,
 		colorSystem,
 	});
 
 	const { handleFileUpload, handleFigmaVariablesUpload } = useFileHandling({
 		setColorSystem,
 		setIsLoading,
-		setMessage,
+		setMessage: setMessageWithKey,
 		sendPluginMessage,
 	});
 
 	// Handle color import to Figma
 	const handleImportToFigma = useCallback(() => {
 		if (!colorSystem) {
-			setMessage("Please load a color system first.");
+			setMessageWithKey("Please load a color system first.");
 			return;
 		}
 
 		setIsLoading(true);
 		sendPluginMessage("import-colors", colorSystem);
-	}, [colorSystem, sendPluginMessage]);
+	}, [colorSystem, sendPluginMessage, setMessageWithKey]);
 
 	// Handle export as CSS
 	const handleExportCSS = useCallback(() => {
 		if (!colorSystem) {
-			setMessage("Please load a color system first.");
+			setMessageWithKey("Please load a color system first.");
 			return;
 		}
 
 		sendPluginMessage("export-css", colorSystem);
-	}, [colorSystem, sendPluginMessage]);
+	}, [colorSystem, sendPluginMessage, setMessageWithKey]);
 
 	// Handle export as JSON
 	const handleExportJSON = useCallback(() => {
 		if (!colorSystem) {
-			setMessage("Please load a color system first.");
+			setMessageWithKey("Please load a color system first.");
 			return;
 		}
 
 		sendPluginMessage("export-json", colorSystem);
-	}, [colorSystem, sendPluginMessage]);
+	}, [colorSystem, sendPluginMessage, setMessageWithKey]);
 
 	// Handle Figma variables export
 	const handleExportFigmaVariables = useCallback(() => {
@@ -153,7 +160,7 @@ export const SystemManagerPlugin: React.FC = () => {
 			<div className="pb-16 pt-24">
 				{renderTabContent()}
 				<div className="fixed bottom-0 left-0 right-0 px-5 py-4">
-					<StatusMessage message={message} />
+					<StatusMessage message={message} messageKey={messageKey} />
 				</div>
 			</div>
 		</div>

@@ -6,6 +6,7 @@ const webpack = require("webpack");
 module.exports = (_env, argv) => ({
 	mode: argv.mode === "production" ? "production" : "development",
 	devtool: argv.mode === "production" ? false : "inline-source-map",
+	cache: false,
 
 	entry: {
 		ui: "./src/ui.tsx", // The entry point for our UI
