@@ -1,6 +1,12 @@
 /// <reference types="@figma/plugin-typings" />
 
 // Import types and utilities from our color generation packages
+import {
+	type ColorScale,
+	generateCollectionsJSON,
+	type ColorSystem as JSONColorSystem,
+} from "@design/color-generation-json";
+
 interface ColorDefinition {
 	[colorName: string]: string;
 }
@@ -382,7 +388,120 @@ async function handleFigmaVariablesExport() {
 	}
 }
 
-// Export current Figma variables as collections format
+// Convert Figma variables to ColorSystem format for use with generateCollectionsJSON
+function convertFigmaVariablesToColorSystem(
+	collections: VariableCollection[],
+	variables: Variable[],
+): JSONColorSystem | null {
+	if (collections.length === 0 || variables.length === 0) return null;
+
+	// Find light and dark modes
+	const mainCollection = collections[0];
+	const lightMode = mainCollection.modes.find((m) => m.name.toLowerCase() === "light");
+	const darkMode = mainCollection.modes.find((m) => m.name.toLowerCase() === "dark");
+
+	if (!lightMode || !darkMode) return null;
+
+	// Extract color variables by mode
+	const lightColors: Record<string, string> = {};
+	const darkColors: Record<string, string> = {};
+	const colorNames: string[] = [];
+
+	for (const variable of variables) {
+		if (variable.resolvedType === "COLOR" && variable.variableCollectionId === mainCollection.id) {
+			// Skip overlay and alpha variables for now
+			if (variable.name.startsWith("overlay-") || variable.name.includes("-alpha")) continue;
+
+			// Get light and dark values
+			const lightValue = variable.valuesByMode[lightMode.modeId];
+			const darkValue = variable.valuesByMode[darkMode.modeId];
+
+			if (
+				lightValue &&
+				darkValue &&
+				typeof lightValue === "object" &&
+				"r" in lightValue &&
+				typeof darkValue === "object" &&
+				"r" in darkValue
+			) {
+				const lightHex = rgbToHex(lightValue as RGB);
+				const darkHex = rgbToHex(darkValue as RGB);
+
+				// Skip background and gray as they'll be handled as constants
+				if (variable.name === "background" || variable.name === "gray") continue;
+
+				lightColors[variable.name] = lightHex;
+				darkColors[variable.name] = darkHex;
+
+				if (!colorNames.includes(variable.name)) {
+					colorNames.push(variable.name);
+				}
+			}
+		}
+	}
+
+	// Get background and gray constants
+	const backgroundVariable = variables.find((v) => v.name === "background");
+	const grayVariable = variables.find((v) => v.name === "gray");
+
+	const lightBackground = backgroundVariable?.valuesByMode[lightMode.modeId];
+	const _darkBackground = backgroundVariable?.valuesByMode[darkMode.modeId];
+	const lightGray = grayVariable?.valuesByMode[lightMode.modeId];
+	const _darkGray = grayVariable?.valuesByMode[darkMode.modeId];
+
+	// Create minimal ColorScale for each color
+	const createColorScale = (color: string): ColorScale => ({
+		accentScale: [color], // Single color instead of 12-step scale
+		accentScaleAlpha: [color],
+		accentScaleWideGamut: [color],
+		accentScaleAlphaWideGamut: [color],
+		accentContrast: color,
+		grayScale: lightGray && typeof lightGray === "object" && "r" in lightGray ? [rgbToHex(lightGray as RGB)] : [color],
+		grayScaleAlpha:
+			lightGray && typeof lightGray === "object" && "r" in lightGray ? [rgbToHex(lightGray as RGB)] : [color],
+		grayScaleWideGamut:
+			lightGray && typeof lightGray === "object" && "r" in lightGray ? [rgbToHex(lightGray as RGB)] : [color],
+		grayScaleAlphaWideGamut:
+			lightGray && typeof lightGray === "object" && "r" in lightGray ? [rgbToHex(lightGray as RGB)] : [color],
+		graySurface: lightGray && typeof lightGray === "object" && "r" in lightGray ? rgbToHex(lightGray as RGB) : color,
+		graySurfaceWideGamut:
+			lightGray && typeof lightGray === "object" && "r" in lightGray ? rgbToHex(lightGray as RGB) : color,
+		accentSurface: color,
+		accentSurfaceWideGamut: color,
+		background:
+			lightBackground && typeof lightBackground === "object" && "r" in lightBackground
+				? rgbToHex(lightBackground as RGB)
+				: "#ffffff",
+		overlays: {
+			black: [],
+			white: [],
+		},
+	});
+
+	// Build light and dark ColorScale maps
+	const lightColorScales: Record<string, ColorScale> = {};
+	const darkColorScales: Record<string, ColorScale> = {};
+
+	for (const colorName of colorNames) {
+		lightColorScales[colorName] = createColorScale(lightColors[colorName]);
+		darkColorScales[colorName] = createColorScale(darkColors[colorName]);
+	}
+
+	return {
+		light: lightColorScales,
+		dark: darkColorScales,
+		colorNames,
+		sourceColors: Object.fromEntries(colorNames.map((name) => [name, lightColors[name]])),
+		metadata: {
+			generatedAt: new Date().toISOString(),
+			totalColors: colorNames.length,
+			totalScales: colorNames.length,
+			config: {},
+		},
+	};
+}
+
+// Export current Figma variables as collections format using @design/color-generation-json
 async function handleFigmaVariablesExportAsCollections() {
 	try {
 		const collections = figma.variables.getLocalVariableCollections();
@@ -396,81 +515,28 @@ async function handleFigmaVariablesExportAsCollections() {
 			return;
 		}
 
-		const collectionsFormat = {
-			collections: collections.map((collection) => ({
-				name: collection.name,
-				modes: collection.modes.map((mode) => mode.name),
-				variables: {
-					solid: {} as Record<string, any>,
-					alpha: {} as Record<string, any>,
-					overlays: {
-						black: {} as Record<string, any>,
-						white: {} as Record<string, any>,
-					},
-				},
-			})),
-		};
+		// Convert Figma variables to ColorSystem format
+		const colorSystem = convertFigmaVariablesToColorSystem(collections, variables);
 
-		// Process variables by collection
-		for (const variable of variables) {
-			if (variable.resolvedType === "COLOR") {
-				const collection = collections.find((c) => c.id === variable.variableCollectionId);
-				if (!collection) continue;
-
-				const collectionIndex = collections.findIndex((c) => c.id === collection.id);
-				const targetCollection = collectionsFormat.collections[collectionIndex];
-
-				// Parse variable name to determine category and step
-				const nameParts = variable.name.split("/");
-				let category = "solid";
-				let colorName = nameParts[0];
-				const step = nameParts[1] || "1";
-
-				// Detect alpha or overlay variables
-				if (colorName.includes("-alpha")) {
-					category = "alpha";
-					colorName = colorName.replace("-alpha", "");
-				} else if (colorName.startsWith("overlay-")) {
-					category = "overlays";
-					const overlayType = colorName.replace("overlay-", "");
-					colorName = overlayType;
-				}
-
-				// Get values for all modes
-				const values: Record<string, string> = {};
-				for (const mode of collection.modes) {
-					const value = variable.valuesByMode[mode.modeId];
-					if (value && typeof value === "object" && "r" in value) {
-						values[mode.name.toLowerCase()] = rgbToHex(value as RGB);
-					}
-				}
-
-				// Store in appropriate category
-				if (category === "overlays") {
-					if (!targetCollection.variables.overlays[colorName]) {
-						targetCollection.variables.overlays[colorName] = {};
-					}
-					targetCollection.variables.overlays[colorName][step] = {
-						type: "color",
-						values: values,
-					};
-				} else {
-					const targetCategory =
-						category === "alpha" ? targetCollection.variables.alpha : targetCollection.variables.solid;
-					if (!targetCategory[colorName]) {
-						targetCategory[colorName] = {};
-					}
-					targetCategory[colorName][step] = {
-						type: "color",
-						values: values,
-					};
-				}
-			}
+		if (!colorSystem) {
+			figma.ui.postMessage({
+				type: "error",
+				error: "Could not convert variables to color system format. Ensure you have Light and Dark modes.",
+			});
+			return;
 		}
+
+		// Use the official generateCollectionsJSON function
+		const collectionsData = generateCollectionsJSON(colorSystem, {
+			collectionName: collections[0]?.name || "Generated Colors",
+			includeAlpha: true,
+			includeGrayScale: true,
+			includeOverlays: true,
+		});
 
 		figma.ui.postMessage({
 			type: "variables-exported-collections",
-			data: collectionsFormat,
+			data: collectionsData,
 		});
 	} catch (error) {
 		figma.ui.postMessage({
@@ -623,7 +689,7 @@ async function handleFigmaVariablesImport(variablesData: any) {
 			}
 
 			// Set values for each mode
-			for (const [modeId, hexValue] of Object.entries(importVariable.valuesByMode)) {
+			for (const [modeId, colorValue] of Object.entries(importVariable.valuesByMode)) {
 				const mode = collection.modes.find((m) => {
 					if (!importVariable.collection || !importVariable.collection.modes) {
 						return false;
@@ -634,9 +700,35 @@ async function handleFigmaVariablesImport(variablesData: any) {
 					return importMode && importMode.name === m.name;
 				});
 
-				if (mode && typeof hexValue === "string") {
+				if (mode && colorValue) {
 					try {
-						const rgbValue = hexToRgb(hexValue);
+						let rgbValue: RGB;
+
+						// Handle different color value formats
+						if (typeof colorValue === "string") {
+							// Raw format: hex string
+							rgbValue = hexToRgb(colorValue);
+						} else if (
+							typeof colorValue === "object" &&
+							colorValue !== null &&
+							"r" in colorValue &&
+							"g" in colorValue &&
+							"b" in colorValue &&
+							typeof colorValue.r === "number" &&
+							typeof colorValue.g === "number" &&
+							typeof colorValue.b === "number"
+						) {
+							// Collections format: Figma color object
+							rgbValue = {
+								r: colorValue.r,
+								g: colorValue.g,
+								b: colorValue.b,
+							};
+						} else {
+							console.warn(`Unsupported color value format for ${importVariable.name}:`, colorValue);
+							continue;
+						}
+
 						variable.setValueForMode(mode.modeId, rgbValue);
 					} catch (error) {
 						console.error(`Failed to set value for variable ${importVariable.name}:`, error);

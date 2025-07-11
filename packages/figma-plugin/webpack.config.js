@@ -15,11 +15,43 @@ module.exports = (_env, argv) => ({
 
 	module: {
 		rules: [
-			// Converts TypeScript code to JavaScript
+			// Converts TypeScript code to JavaScript with Babel for better compatibility
 			{
-				test: /\.tsx?$/,
-				use: "ts-loader",
-				exclude: /node_modules/,
+				test: /\.(tsx?|jsx?|mjs|js)$/,
+				exclude: /node_modules\/(?!(@design)\/).*/,
+				use: [
+					{
+						loader: "babel-loader",
+						options: {
+							presets: [
+								[
+									"@babel/preset-env",
+									{
+										targets: {
+											browsers: ["ie >= 11"],
+										},
+										modules: false,
+										useBuiltIns: "usage",
+										corejs: 3,
+									},
+								],
+								"@babel/preset-typescript",
+								[
+									"@babel/preset-react",
+									{
+										runtime: "automatic",
+									},
+								],
+							],
+							plugins: [
+								"@babel/plugin-proposal-class-properties",
+								"@babel/plugin-proposal-object-rest-spread",
+								"@babel/plugin-proposal-nullish-coalescing-operator",
+								"@babel/plugin-proposal-optional-chaining",
+							],
+						},
+					},
+				],
 			},
 
 			// Enables including CSS by doing "import './file.css'" in your TypeScript code

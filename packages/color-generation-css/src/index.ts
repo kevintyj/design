@@ -1,5 +1,3 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { generateOverlayColors } from "@design/color-generation-core";
 
 // Import types (will be resolved when packages are built)
@@ -44,9 +42,8 @@ export interface GenerationConfig {
 	includeOverlays?: boolean;
 }
 
-// CSS-specific configuration
+// CSS-specific configuration (removed outputDir and file-related options)
 export interface CSSGenerationConfig extends GenerationConfig {
-	outputDir?: string;
 	generateSeparateFiles?: boolean;
 	generateCombinedFile?: boolean;
 	prefix?: string;
@@ -54,9 +51,14 @@ export interface CSSGenerationConfig extends GenerationConfig {
 	variant?: "full" | "clean" | "hexa-only" | "p3-only";
 }
 
+// File data interface for pure functions
+export interface CSSFileData {
+	name: string;
+	content: string;
+}
+
 // Default CSS generation configuration
 export const defaultCSSConfig: Required<CSSGenerationConfig> = {
-	outputDir: "output",
 	includeAlpha: true,
 	includeWideGamut: true,
 	includeGrayScale: true,
@@ -67,15 +69,6 @@ export const defaultCSSConfig: Required<CSSGenerationConfig> = {
 	includeComments: true,
 	variant: "full",
 };
-
-/**
- * Function to ensure directory exists
- */
-function ensureDirectoryExists(dirPath: string): void {
-	if (!existsSync(dirPath)) {
-		mkdirSync(dirPath, { recursive: true });
-	}
-}
 
 /**
  * Generate CSS custom properties for a single color scale
@@ -474,16 +467,13 @@ export function generateCSSForColorSystem(
 }
 
 /**
- * Generate CSS files from a color system
+ * Generate CSS files as data structures (pure function - works in browser and Node.js)
+ * Returns an array of file objects with name and content properties.
+ * Consumers are responsible for writing to filesystem or handling download.
  */
-export function generateCSSFiles(colorSystem: ColorSystem, config: CSSGenerationConfig = {}): string[] {
+export function generateCSSFiles(colorSystem: ColorSystem, config: CSSGenerationConfig = {}): CSSFileData[] {
 	const fullConfig = { ...defaultCSSConfig, ...config };
-	const outputDir = fullConfig.outputDir;
-
-	// Ensure output directory exists
-	ensureDirectoryExists(outputDir);
-
-	const generatedFiles: string[] = [];
+	const files: CSSFileData[] = [];
 
 	// Generate all four versions
 	const versions = [
@@ -510,9 +500,7 @@ export function generateCSSFiles(colorSystem: ColorSystem, config: CSSGeneration
 		// Generate combined CSS file
 		const combinedCSS = generateCombinedCSS(lightCSS, darkCSS, colorSystem, versionConfig, version.suffix);
 
-		const files: Array<{ name: string; content: string }> = [];
-
-		// Generate separate files if requested
+		// Add separate files if requested
 		if (fullConfig.generateSeparateFiles) {
 			files.push(
 				{ name: `colors-${version.suffix}-light.css`, content: lightCSS },
@@ -520,20 +508,13 @@ export function generateCSSFiles(colorSystem: ColorSystem, config: CSSGeneration
 			);
 		}
 
-		// Generate combined file if requested
+		// Add combined file if requested
 		if (fullConfig.generateCombinedFile) {
 			files.push({ name: `colors-${version.suffix}-combined.css`, content: combinedCSS });
 		}
-
-		// Write the files
-		for (const file of files) {
-			const filePath = join(outputDir, file.name);
-			writeFileSync(filePath, file.content);
-			generatedFiles.push(filePath);
-		}
 	}
 
-	return generatedFiles;
+	return files;
 }
 
 /**

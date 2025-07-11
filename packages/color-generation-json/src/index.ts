@@ -1,6 +1,5 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { generateOverlayColors } from "@design/color-generation-core";
+import Color from "colorjs.io";
 
 // Import types (will be resolved when packages are built)
 export interface ColorScale {
@@ -44,9 +43,8 @@ export interface GenerationConfig {
 	includeOverlays?: boolean;
 }
 
-// JSON-specific configuration
+// JSON-specific configuration (removed outputDir and file-related options)
 export interface JSONGenerationConfig extends GenerationConfig {
-	outputDir?: string;
 	format?: "flat" | "nested" | "tokens" | "tailwind" | "collections" | "all";
 	includeMetadata?: boolean;
 	prettyPrint?: boolean;
@@ -55,24 +53,32 @@ export interface JSONGenerationConfig extends GenerationConfig {
 	collectionName?: string;
 }
 
-// Add the new collection format interface
-export interface CollectionFormat {
+// File data interface for pure functions
+export interface JSONFileData {
+	name: string;
+	content: string;
+}
+
+// Simplified collection format interface for human-readable output
+export interface SimpleCollectionFormat {
 	name: string;
 	modes: string[];
 	variables: {
 		solid: Record<string, Record<string, { type: string; values: Record<string, string> }>>;
 		alpha: Record<string, Record<string, { type: string; values: Record<string, string> }>>;
-		overlays: Record<string, Record<string, { type: string; values: Record<string, string> }>>;
+		overlays: {
+			black: Record<string, { type: string; values: Record<string, string> }>;
+			white: Record<string, { type: string; values: Record<string, string> }>;
+		};
 	};
 }
 
-export interface CollectionOutput {
-	collections: CollectionFormat[];
+export interface SimpleCollectionOutput {
+	collections: SimpleCollectionFormat;
 }
 
 // Default JSON generation configuration
 export const defaultJSONConfig: Required<JSONGenerationConfig> = {
-	outputDir: "output",
 	includeAlpha: true,
 	includeWideGamut: true,
 	includeGrayScale: true,
@@ -84,15 +90,6 @@ export const defaultJSONConfig: Required<JSONGenerationConfig> = {
 	separateMetadata: true,
 	collectionName: "Generated Colors",
 };
-
-/**
- * Function to ensure directory exists
- */
-function ensureDirectoryExists(dirPath: string): void {
-	if (!existsSync(dirPath)) {
-		mkdirSync(dirPath, { recursive: true });
-	}
-}
 
 /**
  * Generate comprehensive metadata JSON for all formats and modes
@@ -319,13 +316,60 @@ export function generateNestedJSON(
 }
 
 /**
- * Generate collections format JSON (your requested format) - WITH universal gray scale
+ * Format color for Figma collections (RGB with alpha) using colorjs.io
  */
-export function generateCollectionsJSON(colorSystem: ColorSystem, config: JSONGenerationConfig = {}): CollectionOutput {
-	const fullConfig = { ...defaultJSONConfig, ...config };
+function _formatFigmaColor(colorString: string): any {
+	try {
+		// Parse the color using colorjs.io (handles all formats: hex, rgb, hsl, etc.)
+		const color = new Color(colorString);
 
-	const collection: CollectionFormat = {
-		name: fullConfig.collectionName || "Generated Colors",
+		// Get RGB values (0-1 range for Figma)
+		const rgb = color.srgb;
+
+		return {
+			r: rgb.r,
+			g: rgb.g,
+			b: rgb.b,
+			a: color.alpha ?? 1,
+		};
+	} catch (_error) {
+		// Fallback for invalid colors
+		console.warn(`Invalid color format: ${colorString}, using fallback`);
+		return {
+			r: 0,
+			g: 0,
+			b: 0,
+			a: 1,
+		};
+	}
+}
+
+// Keep the old W3C token format interface for backwards compatibility if needed
+export interface W3CCollectionFormat {
+	$extensions: {
+		[namespace: string]: {
+			modes: string[];
+		};
+	};
+	[collectionName: string]: any;
+}
+
+export interface W3CCollectionOutput {
+	[collectionKey: string]: W3CCollectionFormat;
+}
+
+/**
+ * Generate collections format JSON (Simplified human-readable format) - WITH universal gray scale
+ */
+export function generateCollectionsJSON(
+	colorSystem: ColorSystem,
+	config: JSONGenerationConfig = {},
+): SimpleCollectionOutput {
+	const fullConfig = { ...defaultJSONConfig, ...config };
+	const collectionName = fullConfig.collectionName || "Generated Colors";
+
+	const collection: SimpleCollectionFormat = {
+		name: collectionName,
 		modes: ["light", "dark"],
 		variables: {
 			solid: {},
@@ -337,10 +381,11 @@ export function generateCollectionsJSON(colorSystem: ColorSystem, config: JSONGe
 		},
 	};
 
-	// Generate solid colors (accent colors only)
+	// Generate solid colors (accent colors + gray + background)
 	for (const colorName of colorSystem.colorNames) {
 		collection.variables.solid[colorName] = {};
 
+		// Add main color scale (1-12)
 		for (let i = 1; i <= 12; i++) {
 			const lightColor = colorSystem.light[colorName]?.accentScale[i - 1];
 			const darkColor = colorSystem.dark[colorName]?.accentScale[i - 1];
@@ -355,9 +400,31 @@ export function generateCollectionsJSON(colorSystem: ColorSystem, config: JSONGe
 				};
 			}
 		}
+
+		// Add contrast and surface colors
+		const lightScale = colorSystem.light[colorName];
+		const darkScale = colorSystem.dark[colorName];
+
+		if (lightScale && darkScale) {
+			collection.variables.solid[colorName].contrast = {
+				type: "color",
+				values: {
+					light: lightScale.accentContrast,
+					dark: darkScale.accentContrast,
+				},
+			};
+
+			collection.variables.solid[colorName].surface = {
+				type: "color",
+				values: {
+					light: lightScale.accentSurface,
+					dark: darkScale.accentSurface,
+				},
+			};
+		}
 	}
 
-	// Add universal gray colors (only once)
+	// Add universal gray colors (only once) to solid section
 	if (fullConfig.includeGrayScale) {
 		collection.variables.solid.gray = {};
 
@@ -375,9 +442,39 @@ export function generateCollectionsJSON(colorSystem: ColorSystem, config: JSONGe
 				};
 			}
 		}
+
+		// Add gray surface
+		const lightGray = colorSystem.light[colorSystem.colorNames[0]];
+		const darkGray = colorSystem.dark[colorSystem.colorNames[0]];
+
+		if (lightGray && darkGray) {
+			collection.variables.solid.gray.surface = {
+				type: "color",
+				values: {
+					light: lightGray.graySurface,
+					dark: darkGray.graySurface,
+				},
+			};
+		}
 	}
 
-	// Generate alpha colors (accent colors only)
+	// Add background as a solid color
+	const firstLightColor = colorSystem.light[colorSystem.colorNames[0]];
+	const firstDarkColor = colorSystem.dark[colorSystem.colorNames[0]];
+
+	if (firstLightColor && firstDarkColor) {
+		collection.variables.solid.background = {
+			"1": {
+				type: "color",
+				values: {
+					light: firstLightColor.background,
+					dark: firstDarkColor.background,
+				},
+			},
+		};
+	}
+
+	// Generate alpha colors if enabled
 	if (fullConfig.includeAlpha) {
 		for (const colorName of colorSystem.colorNames) {
 			collection.variables.alpha[colorName] = {};
@@ -398,7 +495,7 @@ export function generateCollectionsJSON(colorSystem: ColorSystem, config: JSONGe
 			}
 		}
 
-		// Add universal gray alpha colors (only once)
+		// Add universal gray alpha colors
 		if (fullConfig.includeGrayScale) {
 			collection.variables.alpha.gray = {};
 
@@ -419,11 +516,11 @@ export function generateCollectionsJSON(colorSystem: ColorSystem, config: JSONGe
 		}
 	}
 
-	// Generate universal overlays (only black and white, not per color) - FIXED
+	// Generate universal overlays
 	if (fullConfig.includeOverlays) {
 		const overlays = generateOverlayColors();
 
-		// Black overlays (universal, same for light and dark)
+		// Black overlays (same for light and dark)
 		overlays.black.forEach((color: string, index: number) => {
 			collection.variables.overlays.black[(index + 1).toString()] = {
 				type: "color",
@@ -434,7 +531,7 @@ export function generateCollectionsJSON(colorSystem: ColorSystem, config: JSONGe
 			};
 		});
 
-		// White overlays (universal, same for light and dark)
+		// White overlays (same for light and dark)
 		overlays.white.forEach((color: string, index: number) => {
 			collection.variables.overlays.white[(index + 1).toString()] = {
 				type: "color",
@@ -447,7 +544,7 @@ export function generateCollectionsJSON(colorSystem: ColorSystem, config: JSONGe
 	}
 
 	return {
-		collections: [collection],
+		collections: collection,
 	};
 }
 
@@ -713,16 +810,13 @@ export function generateTailwindJSON(colorSystem: ColorSystem, config: JSONGener
 }
 
 /**
- * Generate JSON files from a color system
+ * Generate JSON files as data structures (pure function - works in browser and Node.js)
+ * Returns an array of file objects with name and content properties.
+ * Consumers are responsible for writing to filesystem or handling download.
  */
-export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerationConfig = {}): string[] {
+export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerationConfig = {}): JSONFileData[] {
 	const fullConfig = { ...defaultJSONConfig, ...config };
-	const outputDir = fullConfig.outputDir;
-
-	// Ensure output directory exists
-	ensureDirectoryExists(outputDir);
-
-	const generatedFiles: string[] = [];
+	const files: JSONFileData[] = [];
 	const formats =
 		fullConfig.format === "all"
 			? (["flat", "nested", "tokens", "tailwind", "collections"] as const)
@@ -735,12 +829,12 @@ export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerati
 				const flatLight = generateFlatJSON(colorSystem, "light", fullConfig);
 				const flatDark = generateFlatJSON(colorSystem, "dark", fullConfig);
 
-				writeJSONFile(join(outputDir, `colors-flat-light${fullConfig.fileExtension}`), flatLight, fullConfig);
-				writeJSONFile(join(outputDir, `colors-flat-dark${fullConfig.fileExtension}`), flatDark, fullConfig);
+				const lightJson = fullConfig.prettyPrint ? JSON.stringify(flatLight, null, 2) : JSON.stringify(flatLight);
+				const darkJson = fullConfig.prettyPrint ? JSON.stringify(flatDark, null, 2) : JSON.stringify(flatDark);
 
-				generatedFiles.push(
-					join(outputDir, `colors-flat-light${fullConfig.fileExtension}`),
-					join(outputDir, `colors-flat-dark${fullConfig.fileExtension}`),
+				files.push(
+					{ name: `colors-flat-light${fullConfig.fileExtension}`, content: lightJson },
+					{ name: `colors-flat-dark${fullConfig.fileExtension}`, content: darkJson },
 				);
 				break;
 			}
@@ -750,12 +844,12 @@ export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerati
 				const nestedLight = generateNestedJSON(colorSystem, "light", fullConfig);
 				const nestedDark = generateNestedJSON(colorSystem, "dark", fullConfig);
 
-				writeJSONFile(join(outputDir, `colors-nested-light${fullConfig.fileExtension}`), nestedLight, fullConfig);
-				writeJSONFile(join(outputDir, `colors-nested-dark${fullConfig.fileExtension}`), nestedDark, fullConfig);
+				const lightJson = fullConfig.prettyPrint ? JSON.stringify(nestedLight, null, 2) : JSON.stringify(nestedLight);
+				const darkJson = fullConfig.prettyPrint ? JSON.stringify(nestedDark, null, 2) : JSON.stringify(nestedDark);
 
-				generatedFiles.push(
-					join(outputDir, `colors-nested-light${fullConfig.fileExtension}`),
-					join(outputDir, `colors-nested-dark${fullConfig.fileExtension}`),
+				files.push(
+					{ name: `colors-nested-light${fullConfig.fileExtension}`, content: lightJson },
+					{ name: `colors-nested-dark${fullConfig.fileExtension}`, content: darkJson },
 				);
 				break;
 			}
@@ -765,12 +859,12 @@ export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerati
 				const tokensLight = generateDesignTokensJSON(colorSystem, "light", fullConfig);
 				const tokensDark = generateDesignTokensJSON(colorSystem, "dark", fullConfig);
 
-				writeJSONFile(join(outputDir, `colors-tokens-light${fullConfig.fileExtension}`), tokensLight, fullConfig);
-				writeJSONFile(join(outputDir, `colors-tokens-dark${fullConfig.fileExtension}`), tokensDark, fullConfig);
+				const lightJson = fullConfig.prettyPrint ? JSON.stringify(tokensLight, null, 2) : JSON.stringify(tokensLight);
+				const darkJson = fullConfig.prettyPrint ? JSON.stringify(tokensDark, null, 2) : JSON.stringify(tokensDark);
 
-				generatedFiles.push(
-					join(outputDir, `colors-tokens-light${fullConfig.fileExtension}`),
-					join(outputDir, `colors-tokens-dark${fullConfig.fileExtension}`),
+				files.push(
+					{ name: `colors-tokens-light${fullConfig.fileExtension}`, content: lightJson },
+					{ name: `colors-tokens-dark${fullConfig.fileExtension}`, content: darkJson },
 				);
 				break;
 			}
@@ -778,19 +872,22 @@ export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerati
 			case "tailwind": {
 				// Generate Tailwind config (includes both modes via CSS variables)
 				const tailwindConfig = generateTailwindJSON(colorSystem, fullConfig);
+				const tailwindJson = fullConfig.prettyPrint
+					? JSON.stringify(tailwindConfig, null, 2)
+					: JSON.stringify(tailwindConfig);
 
-				writeJSONFile(join(outputDir, `tailwind-colors${fullConfig.fileExtension}`), tailwindConfig, fullConfig);
-
-				generatedFiles.push(join(outputDir, `tailwind-colors${fullConfig.fileExtension}`));
+				files.push({ name: `tailwind-colors${fullConfig.fileExtension}`, content: tailwindJson });
 				break;
 			}
 
 			case "collections": {
 				// Generate collections format
 				const collectionsData = generateCollectionsJSON(colorSystem, fullConfig);
-				const collectionsFilePath = join(outputDir, `collections${fullConfig.fileExtension}`);
-				writeJSONFile(collectionsFilePath, collectionsData, fullConfig);
-				generatedFiles.push(collectionsFilePath);
+				const collectionsJson = fullConfig.prettyPrint
+					? JSON.stringify(collectionsData, null, 2)
+					: JSON.stringify(collectionsData);
+
+				files.push({ name: `collections${fullConfig.fileExtension}`, content: collectionsJson });
 				break;
 			}
 		}
@@ -799,21 +896,12 @@ export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerati
 	// Generate single metadata file if enabled
 	if (fullConfig.includeMetadata && fullConfig.separateMetadata) {
 		const metadata = generateMetadataJSON(colorSystem, fullConfig);
+		const metadataJson = fullConfig.prettyPrint ? JSON.stringify(metadata, null, 2) : JSON.stringify(metadata);
 
-		writeJSONFile(join(outputDir, `metadata${fullConfig.fileExtension}`), metadata, fullConfig);
-		generatedFiles.push(join(outputDir, `metadata${fullConfig.fileExtension}`));
+		files.push({ name: `metadata${fullConfig.fileExtension}`, content: metadataJson });
 	}
 
-	return generatedFiles;
-}
-
-/**
- * Helper function to write JSON files
- */
-function writeJSONFile(filePath: string, data: any, config: Required<JSONGenerationConfig>): void {
-	const json = config.prettyPrint ? JSON.stringify(data, null, 2) : JSON.stringify(data);
-
-	writeFileSync(filePath, json);
+	return files;
 }
 
 /**

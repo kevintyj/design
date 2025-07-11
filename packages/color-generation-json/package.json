@@ -23,7 +23,8 @@
 		"format": "biome format --write src/"
 	},
 	"dependencies": {
-		"@design/color-generation-core": "workspace:*"
+		"@design/color-generation-core": "workspace:*",
+		"colorjs.io": "^0.5.0"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",

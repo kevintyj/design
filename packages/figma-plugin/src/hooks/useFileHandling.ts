@@ -46,17 +46,44 @@ function isValidColorSystem(data: any): data is ColorSystem {
 	);
 }
 
-// Helper function to detect collections format
-function isCollectionsFormat(data: any): boolean {
+// Helper function to detect color-generation-json collections format specifically
+function isColorGenerationJSONFormat(data: any): boolean {
 	return (
+		data?.collections &&
+		!Array.isArray(data.collections) &&
+		data.collections.$extensions &&
+		data.collections.$extensions["com.figma"] &&
+		data.collections.colors &&
+		data.collections.colors.$type === "color"
+	);
+}
+
+// Helper function to detect collections format (both old and new W3C format)
+function isCollectionsFormat(data: any): boolean {
+	// Check for color-generation-json format first
+	if (isColorGenerationJSONFormat(data)) {
+		return true;
+	}
+
+	// Check for old format (array-based)
+	const isOldFormat =
 		data?.collections &&
 		Array.isArray(data.collections) &&
 		data.collections.length > 0 &&
 		data.collections[0].variables &&
 		(data.collections[0].variables.solid ||
 			data.collections[0].variables.alpha ||
-			data.collections[0].variables.overlays)
-	);
+			data.collections[0].variables.overlays);
+
+	// Check for other W3C format variants
+	const isOtherW3CFormat =
+		data?.collections &&
+		!Array.isArray(data.collections) &&
+		data.collections.$extensions &&
+		data.collections.colors &&
+		data.collections.colors.$type === "color";
+
+	return isOldFormat || isOtherW3CFormat;
 }
 
 // Helper function to detect raw Figma variables format
@@ -69,8 +96,87 @@ function isRawFigmaVariablesFormat(data: any): boolean {
 	);
 }
 
-// Helper function to convert collections format to raw Figma format (flexible for any structure)
-function convertCollectionsToRawFormat(collectionsData: any): any {
+// Helper function to convert new W3C format to raw Figma format
+function convertW3CToRawFormat(collectionsData: any): any {
+	const rawFormat: {
+		collections: any[];
+		variables: any[];
+	} = {
+		collections: [],
+		variables: [],
+	};
+
+	const collection = collectionsData.collections;
+	const collectionId = `collection-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+	// Extract modes from extensions
+	const modes = collection.$extensions?.["com.figma"]?.modes || ["light", "dark"];
+	const modeObjects = modes.map((mode: string, index: number) => ({
+		modeId: `mode-${index}`,
+		name: mode.toLowerCase(),
+	}));
+
+	rawFormat.collections.push({
+		id: collectionId,
+		name: "Generated Colors",
+		modes: modeObjects,
+	});
+
+	// Process colors from W3C format
+	if (collection.colors) {
+		processW3CVariables(collection.colors, collectionId, modeObjects, rawFormat.variables);
+	}
+
+	return rawFormat;
+}
+
+// Helper function to process W3C format variables
+function processW3CVariables(colors: any, collectionId: string, modes: any[], outputVariables: any[], prefix = "") {
+	Object.entries(colors).forEach(([key, value]: [string, any]) => {
+		if (key === "$type") return; // Skip type declarations
+
+		if (value && typeof value === "object") {
+			// Check if this is a variable definition (has $value and $extensions)
+			if (value.$value && value.$extensions && value.$extensions["com.figma"]) {
+				const variableName = prefix ? `${prefix}/${key}` : key;
+				const variableId = `${variableName.replace(/[/\s]/g, "-")}-${Date.now()}`;
+
+				// Create valuesByMode from the figma extensions
+				const valuesByMode: any = {};
+				const figmaExtensions = value.$extensions["com.figma"];
+
+				if (figmaExtensions.modes) {
+					modes.forEach((mode) => {
+						const modeValue = figmaExtensions.modes[mode.name];
+						if (modeValue !== undefined) {
+							valuesByMode[mode.modeId] = modeValue;
+						}
+					});
+				}
+
+				outputVariables.push({
+					id: variableId,
+					name: variableName,
+					variableCollectionId: collectionId,
+					resolvedType: "COLOR",
+					valuesByMode: valuesByMode,
+					collection: {
+						id: collectionId,
+						name: "Generated Colors",
+						modes: modes,
+					},
+				});
+			} else {
+				// Recursively process nested objects
+				const newPrefix = prefix ? `${prefix}/${key}` : key;
+				processW3CVariables(value, collectionId, modes, outputVariables, newPrefix);
+			}
+		}
+	});
+}
+
+// Helper function to convert old collections format to raw Figma format
+function convertOldCollectionsToRawFormat(collectionsData: any): any {
 	const rawFormat: {
 		collections: any[];
 		variables: any[];
@@ -107,6 +213,21 @@ function convertCollectionsToRawFormat(collectionsData: any): any {
 	});
 
 	return rawFormat;
+}
+
+// Helper function to convert collections format to raw Figma format (handles both old and new formats)
+function convertCollectionsToRawFormat(collectionsData: any): any {
+	// Check if it's the new W3C format
+	if (
+		collectionsData?.collections &&
+		!Array.isArray(collectionsData.collections) &&
+		collectionsData.collections.$extensions
+	) {
+		return convertW3CToRawFormat(collectionsData);
+	}
+
+	// Otherwise, use the old format converter
+	return convertOldCollectionsToRawFormat(collectionsData);
 }
 
 // Recursive function to process any variable structure
@@ -220,8 +341,17 @@ export const useFileHandling = ({
 					const parsedData = JSON.parse(content);
 
 					// Detect format and validate
-					if (isCollectionsFormat(parsedData)) {
-						// Convert collections format to raw format
+					if (isColorGenerationJSONFormat(parsedData)) {
+						// Handle color-generation-json format specifically
+						const rawFormat = convertCollectionsToRawFormat(parsedData);
+						if (setParsedVariables) {
+							setParsedVariables(rawFormat);
+							setMessage(
+								`Color Generation JSON format detected! Found ${rawFormat.variables.length} color variables from the generated collections. Review and click "Import to Figma" to proceed.`,
+							);
+						}
+					} else if (isCollectionsFormat(parsedData)) {
+						// Handle other collections formats
 						const rawFormat = convertCollectionsToRawFormat(parsedData);
 						if (setParsedVariables) {
 							setParsedVariables(rawFormat);
@@ -239,7 +369,7 @@ export const useFileHandling = ({
 						}
 					} else {
 						setMessage(
-							"Invalid variables file format. Please use either collections JSON or raw Figma variables JSON format.",
+							"Invalid variables file format. Please use either color-generation-json collections, other collections JSON, or raw Figma variables JSON format.",
 						);
 					}
 				} catch (error) {

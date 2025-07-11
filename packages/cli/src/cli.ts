@@ -325,32 +325,54 @@ async function generateColors(config: CLIConfig): Promise<void> {
 			if (format === "css" || format === "all") {
 				const cssOutputDir = config.organizeFolders ? join(config.outputDir, "css") : config.outputDir;
 				const cssConfig: CSSGenerationConfig = {
-					outputDir: cssOutputDir,
 					...generationConfig,
 					...config.cssConfig,
 				};
 
-				const cssFiles = generateCSSFiles(colorSystem, cssConfig);
-				generatedFiles.push(...cssFiles);
+				// Ensure CSS output directory exists
+				if (!existsSync(cssOutputDir)) {
+					mkdirSync(cssOutputDir, { recursive: true });
+				}
+
+				// Generate CSS file data (pure function call)
+				const cssFileData = generateCSSFiles(colorSystem, cssConfig);
+
+				// Write CSS files and collect paths
+				for (const fileData of cssFileData) {
+					const filePath = join(cssOutputDir, fileData.name);
+					writeFileSync(filePath, fileData.content);
+					generatedFiles.push(filePath);
+				}
 
 				if (config.verbose) {
-					outputSpinner.text = `Generated CSS files: ${cssFiles.length}`;
+					outputSpinner.text = `Generated CSS files: ${cssFileData.length}`;
 				}
 			}
 
 			if (format === "json" || format === "all") {
 				const jsonOutputDir = config.organizeFolders ? join(config.outputDir, "json") : config.outputDir;
 				const jsonConfig: JSONGenerationConfig = {
-					outputDir: jsonOutputDir,
 					...generationConfig,
 					...config.jsonConfig,
 				};
 
-				const jsonFiles = generateJSONFiles(colorSystem, jsonConfig);
-				generatedFiles.push(...jsonFiles);
+				// Ensure JSON output directory exists
+				if (!existsSync(jsonOutputDir)) {
+					mkdirSync(jsonOutputDir, { recursive: true });
+				}
+
+				// Generate JSON file data (pure function call)
+				const jsonFileData = generateJSONFiles(colorSystem, jsonConfig);
+
+				// Write JSON files and collect paths
+				for (const fileData of jsonFileData) {
+					const filePath = join(jsonOutputDir, fileData.name);
+					writeFileSync(filePath, fileData.content);
+					generatedFiles.push(filePath);
+				}
 
 				if (config.verbose) {
-					outputSpinner.text = `Generated JSON files: ${jsonFiles.length}`;
+					outputSpinner.text = `Generated JSON files: ${jsonFileData.length}`;
 				}
 			}
 		}
@@ -669,10 +691,11 @@ program.on("command:*", (operands) => {
 	process.exit(1);
 });
 
+// Add a default action to show help when no command is provided
+program.action(() => {
+	program.outputHelp();
+	process.exit(0);
+});
+
 // Parse CLI arguments
 program.parse();
-
-// If no command provided, show help
-if (!process.argv.slice(2).length) {
-	program.outputHelp();
-}

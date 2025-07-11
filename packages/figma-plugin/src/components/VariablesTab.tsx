@@ -60,8 +60,8 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 				<div className="border-t border-gray-6 pt-6">
 					<h3 className="text-sm font-medium text-gray-12 mb-3">Import Variables</h3>
 					<p className="text-xs text-gray-11 mb-3">
-						Import variables from either collections JSON or raw Figma variables JSON format. The system will
-						automatically detect the format and validate before importing.
+						Import variables from color-generation-json collections, other collections formats, or raw Figma variables
+						JSON. The system will automatically detect the format and validate before importing.
 					</p>
 					<FileDropzone
 						id="variables-file-upload"
@@ -69,7 +69,7 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 						onChange={onImportVariables}
 						label=""
 						primaryText="Click to upload or drag & drop"
-						secondaryText="Collections JSON or Raw Variables JSON files"
+						secondaryText="Generated Collections JSON, Other Collections JSON, or Raw Variables JSON files"
 					/>
 
 					{/* Preview and Import Section */}
@@ -103,7 +103,11 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 
 					<div className="mt-3 text-xs text-gray-10 space-y-1">
 						<p>
-							• <strong>Collections format:</strong> Compatible with generated collections.json files
+							• <strong>Color Generation JSON:</strong> Generated collections.json files from the color-generation-json
+							package
+						</p>
+						<p>
+							• <strong>Collections format:</strong> Compatible with other W3C design token collections
 						</p>
 						<p>
 							• <strong>Raw format:</strong> Compatible with exported Figma variables JSON files

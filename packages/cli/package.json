@@ -4,12 +4,12 @@
 	"description": "CLI tool for generating color scales from color definitions",
 	"main": "dist/index.js",
 	"bin": {
-		"design-colors": "./dist/cli.js",
-		"generate-colors": "./dist/cli.js"
+		"design-colors": "./dist/index.js",
+		"generate-colors": "./dist/index.js"
 	},
 	"scripts": {
-		"build": "bun build src/cli.ts --outdir dist --target bun && chmod +x dist/cli.js",
-		"dev": "bun --watch src/cli.ts",
+		"build": "bun build src/index.ts --outdir dist --target bun && chmod +x dist/cli.js",
+		"dev": "bun --watch src/index.ts",
 		"test": "bun test",
 		"lint": "biome check src/",
 		"format": "biome format --write src/"
