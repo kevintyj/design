@@ -433,42 +433,42 @@ export function generateCollectionsSpacingJSON(
 	// Get sorted entries by value (this represents the desired logical order)
 	const sortedEntries = getSortedSpacingEntries(values);
 
-	const result: any = {
-		collections: {
-			name: collectionName,
-			modes: ["default"],
-			variables: {
-				spacing: {},
-			},
+	const collection: any = {
+		name: collectionName,
+		modes: ["default"],
+		variables: {
+			spacing: {},
 		},
 	};
 
 	// Add px and rem collections if enabled
 	if (fullConfig.includePx) {
-		result.collections.variables["spacing-px"] = {};
+		collection.variables["spacing-px"] = {};
 	}
 	if (fullConfig.includeRem) {
-		result.collections.variables["spacing-rem"] = {};
+		collection.variables["spacing-rem"] = {};
 	}
 
 	// Build spacing variables in sorted order for all formats
 	for (const [name, value] of sortedEntries) {
 		// Raw numeric values
-		result.collections.variables.spacing[name] = createSpacingVariable(value);
+		collection.variables.spacing[name] = createSpacingVariable(value);
 
 		// Px values as numbers (not strings)
 		if (fullConfig.includePx && pxValues[name]) {
-			result.collections.variables["spacing-px"][name] = createSpacingVariable(value, "number");
+			collection.variables["spacing-px"][name] = createSpacingVariable(value, "number");
 		}
 
 		// Rem values as numbers (not strings)
 		if (fullConfig.includeRem && remValues[name]) {
 			const remValue = value / fullConfig.remBase;
-			result.collections.variables["spacing-rem"][name] = createSpacingVariable(remValue, "number");
+			collection.variables["spacing-rem"][name] = createSpacingVariable(remValue, "number");
 		}
 	}
 
-	return result;
+	return {
+		collections: [collection],
+	};
 }
 
 /**

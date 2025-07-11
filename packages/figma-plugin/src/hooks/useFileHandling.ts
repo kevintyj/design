@@ -1,6 +1,9 @@
 import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
 import { generateCollectionsJSON } from "@design/color-generation-json";
-import { convertSimpleCollectionOutputToRawFormat, isSimpleCollectionOutputFormat } from "@design/figma-to-json";
+import { isSimpleCollectionOutputFormat } from "@design/figma-to-json";
+import type { SpacingSystem as SpacingSystemCore } from "@design/spacing-generation-core";
+import { generateCollectionsSpacingJSON } from "@design/spacing-generation-json";
+
 import { useCallback } from "react";
 import type { ColorSystem, SpacingSystem } from "../types";
 
@@ -11,14 +14,6 @@ interface UseFileHandlingProps {
 	setMessage: (message: string) => void;
 	sendPluginMessage: (type: string, data?: any) => void;
 	setParsedVariables?: (variables: any) => void;
-}
-
-// Interface for the figma-colors.json format
-interface FigmaColorsFormat {
-	constantsLight: { gray: string; background: string };
-	constantsDark: { gray: string; background: string };
-	light: { [colorName: string]: string };
-	dark: { [colorName: string]: string };
 }
 
 // Helper function to detect and transform figma-colors.json format
@@ -93,28 +88,78 @@ function _transformSpacingFormat(data: any): SpacingSystem | null {
 
 // Helper function to detect color-generation-json collections format specifically
 function isColorGenerationJSONFormat(data: any): boolean {
-	return (
-		data?.collections &&
-		!Array.isArray(data.collections) &&
-		data.collections.$extensions &&
-		data.collections.$extensions["com.figma"] &&
-		data.collections.colors &&
-		data.collections.colors.$type === "color"
-	);
+	// Handle both new format (array) and old format (single object)
+	if (data?.collections) {
+		// New format: array of collections
+		if (Array.isArray(data.collections)) {
+			return data.collections.some(
+				(collection: any) => collection.variables?.solid && typeof collection.variables.solid === "object",
+			);
+		}
+		// Old format: single collection object (for backward compatibility)
+		return (
+			data.collections.$extensions?.["com.figma"] &&
+			data.collections.colors &&
+			data.collections.colors.$type === "color"
+		);
+	}
+	return false;
+}
+
+// Helper function to detect spacing-generation-json collections format specifically
+function isSpacingGenerationJSONFormat(data: any): boolean {
+	// Handle both new format (array) and old format (single object)
+	if (data?.collections) {
+		// New format: array of collections
+		if (Array.isArray(data.collections)) {
+			return data.collections.some(
+				(collection: any) =>
+					collection.variables &&
+					typeof collection.variables === "object" &&
+					(collection.variables.spacing || collection.variables["spacing-px"] || collection.variables["spacing-rem"]),
+			);
+		}
+		// Old format: single collection object (for backward compatibility)
+		return (
+			typeof data.collections.name === "string" &&
+			Array.isArray(data.collections.modes) &&
+			data.collections.variables &&
+			typeof data.collections.variables === "object" &&
+			(data.collections.variables.spacing ||
+				data.collections.variables["spacing-px"] ||
+				data.collections.variables["spacing-rem"])
+		);
+	}
+	return false;
 }
 
 // Helper function to detect SimpleCollectionOutput from color-generation-json package
 function isSimpleCollectionFormat(data: any): boolean {
-	return (
-		data?.collections &&
-		!Array.isArray(data.collections) &&
-		typeof data.collections.name === "string" &&
-		Array.isArray(data.collections.modes) &&
-		data.collections.variables &&
-		typeof data.collections.variables === "object" &&
-		data.collections.variables.solid &&
-		typeof data.collections.variables.solid === "object"
-	);
+	// Handle both new format (array) and old format (single object)
+	if (data?.collections) {
+		// New format: array of collections
+		if (Array.isArray(data.collections)) {
+			return data.collections.some(
+				(collection: any) =>
+					typeof collection.name === "string" &&
+					Array.isArray(collection.modes) &&
+					collection.variables &&
+					typeof collection.variables === "object" &&
+					collection.variables.solid &&
+					typeof collection.variables.solid === "object",
+			);
+		}
+		// Old format: single collection object (for backward compatibility)
+		return (
+			typeof data.collections.name === "string" &&
+			Array.isArray(data.collections.modes) &&
+			data.collections.variables &&
+			typeof data.collections.variables === "object" &&
+			data.collections.variables.solid &&
+			typeof data.collections.variables.solid === "object"
+		);
+	}
+	return false;
 }
 
 // Helper function to convert SimpleCollectionFormat to raw Figma format
@@ -390,11 +435,48 @@ function convertOldCollectionsToRawFormat(collectionsData: any): any {
 	return rawFormat;
 }
 
+// Helper function to convert array of collections to raw Figma format (new format)
+function convertCollectionsArrayToRawFormat(collectionsData: any): any {
+	const rawFormat: {
+		collections: any[];
+		variables: any[];
+	} = {
+		collections: [],
+		variables: [],
+	};
+
+	// Process each collection in the array
+	collectionsData.collections.forEach((collection: any) => {
+		const collectionId = `collection-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+		// Create modes based on the collection's modes
+		const modes = collection.modes
+			? collection.modes.map((mode: string, index: number) => ({
+					modeId: `mode-${index}`,
+					name: mode.toLowerCase(),
+				}))
+			: [{ modeId: "default", name: "default" }];
+
+		rawFormat.collections.push({
+			id: collectionId,
+			name: collection.name || "Imported Collection",
+			modes: modes,
+		});
+
+		// Process all variable categories flexibly
+		if (collection.variables) {
+			processVariableCategory(collection.variables, collectionId, collection.name, modes, rawFormat.variables);
+		}
+	});
+
+	return rawFormat;
+}
+
 // Helper function to convert collections format to raw Figma format (handles both old and new formats)
 function convertCollectionsToRawFormat(collectionsData: any): any {
-	// Check if it's the SimpleCollectionOutput format (array of collections)
-	if (isSimpleCollectionOutputFormat(collectionsData)) {
-		return convertSimpleCollectionOutputToRawFormat(collectionsData);
+	// Check if it's the new format (array of collections)
+	if (collectionsData?.collections && Array.isArray(collectionsData.collections)) {
+		return convertCollectionsArrayToRawFormat(collectionsData);
 	}
 
 	// Check if it's the SimpleCollectionFormat from color-generation-json (single collection)
@@ -602,6 +684,15 @@ export const useFileHandling = ({
 								`Color Generation JSON format detected! Found ${rawFormat.variables.length} color variables from the generated collections. Review and click "Import to Figma" to proceed.`,
 							);
 						}
+					} else if (isSpacingGenerationJSONFormat(parsedData)) {
+						// Handle spacing-generation-json format specifically
+						const rawFormat = convertCollectionsToRawFormat(parsedData);
+						if (setParsedVariables) {
+							setParsedVariables(rawFormat);
+							setMessage(
+								`Spacing Generation JSON format detected! Found ${rawFormat.variables.length} spacing variables from the generated collections. Review and click "Import to Figma" to proceed.`,
+							);
+						}
 					} else if (isCollectionsFormat(parsedData)) {
 						// Handle other collections formats
 						const rawFormat = convertCollectionsToRawFormat(parsedData);
@@ -630,7 +721,7 @@ export const useFileHandling = ({
 						}
 					} else {
 						setMessage(
-							"Invalid variables file format. Please use either color-generation-json collections, other collections JSON, or raw Figma variables JSON format.",
+							"Invalid variables file format. Please use either color-generation-json collections, spacing-generation-json collections, other collections JSON, or raw Figma variables JSON format.",
 						);
 					}
 				} catch (error) {
@@ -682,6 +773,42 @@ export const useFileHandling = ({
 		[setIsLoading, setMessage, setParsedVariables],
 	);
 
+	const handleImportFromGeneratedSpacing = useCallback(
+		(generatedSpacingSystem: SpacingSystemCore) => {
+			if (!generatedSpacingSystem) {
+				setMessage("No generated spacing system available to import.");
+				return;
+			}
+
+			setIsLoading(true);
+			try {
+				// Convert generated spacing system to collections format
+				const collectionsConfig = generateCollectionsSpacingJSON(generatedSpacingSystem, {
+					collectionName: "Generated Spacing",
+					includePx: true,
+					includeRem: true,
+					prettyPrint: true,
+				});
+
+				// Convert collections format to raw format for variable import
+				const rawFormat = convertCollectionsToRawFormat(collectionsConfig);
+
+				// Set the parsed variables for preview and import
+				if (setParsedVariables) {
+					setParsedVariables(rawFormat);
+					setMessage(
+						`Generated spacing prepared for import! Found ${rawFormat.variables.length} spacing variables from ${Object.keys(generatedSpacingSystem.spacing.values).length} spacing values. Review and click "Import to Figma" to proceed.`,
+					);
+				}
+			} catch (error) {
+				setMessage(`Error preparing generated spacing for import: ${error}`);
+			} finally {
+				setIsLoading(false);
+			}
+		},
+		[setIsLoading, setMessage, setParsedVariables],
+	);
+
 	const handleImportToFigma = useCallback(
 		(parsedVariables: any) => {
 			if (!parsedVariables) {
@@ -702,5 +829,6 @@ export const useFileHandling = ({
 		handleFigmaVariablesUpload,
 		handleImportToFigma, // Add this new function
 		handleImportFromGeneratedColors, // Add this new function
+		handleImportFromGeneratedSpacing, // Add this new function
 	};
 };

@@ -16,8 +16,8 @@ interface ExportTabProps {
 	onExportGeneratedJSON: () => void;
 	onExportTailwindJSON: () => void;
 	onExportCollectionsJSON: () => void;
-	onExportSpacingCSS?: () => void;
-	onExportSpacingJSON?: () => void;
+	onExportSpacingCSS: () => void;
+	onExportSpacingJSON: () => void;
 	onExportGeneratedSpacingCSS?: () => void;
 	onExportGeneratedSpacingJSON?: () => void;
 	onExportSpacingTailwindJSON?: () => void;
@@ -70,7 +70,7 @@ interface ButtonGroupProps {
 }
 
 const ButtonGroup: React.FC<ButtonGroupProps> = ({ title, buttons }) => (
-	<div>
+	<div className="space-y-2">
 		{title && <p className="text-xs font-medium text-gray-12">{title}</p>}
 		<div className="flex space-x-3 flex-wrap gap-y-2">
 			{buttons.map((button) => (
@@ -134,33 +134,30 @@ export const ExportTab: React.FC<ExportTabProps> = ({
 				/>
 			</ExportSection>
 
-			{/* Original spacing system export */}
-			{spacingSystem && onExportSpacingCSS && onExportSpacingJSON && (
-				<ExportSection
-					title="Export spacing system"
-					description="Export your imported spacing system as CSS or JSON files."
-					system={spacingSystem}
-					systemName="spacing system"
-					className="border-t border-gray-6 pt-6"
-				>
-					<ButtonGroup
-						buttons={[
-							{
-								label: "Export as CSS",
-								onClick: onExportSpacingCSS,
-								disabled: !spacingSystem || isLoading,
-								loading: isLoading,
-							},
-							{
-								label: "Export as JSON",
-								onClick: onExportSpacingJSON,
-								disabled: !spacingSystem || isLoading,
-								loading: isLoading,
-							},
-						]}
-					/>
-				</ExportSection>
-			)}
+			<ExportSection
+				title="Export spacing system"
+				description="Export your imported spacing system as CSS or JSON files."
+				system={spacingSystem}
+				systemName="spacing system"
+				className="border-t border-gray-6 pt-6"
+			>
+				<ButtonGroup
+					buttons={[
+						{
+							label: "Export as CSS",
+							onClick: onExportSpacingCSS,
+							disabled: !spacingSystem || isLoading,
+							loading: isLoading,
+						},
+						{
+							label: "Export as JSON",
+							onClick: onExportSpacingJSON,
+							disabled: !spacingSystem || isLoading,
+							loading: isLoading,
+						},
+					]}
+				/>
+			</ExportSection>
 
 			{/* Generated color scales export */}
 			<ExportSection

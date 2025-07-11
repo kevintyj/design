@@ -635,3 +635,9 @@
 ::-webkit-scrollbar-thumb:hover {
 	background: var(--color-gray-a9);
 }
+
+/* Force scrollbar to always be visible */
+body {
+	overflow-y: scroll !important;
+	scrollbar-gutter: stable;
+}

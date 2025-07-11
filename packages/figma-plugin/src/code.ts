@@ -400,7 +400,7 @@ async function handleFigmaVariablesExportAsCollections() {
 	try {
 		// Use the new package to export all collections with full transparency support
 		const collectionsData = await exportFigmaVariablesAsCollections({
-			includeAllVariableTypes: false, // Only colors for now
+			includeAllVariableTypes: true, // Include all variable types (colors and spacing)
 			preserveVariableStructure: true,
 			includeMetadata: true,
 			prettyPrint: true,
@@ -409,7 +409,7 @@ async function handleFigmaVariablesExportAsCollections() {
 		if (collectionsData.collections.length === 0) {
 			figma.ui.postMessage({
 				type: "error",
-				error: "No color variables found to export",
+				error: "No variables found to export",
 			});
 			return;
 		}
@@ -497,17 +497,31 @@ async function handleFigmaVariablesImport(variablesData: any) {
 			const collection = collectionMap.get(importVariable.variableCollectionId);
 			if (!collection) continue;
 
+			// Determine variable type based on resolvedType or infer from values
+			let variableType: "COLOR" | "FLOAT" = "COLOR";
+			if (importVariable.resolvedType === "FLOAT" || importVariable.resolvedType === "NUMBER") {
+				variableType = "FLOAT";
+			} else if (importVariable.resolvedType === "COLOR") {
+				variableType = "COLOR";
+			} else {
+				// Infer type from first value
+				const firstValue = Object.values(importVariable.valuesByMode)[0];
+				if (typeof firstValue === "number") {
+					variableType = "FLOAT";
+				}
+			}
+
 			// Check if variable already exists
 			let variable = figma.variables
 				.getLocalVariables()
 				.find((v) => v.name === importVariable.name && v.variableCollectionId === collection.id);
 
 			if (!variable) {
-				variable = figma.variables.createVariable(importVariable.name, collection, "COLOR");
+				variable = figma.variables.createVariable(importVariable.name, collection, variableType);
 			}
 
 			// Set values for each mode
-			for (const [modeId, colorValue] of Object.entries(importVariable.valuesByMode)) {
+			for (const [modeId, value] of Object.entries(importVariable.valuesByMode)) {
 				const mode = collection.modes.find((m) => {
 					if (!importVariable.collection || !importVariable.collection.modes) {
 						return false;
@@ -518,36 +532,59 @@ async function handleFigmaVariablesImport(variablesData: any) {
 					return importMode && importMode.name === m.name;
 				});
 
-				if (mode && colorValue) {
+				if (mode && value !== undefined && value !== null) {
 					try {
-						let rgbValue: RGB;
+						if (variableType === "COLOR") {
+							let rgbValue: RGB;
 
-						// Handle different color value formats
-						if (typeof colorValue === "string") {
-							// Raw format: hex string
-							rgbValue = convertColorToFigmaRGB(colorValue);
-						} else if (
-							typeof colorValue === "object" &&
-							colorValue !== null &&
-							"r" in colorValue &&
-							"g" in colorValue &&
-							"b" in colorValue &&
-							typeof colorValue.r === "number" &&
-							typeof colorValue.g === "number" &&
-							typeof colorValue.b === "number"
-						) {
-							// Collections format: Figma color object
-							rgbValue = {
-								r: colorValue.r,
-								g: colorValue.g,
-								b: colorValue.b,
-							};
-						} else {
-							console.warn(`Unsupported color value format for ${importVariable.name}:`, colorValue);
-							continue;
+							// Handle different color value formats
+							if (typeof value === "string") {
+								// Raw format: hex string
+								rgbValue = convertColorToFigmaRGB(value);
+							} else if (
+								typeof value === "object" &&
+								value !== null &&
+								"r" in value &&
+								"g" in value &&
+								"b" in value &&
+								typeof value.r === "number" &&
+								typeof value.g === "number" &&
+								typeof value.b === "number"
+							) {
+								// Collections format: Figma color object
+								rgbValue = {
+									r: value.r,
+									g: value.g,
+									b: value.b,
+								};
+							} else {
+								console.warn(`Unsupported color value format for ${importVariable.name}:`, value);
+								continue;
+							}
+
+							variable.setValueForMode(mode.modeId, rgbValue);
+						} else if (variableType === "FLOAT") {
+							let numericValue: number;
+
+							// Handle different number value formats
+							if (typeof value === "number") {
+								numericValue = value;
+							} else if (typeof value === "string") {
+								// Parse string values like "16px", "1rem", etc.
+								const parsed = parseFloat(value);
+								if (!Number.isNaN(parsed)) {
+									numericValue = parsed;
+								} else {
+									console.warn(`Cannot parse numeric value for ${importVariable.name}:`, value);
+									continue;
+								}
+							} else {
+								console.warn(`Unsupported number value format for ${importVariable.name}:`, value);
+								continue;
+							}
+
+							variable.setValueForMode(mode.modeId, numericValue);
 						}
-
-						variable.setValueForMode(mode.modeId, rgbValue);
 					} catch (error) {
 						console.error(`Failed to set value for variable ${importVariable.name}:`, error);
 					}

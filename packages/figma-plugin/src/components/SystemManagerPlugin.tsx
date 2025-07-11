@@ -348,6 +348,7 @@ export const SystemManagerPlugin: React.FC = () => {
 		handleFigmaVariablesUpload,
 		handleImportToFigma,
 		handleImportFromGeneratedColors,
+		handleImportFromGeneratedSpacing,
 	} = useFileHandling({
 		setColorSystem,
 		setSpacingSystem,
@@ -365,6 +366,15 @@ export const SystemManagerPlugin: React.FC = () => {
 		}
 		handleImportFromGeneratedColors(generatedColorSystem);
 	}, [generatedColorSystem, handleImportFromGeneratedColors, setMessageWithKey]);
+
+	// Create a handler that passes the generated spacing system
+	const _handleImportFromGeneratedSpacingWithSystem = useCallback(() => {
+		if (!generatedSpacingSystem) {
+			setMessageWithKey("No generated spacing system available to import.");
+			return;
+		}
+		handleImportFromGeneratedSpacing(generatedSpacingSystem);
+	}, [generatedSpacingSystem, handleImportFromGeneratedSpacing, setMessageWithKey]);
 
 	// Handle export as CSS
 	const handleExportCSS = useCallback(() => {
@@ -432,14 +442,32 @@ export const SystemManagerPlugin: React.FC = () => {
 	const handleResetColorSystem = useCallback(() => {
 		setColorSystem(null);
 		setGeneratedColorSystem(null);
-		setMessageWithKey("Color system reset");
-	}, [setMessageWithKey]);
+
+		// Also clear from Figma storage if save is enabled
+		if (preferences.saveColorSystem) {
+			sendPluginMessage("remove-color-system", {
+				key: CLIENT_STORAGE_KEY,
+			});
+			setMessageWithKey("Color system reset and removed from Figma storage");
+		} else {
+			setMessageWithKey("Color system reset");
+		}
+	}, [setMessageWithKey, preferences.saveColorSystem, sendPluginMessage]);
 
 	const handleResetSpacingSystem = useCallback(() => {
 		setSpacingSystem(null);
 		setGeneratedSpacingSystem(null);
-		setMessageWithKey("Spacing system reset");
-	}, [setMessageWithKey]);
+
+		// Also clear from Figma storage if save is enabled
+		if (preferences.saveSpacingSystem) {
+			sendPluginMessage("remove-spacing-system", {
+				key: _SPACING_STORAGE_KEY,
+			});
+			setMessageWithKey("Spacing system reset and removed from Figma storage");
+		} else {
+			setMessageWithKey("Spacing system reset");
+		}
+	}, [setMessageWithKey, preferences.saveSpacingSystem, sendPluginMessage]);
 
 	// Handle export generated color scales as CSS
 	const handleExportGeneratedCSS = useCallback(async () => {
@@ -536,7 +564,7 @@ export const SystemManagerPlugin: React.FC = () => {
 
 			// Debug the output
 			console.log("Collections Config Output:", collectionsConfig);
-			console.log("Solid Colors Keys:", Object.keys(collectionsConfig.collections.variables.solid));
+			console.log("Solid Colors Keys:", Object.keys(collectionsConfig.collections[0].variables.solid));
 
 			const jsonContent = JSON.stringify(collectionsConfig, null, 2);
 
@@ -800,6 +828,8 @@ ${new Date().toISOString()}
 						onConfirmImport={handleConfirmImport}
 						generatedColorSystem={generatedColorSystem}
 						onImportFromGeneratedColors={handleImportFromGeneratedColorsWithSystem}
+						generatedSpacingSystem={generatedSpacingSystem}
+						onImportFromGeneratedSpacing={_handleImportFromGeneratedSpacingWithSystem}
 					/>
 				);
 			case "preferences":

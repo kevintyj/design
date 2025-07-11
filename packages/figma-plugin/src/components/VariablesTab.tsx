@@ -1,4 +1,5 @@
 import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
+import type { SpacingSystem as SpacingSystemCore } from "@design/spacing-generation-core";
 import type React from "react";
 import { FileDropzone } from "./FileDropzone";
 
@@ -11,6 +12,8 @@ interface VariablesTabProps {
 	onConfirmImport: () => void;
 	generatedColorSystem?: ColorSystemCore | null;
 	onImportFromGeneratedColors?: () => void;
+	generatedSpacingSystem?: SpacingSystemCore | null;
+	onImportFromGeneratedSpacing?: () => void;
 }
 
 export const VariablesTab: React.FC<VariablesTabProps> = ({
@@ -22,6 +25,8 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 	onConfirmImport,
 	generatedColorSystem,
 	onImportFromGeneratedColors,
+	generatedSpacingSystem,
+	onImportFromGeneratedSpacing,
 }) => {
 	return (
 		<div className="py-3 px-5">
@@ -35,7 +40,7 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 					{/* Primary Export - Collections Format */}
 					<div className="mb-4">
 						<p className="text-xs text-gray-11 mb-2">
-							Export variables as design token collections (recommended format)
+							Export all variables (colors and spacing) as design token collections (recommended format)
 						</p>
 						<button
 							type="button"
@@ -95,12 +100,43 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 						</div>
 					)}
 
+					{/* Import from Generated Spacing */}
+					{generatedSpacingSystem && onImportFromGeneratedSpacing && (
+						<div className="mb-6">
+							<h4 className="text-sm font-medium text-gray-12 mb-2">Import from Generated Spacing</h4>
+							<p className="text-xs text-gray-11 mb-3">
+								Import variables directly from your currently generated spacing system. This will create number
+								variables for all spacing values including pixel values, rem values, and raw numeric values.
+							</p>
+							<div className="text-xs text-gray-11 space-y-1 mb-3">
+								<p>
+									• <strong>Spacing values:</strong> {Object.keys(generatedSpacingSystem.spacing.values).length} total
+								</p>
+								<p>
+									• <strong>Base multiplier:</strong> {generatedSpacingSystem.spacing.multiplier}px
+								</p>
+								<p>
+									• <strong>Formats:</strong> Raw numbers, Pixel values, REM values
+								</p>
+							</div>
+							<button
+								type="button"
+								onClick={onImportFromGeneratedSpacing}
+								disabled={isLoading}
+								className="btn bg-teal-9 hover:bg-teal-10 text-[white] border-teal-11"
+							>
+								{isLoading ? "Importing..." : "Import Generated Spacing as Variables"}
+							</button>
+						</div>
+					)}
+
 					{/* Import from File */}
-					<div className={generatedColorSystem ? "border-t border-gray-6 pt-4" : ""}>
+					<div className={generatedColorSystem || generatedSpacingSystem ? "border-t border-gray-6 pt-4" : ""}>
 						<h4 className="text-sm font-medium text-gray-12 mb-3">Import from File</h4>
 						<p className="text-xs text-gray-11 mb-3">
-							Import variables from color-generation-json collections, other collections formats, or raw Figma variables
-							JSON. The system will automatically detect the format and validate before importing.
+							Import variables from color-generation-json collections, spacing-generation-json collections, other
+							collections formats, or raw Figma variables JSON. The system will automatically detect the format and
+							validate before importing.
 						</p>
 						<FileDropzone
 							id="variables-file-upload"
@@ -108,7 +144,7 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 							onChange={onImportVariables}
 							label=""
 							primaryText="Click to upload or drag & drop"
-							secondaryText="Generated Collections JSON, Other Collections JSON, or Raw Variables JSON files"
+							secondaryText="Generated Collections JSON (colors & spacing), Other Collections JSON, or Raw Variables JSON files"
 						/>
 					</div>
 
@@ -146,8 +182,15 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 							• <strong>Generated Colors:</strong> Import directly from your current generated color system
 						</p>
 						<p>
+							• <strong>Generated Spacing:</strong> Import directly from your current generated spacing system
+						</p>
+						<p>
 							• <strong>Color Generation JSON:</strong> Generated collections.json files from the color-generation-json
 							package
+						</p>
+						<p>
+							• <strong>Spacing Generation JSON:</strong> Generated collections.json files from the
+							spacing-generation-json package
 						</p>
 						<p>
 							• <strong>Collections format:</strong> Compatible with other W3C design token collections

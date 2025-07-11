@@ -79,7 +79,7 @@ export interface SimpleCollectionFormat {
 }
 
 export interface SimpleCollectionOutput {
-	collections: SimpleCollectionFormat;
+	collections: SimpleCollectionFormat[];
 }
 
 // Default JSON generation configuration
@@ -553,7 +553,7 @@ export function generateCollectionsJSON(
 	}
 
 	return {
-		collections: collection,
+		collections: [collection],
 	};
 }
 
