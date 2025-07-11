@@ -5,7 +5,7 @@
 	"main": "dist/code.js",
 	"scripts": {
 		"build": "webpack --mode production",
-		"dev": "webpack --watch --mode development",
+		"dev": "webpack --watch --mode production",
 		"lint": "biome check src/",
 		"format": "biome format --write src/"
 	},

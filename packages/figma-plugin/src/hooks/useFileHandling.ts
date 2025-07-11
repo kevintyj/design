@@ -58,10 +58,111 @@ function isColorGenerationJSONFormat(data: any): boolean {
 	);
 }
 
+// Helper function to detect SimpleCollectionOutput from color-generation-json package
+function isSimpleCollectionFormat(data: any): boolean {
+	return (
+		data?.collections &&
+		!Array.isArray(data.collections) &&
+		typeof data.collections.name === "string" &&
+		Array.isArray(data.collections.modes) &&
+		data.collections.variables &&
+		typeof data.collections.variables === "object" &&
+		data.collections.variables.solid &&
+		typeof data.collections.variables.solid === "object"
+	);
+}
+
+// Helper function to convert SimpleCollectionFormat to raw Figma format
+function convertSimpleCollectionToRawFormat(data: any): any {
+	const collection = data.collections;
+	const collectionId = `collection-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+	// Create modes from the collection modes
+	const modes = collection.modes.map((mode: string, index: number) => ({
+		modeId: `mode-${index}`,
+		name: mode.toLowerCase(),
+	}));
+
+	const rawFormat: {
+		collections: any[];
+		variables: any[];
+	} = {
+		collections: [
+			{
+				id: collectionId,
+				name: collection.name,
+				modes: modes,
+			},
+		],
+		variables: [],
+	};
+
+	// Helper function to add variables from a variable group
+	const addVariables = (variables: any, prefix: string = "") => {
+		Object.entries(variables).forEach(([key, value]: [string, any]) => {
+			if (value && typeof value === "object") {
+				// Check if this is a variable definition (has type and values)
+				if (value.type && value.values) {
+					const variableName = prefix ? `${prefix}/${key}` : key;
+					const variableId = `${variableName.replace(/[/\s]/g, "-")}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+
+					// Create valuesByMode from the values object
+					const valuesByMode: any = {};
+					modes.forEach((mode: { modeId: string; name: string }) => {
+						const modeValue = value.values[mode.name];
+						if (modeValue !== undefined) {
+							valuesByMode[mode.modeId] = modeValue;
+						}
+					});
+
+					rawFormat.variables.push({
+						id: variableId,
+						name: variableName,
+						variableCollectionId: collectionId,
+						resolvedType: value.type.toUpperCase(),
+						valuesByMode: valuesByMode,
+						collection: {
+							id: collectionId,
+							name: collection.name,
+							modes: modes,
+						},
+					});
+				} else {
+					// Recursively process nested objects
+					const newPrefix = prefix ? `${prefix}/${key}` : key;
+					addVariables(value, newPrefix);
+				}
+			}
+		});
+	};
+
+	// Process solid variables
+	if (collection.variables.solid) {
+		addVariables(collection.variables.solid, "solid");
+	}
+
+	// Process alpha variables
+	if (collection.variables.alpha) {
+		addVariables(collection.variables.alpha, "alpha");
+	}
+
+	// Process overlay variables
+	if (collection.variables.overlays) {
+		addVariables(collection.variables.overlays, "overlays");
+	}
+
+	return rawFormat;
+}
+
 // Helper function to detect collections format (both old and new W3C format)
 function isCollectionsFormat(data: any): boolean {
 	// Check for color-generation-json format first
 	if (isColorGenerationJSONFormat(data)) {
+		return true;
+	}
+
+	// Check for SimpleCollectionFormat from color-generation-json
+	if (isSimpleCollectionFormat(data)) {
 		return true;
 	}
 
@@ -217,6 +318,11 @@ function convertOldCollectionsToRawFormat(collectionsData: any): any {
 
 // Helper function to convert collections format to raw Figma format (handles both old and new formats)
 function convertCollectionsToRawFormat(collectionsData: any): any {
+	// Check if it's the SimpleCollectionFormat from color-generation-json
+	if (isSimpleCollectionFormat(collectionsData)) {
+		return convertSimpleCollectionToRawFormat(collectionsData);
+	}
+
 	// Check if it's the new W3C format
 	if (
 		collectionsData?.collections &&
@@ -365,6 +471,15 @@ export const useFileHandling = ({
 							setParsedVariables(parsedData);
 							setMessage(
 								`Raw Figma variables format detected! Found ${parsedData.variables.length} variables. Review and click "Import to Figma" to proceed.`,
+							);
+						}
+					} else if (isSimpleCollectionFormat(parsedData)) {
+						// Handle SimpleCollectionOutput format
+						const rawFormat = convertSimpleCollectionToRawFormat(parsedData);
+						if (setParsedVariables) {
+							setParsedVariables(rawFormat);
+							setMessage(
+								`Simple Collection format detected! Found ${rawFormat.variables.length} variables. Review and click "Import to Figma" to proceed.`,
 							);
 						}
 					} else {

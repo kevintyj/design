@@ -1,6 +1,6 @@
 import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
 import { generateColorSystem } from "@design/color-generation-core";
-import { convertToJSON } from "@design/color-generation-json";
+import { convertToJSON, generateCollectionsJSON } from "@design/color-generation-json";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useFileHandling } from "../hooks/useFileHandling";
@@ -300,12 +300,43 @@ export const SystemManagerPlugin: React.FC = () => {
 
 		setIsLoading(true);
 		try {
-			const collectionsConfig = convertToJSON(generatedColorSystem, "collections", undefined, { prettyPrint: true });
+			// Debug logging to understand the data structure
+			console.log("Generated Color System for Collections Export:", generatedColorSystem);
+			console.log("Color Names:", generatedColorSystem.colorNames);
+			console.log("Light Colors Keys:", Object.keys(generatedColorSystem.light));
+			console.log("Dark Colors Keys:", Object.keys(generatedColorSystem.dark));
+
+			// Log first few colors to check data integrity
+			generatedColorSystem.colorNames.forEach((colorName, index) => {
+				if (index < 5) {
+					// Log first 5 colors
+					console.log(`Color ${colorName}:`, {
+						light: generatedColorSystem.light[colorName] ? "exists" : "missing",
+						dark: generatedColorSystem.dark[colorName] ? "exists" : "missing",
+						lightAccentScale: generatedColorSystem.light[colorName]?.accentScale?.length || 0,
+						darkAccentScale: generatedColorSystem.dark[colorName]?.accentScale?.length || 0,
+					});
+				}
+			});
+
+			const collectionsConfig = generateCollectionsJSON(generatedColorSystem, {
+				collectionName: "Generated Colors",
+				includeAlpha: true,
+				includeGrayScale: true,
+				includeOverlays: true,
+				prettyPrint: true,
+			});
+
+			// Debug the output
+			console.log("Collections Config Output:", collectionsConfig);
+			console.log("Solid Colors Keys:", Object.keys(collectionsConfig.collections.variables.solid));
+
 			const jsonContent = JSON.stringify(collectionsConfig, null, 2);
 
 			downloadFile(jsonContent, "collections.json", "application/json");
 			setMessageWithKey("Collections JSON export completed successfully!");
 		} catch (error) {
+			console.error("Collections export error:", error);
 			setMessageWithKey(`Error exporting Collections JSON: ${error}`);
 		} finally {
 			setIsLoading(false);

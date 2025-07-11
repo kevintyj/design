@@ -222,8 +222,8 @@ async function importColorVariable(
 		}
 
 		// Convert hex to RGB
-		const lightRgb = hexToRgb(lightValue);
-		const darkRgb = darkValue ? hexToRgb(darkValue) : lightRgb;
+		const lightRgb = convertColorToFigmaRGB(lightValue);
+		const darkRgb = darkValue ? convertColorToFigmaRGB(darkValue) : lightRgb;
 
 		// Set values for both modes
 		variable.setValueForMode(lightModeId, lightRgb);
@@ -233,18 +233,75 @@ async function importColorVariable(
 	}
 }
 
-// Convert hex color to RGB object for Figma
-function hexToRgb(hex: string): RGB {
-	const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-	if (!result) {
-		throw new Error(`Invalid hex color: ${hex}`);
-	}
+// Convert any hex format to RGB/RGBA object for Figma
+// Supported formats:
+// - 3-character hex: #abc, #f00 (expands to #aabbcc, #ff0000)
+// - 6-character hex: #aabbcc, #ff0000 (returns RGB)
+// - 8-character hex with alpha: #aabbccdd, #ff000080 (returns RGBA)
+// Figma supports both RGB and RGBA color values in variables
+function convertColorToFigmaRGB(colorString: string): RGB | RGBA {
+	try {
+		// Remove # if present and convert to lowercase
+		const hex = colorString.replace("#", "").toLowerCase();
 
-	return {
-		r: parseInt(result[1], 16) / 255,
-		g: parseInt(result[2], 16) / 255,
-		b: parseInt(result[3], 16) / 255,
-	};
+		// Validate hex characters
+		if (!/^[0-9a-f]+$/.test(hex)) {
+			throw new Error(`Invalid hex characters in: ${colorString}`);
+		}
+
+		let r: number, g: number, b: number, a: number | undefined;
+
+		if (hex.length === 3) {
+			// 3-character hex: #abc -> #aabbcc
+			r = parseInt(hex[0] + hex[0], 16) / 255;
+			g = parseInt(hex[1] + hex[1], 16) / 255;
+			b = parseInt(hex[2] + hex[2], 16) / 255;
+		} else if (hex.length === 6) {
+			// 6-character hex: #aabbcc
+			r = parseInt(hex.substring(0, 2), 16) / 255;
+			g = parseInt(hex.substring(2, 4), 16) / 255;
+			b = parseInt(hex.substring(4, 6), 16) / 255;
+		} else if (hex.length === 8) {
+			// 8-character hex with alpha: #aabbccdd
+			r = parseInt(hex.substring(0, 2), 16) / 255;
+			g = parseInt(hex.substring(2, 4), 16) / 255;
+			b = parseInt(hex.substring(4, 6), 16) / 255;
+			a = parseInt(hex.substring(6, 8), 16) / 255;
+		} else {
+			throw new Error(`Invalid hex length: ${hex.length} characters in ${colorString}`);
+		}
+
+		// Ensure values are within 0-1 range
+		const clampedR = Math.max(0, Math.min(1, r));
+		const clampedG = Math.max(0, Math.min(1, g));
+		const clampedB = Math.max(0, Math.min(1, b));
+
+		// Return RGBA if alpha is present, otherwise RGB
+		if (a !== undefined) {
+			const clampedA = Math.max(0, Math.min(1, a));
+			return {
+				r: clampedR,
+				g: clampedG,
+				b: clampedB,
+				a: clampedA,
+			};
+		} else {
+			return {
+				r: clampedR,
+				g: clampedG,
+				b: clampedB,
+			};
+		}
+	} catch (error) {
+		console.error(`Failed to convert color ${colorString}:`, error);
+		// Fallback to a default color (mid-gray) if conversion fails
+		return { r: 0.5, g: 0.5, b: 0.5 };
+	}
+}
+
+// Legacy function for backwards compatibility - now supports alpha/transparency
+function _hexToRgb(hex: string): RGB | RGBA {
+	return convertColorToFigmaRGB(hex);
 }
 
 // Convert RGB to hex
@@ -707,7 +764,7 @@ async function handleFigmaVariablesImport(variablesData: any) {
 						// Handle different color value formats
 						if (typeof colorValue === "string") {
 							// Raw format: hex string
-							rgbValue = hexToRgb(colorValue);
+							rgbValue = convertColorToFigmaRGB(colorValue);
 						} else if (
 							typeof colorValue === "object" &&
 							colorValue !== null &&
