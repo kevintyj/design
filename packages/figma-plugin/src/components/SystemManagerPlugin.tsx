@@ -1,11 +1,12 @@
 import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
 import { generateColorSystem } from "@design/color-generation-core";
+import { convertToJSON } from "@design/color-generation-json";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useFileHandling } from "../hooks/useFileHandling";
 import { usePluginMessaging } from "../hooks/usePluginMessaging";
 import type { ColorSystem, Tab, UserPreferences } from "../types";
-import { downloadGeneratedColorScalesZip } from "../utils/download";
+import { downloadFile, downloadGeneratedColorScalesZip } from "../utils/download";
 import { ConfigureTab } from "./ConfigureTab";
 import { ExportTab } from "./ExportTab";
 import { PreferencesTab } from "./PreferencesTab";
@@ -54,6 +55,90 @@ const returnGeneratedColorSystem = async (colorSystem: ColorSystem) => {
 	});
 
 	return generatedColorSystem;
+};
+
+// Add this helper function after the returnGeneratedColorSystem function
+const convertToCollectionsFormat = (generatedColorSystem: ColorSystemCore) => {
+	const collections = {
+		collections: [
+			{
+				name: "Generated Colors",
+				modes: ["light", "dark"],
+				variables: {
+					solid: {} as Record<string, any>,
+					alpha: {} as Record<string, any>,
+					overlays: {
+						black: {} as Record<string, any>,
+						white: {} as Record<string, any>,
+					},
+				},
+			},
+		],
+	};
+
+	// Process each color in the system
+	generatedColorSystem.colorNames.forEach((colorName) => {
+		const lightScale = generatedColorSystem.light[colorName];
+		const darkScale = generatedColorSystem.dark[colorName];
+
+		// Convert solid colors (accentScale)
+		collections.collections[0].variables.solid[colorName] = {};
+		lightScale.accentScale.forEach((lightColor, index) => {
+			const step = index + 1;
+			collections.collections[0].variables.solid[colorName][step] = {
+				type: "color",
+				values: {
+					light: lightColor,
+					dark: darkScale.accentScale[index],
+				},
+			};
+		});
+
+		// Convert alpha colors (accentScaleAlpha)
+		collections.collections[0].variables.alpha[colorName] = {};
+		lightScale.accentScaleAlpha.forEach((lightColor, index) => {
+			const step = index + 1;
+			collections.collections[0].variables.alpha[colorName][step] = {
+				type: "color",
+				values: {
+					light: lightColor,
+					dark: darkScale.accentScaleAlpha[index],
+				},
+			};
+		});
+	});
+
+	// Add overlay colors (using the first color's overlays as they should be the same)
+	if (generatedColorSystem.colorNames.length > 0) {
+		const firstColorLight = generatedColorSystem.light[generatedColorSystem.colorNames[0]];
+		const firstColorDark = generatedColorSystem.dark[generatedColorSystem.colorNames[0]];
+
+		// Black overlays
+		firstColorLight.overlays.black.forEach((color, index) => {
+			const step = index + 1;
+			collections.collections[0].variables.overlays.black[step] = {
+				type: "color",
+				values: {
+					light: color,
+					dark: firstColorDark.overlays.black[index],
+				},
+			};
+		});
+
+		// White overlays
+		firstColorLight.overlays.white.forEach((color, index) => {
+			const step = index + 1;
+			collections.collections[0].variables.overlays.white[step] = {
+				type: "color",
+				values: {
+					light: color,
+					dark: firstColorDark.overlays.white[index],
+				},
+			};
+		});
+	}
+
+	return collections;
 };
 
 export const SystemManagerPlugin: React.FC = () => {
@@ -255,6 +340,48 @@ export const SystemManagerPlugin: React.FC = () => {
 		}
 	}, [generatedColorSystem, setMessageWithKey]);
 
+	// Handle export generated color scales as Tailwind JSON
+	const handleExportTailwindJSON = useCallback(async () => {
+		if (!generatedColorSystem) {
+			setMessageWithKey("Please generate color scales first.");
+			return;
+		}
+
+		setIsLoading(true);
+		try {
+			const tailwindConfig = convertToJSON(generatedColorSystem, "tailwind", undefined, { prettyPrint: true });
+			const jsonContent = JSON.stringify(tailwindConfig, null, 2);
+
+			downloadFile(jsonContent, "tailwind-colors.json", "application/json");
+			setMessageWithKey("Tailwind JSON export completed successfully!");
+		} catch (error) {
+			setMessageWithKey(`Error exporting Tailwind JSON: ${error}`);
+		} finally {
+			setIsLoading(false);
+		}
+	}, [generatedColorSystem, setMessageWithKey]);
+
+	// Handle export generated color scales as Collections JSON
+	const handleExportCollectionsJSON = useCallback(async () => {
+		if (!generatedColorSystem) {
+			setMessageWithKey("Please generate color scales first.");
+			return;
+		}
+
+		setIsLoading(true);
+		try {
+			const collectionsConfig = convertToCollectionsFormat(generatedColorSystem);
+			const jsonContent = JSON.stringify(collectionsConfig, null, 2);
+
+			downloadFile(jsonContent, "collections.json", "application/json");
+			setMessageWithKey("Collections JSON export completed successfully!");
+		} catch (error) {
+			setMessageWithKey(`Error exporting Collections JSON: ${error}`);
+		} finally {
+			setIsLoading(false);
+		}
+	}, [generatedColorSystem, setMessageWithKey]);
+
 	const renderTabContent = () => {
 		switch (activeTab) {
 			case "configure":
@@ -278,6 +405,8 @@ export const SystemManagerPlugin: React.FC = () => {
 						onExportJSON={handleExportJSON}
 						onExportGeneratedCSS={handleExportGeneratedCSS}
 						onExportGeneratedJSON={handleExportGeneratedJSON}
+						onExportTailwindJSON={handleExportTailwindJSON}
+						onExportCollectionsJSON={handleExportCollectionsJSON}
 					/>
 				);
 			case "variables":

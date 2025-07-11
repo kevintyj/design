@@ -11,6 +11,8 @@ interface ExportTabProps {
 	onExportJSON: () => void;
 	onExportGeneratedCSS: () => void;
 	onExportGeneratedJSON: () => void;
+	onExportTailwindJSON: () => void;
+	onExportCollectionsJSON: () => void;
 }
 
 export const ExportTab: React.FC<ExportTabProps> = ({
@@ -21,6 +23,8 @@ export const ExportTab: React.FC<ExportTabProps> = ({
 	onExportJSON,
 	onExportGeneratedCSS,
 	onExportGeneratedJSON,
+	onExportTailwindJSON,
+	onExportCollectionsJSON,
 }) => {
 	return (
 		<div className="py-3 px-5 space-y-6">
@@ -64,26 +68,55 @@ export const ExportTab: React.FC<ExportTabProps> = ({
 				<h2 className="text-base font-serif font-medium text-gray-12 pb-2">Export generated color scales</h2>
 				<div className="space-y-3">
 					<p className="text-sm text-gray-11">
-						Export your generated color scales as comprehensive CSS or JSON files with multiple variants and formats.
+						Export your generated color scales as comprehensive files or single format exports.
 					</p>
 
-					<div className="flex space-x-3">
-						<button
-							type="button"
-							onClick={onExportGeneratedCSS}
-							disabled={!generatedColorSystem || isLoading}
-							className="btn bg-teal-9 hover:bg-teal-10 text-[white] border-teal-11"
-						>
-							{isLoading ? "Loading..." : "Export Scales as CSS"}
-						</button>
-						<button
-							type="button"
-							onClick={onExportGeneratedJSON}
-							disabled={!generatedColorSystem || isLoading}
-							className="btn bg-teal-9 hover:bg-teal-10 text-[white] border-teal-11"
-						>
-							{isLoading ? "Loading..." : "Export Scales as JSON"}
-						</button>
+					<div className="space-y-3">
+						{/* ZIP exports with multiple formats */}
+						<div>
+							<p className="text-xs font-medium text-gray-12 mb-2">Multi-format exports (ZIP)</p>
+							<div className="flex space-x-3">
+								<button
+									type="button"
+									onClick={onExportGeneratedCSS}
+									disabled={!generatedColorSystem || isLoading}
+									className="btn bg-teal-9 hover:bg-teal-10 text-[white] border-teal-11"
+								>
+									{isLoading ? "Loading..." : "Export Scales as CSS"}
+								</button>
+								<button
+									type="button"
+									onClick={onExportGeneratedJSON}
+									disabled={!generatedColorSystem || isLoading}
+									className="btn bg-teal-9 hover:bg-teal-10 text-[white] border-teal-11"
+								>
+									{isLoading ? "Loading..." : "Export Scales as JSON"}
+								</button>
+							</div>
+						</div>
+
+						{/* Single format exports */}
+						<div>
+							<p className="text-xs font-medium text-gray-12 mb-2">Single format exports</p>
+							<div className="flex space-x-3 flex-wrap gap-y-2">
+								<button
+									type="button"
+									onClick={onExportTailwindJSON}
+									disabled={!generatedColorSystem || isLoading}
+									className="btn bg-teal-9 hover:bg-teal-10 text-[white] border-teal-11"
+								>
+									{isLoading ? "Loading..." : "Export Tailwind JSON"}
+								</button>
+								<button
+									type="button"
+									onClick={onExportCollectionsJSON}
+									disabled={!generatedColorSystem || isLoading}
+									className="btn bg-teal-9 hover:bg-teal-10 text-[white] border-teal-11"
+								>
+									{isLoading ? "Loading..." : "Export Collections JSON"}
+								</button>
+							</div>
+						</div>
 					</div>
 
 					{!generatedColorSystem && (
@@ -96,9 +129,10 @@ export const ExportTab: React.FC<ExportTabProps> = ({
 
 					{generatedColorSystem && (
 						<div className="text-xs text-gray-10 space-y-1">
-							<p>• CSS export includes: full, clean, hexa-only, and P3-only variants</p>
-							<p>• JSON export includes: flat, nested, tokens, Tailwind, and collections formats</p>
-							<p>• All exports are packaged as ZIP files with documentation</p>
+							<p>• CSS ZIP includes: full, clean, hexa-only, and P3-only variants</p>
+							<p>• JSON ZIP includes: flat, nested, tokens, Tailwind, and collections formats</p>
+							<p>• Tailwind JSON exports a single file compatible with Tailwind CSS</p>
+							<p>• Collections JSON exports a single file compatible with design token collections</p>
 						</div>
 					)}
 				</div>
