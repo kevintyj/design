@@ -139,19 +139,43 @@ function convertSimpleCollectionToRawFormat(data: any): any {
 		});
 	};
 
-	// Process solid variables
-	if (collection.variables.solid) {
-		addVariables(collection.variables.solid, "solid");
-	}
+	// Process all variable categories dynamically
+	if (collection.variables) {
+		Object.entries(collection.variables).forEach(([categoryKey, categoryValue]: [string, any]) => {
+			if (categoryValue && typeof categoryValue === "object") {
+				// Special handling for root-level variables from figma-to-json
+				if (categoryKey === "__ROOT__") {
+					// Process root variables without any prefix
+					addVariables(categoryValue, "");
+				} else if (categoryKey === "solid") {
+					// Special handling for 'solid' category - check for single vs grouped variables
+					// Separate single variables (no prefix) from grouped variables (with prefix)
+					const singleVariables: any = {};
+					const groupedVariables: any = {};
 
-	// Process alpha variables
-	if (collection.variables.alpha) {
-		addVariables(collection.variables.alpha, "alpha");
-	}
+					Object.entries(categoryValue).forEach(([key, value]: [string, any]) => {
+						if (value && typeof value === "object") {
+							// Check if this is a single variable (has type and values directly)
+							if (value.type && value.values) {
+								singleVariables[key] = value;
+							} else {
+								// This is a grouped variable (contains nested objects)
+								groupedVariables[key] = value;
+							}
+						}
+					});
 
-	// Process overlay variables
-	if (collection.variables.overlays) {
-		addVariables(collection.variables.overlays, "overlays");
+					// Process single variables without prefix
+					addVariables(singleVariables, "");
+
+					// Process grouped variables with category prefix
+					addVariables(groupedVariables, categoryKey);
+				} else {
+					// For all other categories (alpha, overlays, etc.), use category as prefix
+					addVariables(categoryValue, categoryKey);
+				}
+			}
+		});
 	}
 
 	return rawFormat;

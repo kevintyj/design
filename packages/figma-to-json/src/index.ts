@@ -277,7 +277,12 @@ export function convertSimpleCollectionOutputToRawFormat(data: SimpleCollectionO
 		};
 
 		Object.entries(collection.variables).forEach(([groupName, groupVariables]) => {
-			addVariables(groupVariables, groupName);
+			// Handle root-level variables without prefix
+			if (groupName === "__ROOT__") {
+				addVariables(groupVariables, "");
+			} else {
+				addVariables(groupVariables, groupName);
+			}
 		});
 	});
 
@@ -299,8 +304,9 @@ function parseVariableName(fullName: string, preserveStructure: boolean): { grou
 	const parts = fullName.split(/[/\-.]/);
 
 	if (parts.length === 1) {
+		// Single part variables remain ungrouped (use a special marker for root level)
 		return {
-			groupName: "colors",
+			groupName: "__ROOT__",
 			variableName: fullName,
 		};
 	}

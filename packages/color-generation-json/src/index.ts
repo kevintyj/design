@@ -51,6 +51,9 @@ export interface JSONGenerationConfig extends GenerationConfig {
 	fileExtension?: string;
 	separateMetadata?: boolean;
 	collectionName?: string;
+	// Collection-specific options
+	ungroupBackgroundVariable?: boolean; // Whether to place background in __ROOT__ instead of solid
+	rootVariables?: string[]; // Array of variable names that should be placed in __ROOT__
 }
 
 // File data interface for pure functions
@@ -59,18 +62,20 @@ export interface JSONFileData {
 	content: string;
 }
 
-// Simplified collection format interface for human-readable output
+// Variable definition interface
+export interface CollectionVariable {
+	type: string;
+	values: Record<string, string>;
+}
+
+// Collection variables can be either single variables or grouped variables
+export type CollectionVariableValue = CollectionVariable | Record<string, CollectionVariable>;
+
+// Simplified collection format interface for human-readable output (flexible structure)
 export interface SimpleCollectionFormat {
 	name: string;
 	modes: string[];
-	variables: {
-		solid: Record<string, Record<string, { type: string; values: Record<string, string> }>>;
-		alpha: Record<string, Record<string, { type: string; values: Record<string, string> }>>;
-		overlays: {
-			black: Record<string, { type: string; values: Record<string, string> }>;
-			white: Record<string, { type: string; values: Record<string, string> }>;
-		};
-	};
+	variables: Record<string, Record<string, CollectionVariableValue>>;
 }
 
 export interface SimpleCollectionOutput {
@@ -89,6 +94,8 @@ export const defaultJSONConfig: Required<JSONGenerationConfig> = {
 	fileExtension: ".json",
 	separateMetadata: true,
 	collectionName: "Generated Colors",
+	ungroupBackgroundVariable: true, // Default to ungrouping background for better Figma import
+	rootVariables: ["background"], // Default root variables
 };
 
 /**
@@ -360,6 +367,15 @@ export interface W3CCollectionOutput {
 
 /**
  * Generate collections format JSON (Simplified human-readable format) - WITH universal gray scale
+ *
+ * Supports flexible variable organization including:
+ * - Grouped variables (e.g., solid/primary/1, alpha/primary/1)
+ * - Ungrouped variables using __ROOT__ category (e.g., background)
+ * - Custom categories and dynamic structure
+ *
+ * @param colorSystem - The color system to convert
+ * @param config - Configuration options including ungroupBackgroundVariable and rootVariables
+ * @returns SimpleCollectionOutput with flexible variable structure
  */
 export function generateCollectionsJSON(
 	colorSystem: ColorSystem,
@@ -371,19 +387,21 @@ export function generateCollectionsJSON(
 	const collection: SimpleCollectionFormat = {
 		name: collectionName,
 		modes: ["light", "dark"],
-		variables: {
-			solid: {},
-			alpha: {},
-			overlays: {
-				black: {},
-				white: {},
-			},
-		},
+		variables: {},
 	};
 
-	// Generate solid colors (accent colors + gray + background)
+	// Initialize categories
+	collection.variables.solid = {};
+	if (fullConfig.includeAlpha) {
+		collection.variables.alpha = {};
+	}
+	if (fullConfig.includeOverlays) {
+		collection.variables.overlays = {};
+	}
+
+	// Generate solid colors (accent colors + gray)
 	for (const colorName of colorSystem.colorNames) {
-		collection.variables.solid[colorName] = {};
+		const colorGroup: Record<string, CollectionVariable> = {};
 
 		// Add main color scale (1-12)
 		for (let i = 1; i <= 12; i++) {
@@ -391,7 +409,7 @@ export function generateCollectionsJSON(
 			const darkColor = colorSystem.dark[colorName]?.accentScale[i - 1];
 
 			if (lightColor && darkColor) {
-				collection.variables.solid[colorName][i.toString()] = {
+				colorGroup[i.toString()] = {
 					type: "color",
 					values: {
 						light: lightColor,
@@ -401,39 +419,20 @@ export function generateCollectionsJSON(
 			}
 		}
 
-		// Add contrast and surface colors
-		const lightScale = colorSystem.light[colorName];
-		const darkScale = colorSystem.dark[colorName];
-
-		if (lightScale && darkScale) {
-			collection.variables.solid[colorName].contrast = {
-				type: "color",
-				values: {
-					light: lightScale.accentContrast,
-					dark: darkScale.accentContrast,
-				},
-			};
-
-			collection.variables.solid[colorName].surface = {
-				type: "color",
-				values: {
-					light: lightScale.accentSurface,
-					dark: darkScale.accentSurface,
-				},
-			};
-		}
+		// Collections format only includes numbered scales, not semantic values like contrast
+		collection.variables.solid[colorName] = colorGroup;
 	}
 
 	// Add universal gray colors (only once) to solid section
 	if (fullConfig.includeGrayScale) {
-		collection.variables.solid.gray = {};
+		const grayGroup: Record<string, CollectionVariable> = {};
 
 		for (let i = 1; i <= 12; i++) {
 			const lightColor = colorSystem.light[colorSystem.colorNames[0]]?.grayScale[i - 1];
 			const darkColor = colorSystem.dark[colorSystem.colorNames[0]]?.grayScale[i - 1];
 
 			if (lightColor && darkColor) {
-				collection.variables.solid.gray[i.toString()] = {
+				grayGroup[i.toString()] = {
 					type: "color",
 					values: {
 						light: lightColor,
@@ -443,48 +442,46 @@ export function generateCollectionsJSON(
 			}
 		}
 
-		// Add gray surface
-		const lightGray = colorSystem.light[colorSystem.colorNames[0]];
-		const darkGray = colorSystem.dark[colorSystem.colorNames[0]];
-
-		if (lightGray && darkGray) {
-			collection.variables.solid.gray.surface = {
-				type: "color",
-				values: {
-					light: lightGray.graySurface,
-					dark: darkGray.graySurface,
-				},
-			};
-		}
+		collection.variables.solid.gray = grayGroup;
 	}
 
-	// Add background as a solid color
+	// Add background as a single variable - placement depends on configuration
 	const firstLightColor = colorSystem.light[colorSystem.colorNames[0]];
 	const firstDarkColor = colorSystem.dark[colorSystem.colorNames[0]];
 
 	if (firstLightColor && firstDarkColor) {
-		collection.variables.solid.background = {
-			"1": {
-				type: "color",
-				values: {
-					light: firstLightColor.background,
-					dark: firstDarkColor.background,
-				},
+		const backgroundVariable: CollectionVariable = {
+			type: "color",
+			values: {
+				light: firstLightColor.background,
+				dark: firstDarkColor.background,
 			},
 		};
+
+		// Check if background should be ungrouped based on configuration
+		if (fullConfig.ungroupBackgroundVariable || fullConfig.rootVariables?.includes("background")) {
+			// Initialize __ROOT__ category if it doesn't exist
+			if (!collection.variables.__ROOT__) {
+				collection.variables.__ROOT__ = {};
+			}
+			collection.variables.__ROOT__.background = backgroundVariable;
+		} else {
+			// Place in solid category as before
+			collection.variables.solid.background = backgroundVariable;
+		}
 	}
 
 	// Generate alpha colors if enabled
 	if (fullConfig.includeAlpha) {
 		for (const colorName of colorSystem.colorNames) {
-			collection.variables.alpha[colorName] = {};
+			const alphaGroup: Record<string, CollectionVariable> = {};
 
 			for (let i = 1; i <= 12; i++) {
 				const lightColor = colorSystem.light[colorName]?.accentScaleAlpha[i - 1];
 				const darkColor = colorSystem.dark[colorName]?.accentScaleAlpha[i - 1];
 
 				if (lightColor && darkColor) {
-					collection.variables.alpha[colorName][i.toString()] = {
+					alphaGroup[i.toString()] = {
 						type: "color",
 						values: {
 							light: lightColor,
@@ -493,18 +490,20 @@ export function generateCollectionsJSON(
 					};
 				}
 			}
+
+			collection.variables.alpha[colorName] = alphaGroup;
 		}
 
 		// Add universal gray alpha colors
 		if (fullConfig.includeGrayScale) {
-			collection.variables.alpha.gray = {};
+			const grayAlphaGroup: Record<string, CollectionVariable> = {};
 
 			for (let i = 1; i <= 12; i++) {
 				const lightColor = colorSystem.light[colorSystem.colorNames[0]]?.grayScaleAlpha[i - 1];
 				const darkColor = colorSystem.dark[colorSystem.colorNames[0]]?.grayScaleAlpha[i - 1];
 
 				if (lightColor && darkColor) {
-					collection.variables.alpha.gray[i.toString()] = {
+					grayAlphaGroup[i.toString()] = {
 						type: "color",
 						values: {
 							light: lightColor,
@@ -513,6 +512,8 @@ export function generateCollectionsJSON(
 					};
 				}
 			}
+
+			collection.variables.alpha.gray = grayAlphaGroup;
 		}
 	}
 
@@ -520,9 +521,12 @@ export function generateCollectionsJSON(
 	if (fullConfig.includeOverlays) {
 		const overlays = generateOverlayColors();
 
+		const blackOverlays: Record<string, CollectionVariable> = {};
+		const whiteOverlays: Record<string, CollectionVariable> = {};
+
 		// Black overlays (same for light and dark)
 		overlays.black.forEach((color: string, index: number) => {
-			collection.variables.overlays.black[(index + 1).toString()] = {
+			blackOverlays[(index + 1).toString()] = {
 				type: "color",
 				values: {
 					light: color,
@@ -533,7 +537,7 @@ export function generateCollectionsJSON(
 
 		// White overlays (same for light and dark)
 		overlays.white.forEach((color: string, index: number) => {
-			collection.variables.overlays.white[(index + 1).toString()] = {
+			whiteOverlays[(index + 1).toString()] = {
 				type: "color",
 				values: {
 					light: color,
@@ -541,6 +545,11 @@ export function generateCollectionsJSON(
 				},
 			};
 		});
+
+		collection.variables.overlays = {
+			black: blackOverlays,
+			white: whiteOverlays,
+		};
 	}
 
 	return {
