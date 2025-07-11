@@ -39,6 +39,28 @@ interface PackageConfigs {
 	[packageName: string]: PackageConfig;
 }
 
+interface PackageBuildResult {
+	name: string;
+	success: boolean;
+	duration: number;
+}
+
+interface BuildSummary {
+	startTime: number;
+	endTime?: number;
+	totalPackages: number;
+	builtPackages: PackageBuildResult[];
+	skippedPackages: string[];
+	buildGroups: BuildGroupResult[];
+}
+
+interface BuildGroupResult {
+	name: string;
+	builtPackages: PackageBuildResult[];
+	skippedPackages: string[];
+	duration: number;
+}
+
 const COLORS: Colors = {
 	reset: "\x1b[0m",
 	bright: "\x1b[1m",
@@ -61,13 +83,19 @@ const log: Logger = {
 // Define build order and dependencies
 const BUILD_ORDER: BuildGroup[] = [
 	{
-		name: "Core Package",
-		packages: ["color-generation-core"],
-		description: "Core color generation logic",
+		name: "Core Packages",
+		packages: ["color-generation-core", "spacing-generation-core"],
+		description: "Core color and spacing generation logic",
 	},
 	{
 		name: "Extension Packages",
-		packages: ["color-generation-css", "color-generation-json", "figma-to-json"],
+		packages: [
+			"color-generation-css",
+			"color-generation-json",
+			"spacing-generation-css",
+			"spacing-generation-json",
+			"figma-to-json",
+		],
 		description: "CSS and JSON output formatters, Figma integration",
 	},
 	{
@@ -91,6 +119,18 @@ const PACKAGE_CONFIGS: PackageConfigs = {
 		hasTypes: true,
 		needsCleanup: true,
 	},
+	"spacing-generation-core": {
+		hasTypes: true,
+		needsCleanup: true,
+	},
+	"spacing-generation-css": {
+		hasTypes: true,
+		needsCleanup: true,
+	},
+	"spacing-generation-json": {
+		hasTypes: true,
+		needsCleanup: true,
+	},
 	"figma-to-json": {
 		hasTypes: true,
 		needsCleanup: true,
@@ -104,6 +144,84 @@ const PACKAGE_CONFIGS: PackageConfigs = {
 		needsCleanup: false,
 	},
 };
+
+function formatDuration(ms: number): string {
+	if (ms < 1000) return `${Math.round(ms)}ms`;
+	const seconds = ms / 1000;
+	if (seconds < 60) return `${seconds.toFixed(1)}s`;
+	const minutes = Math.floor(seconds / 60);
+	const remainingSeconds = seconds % 60;
+	return `${minutes}m ${remainingSeconds.toFixed(1)}s`;
+}
+
+function displayBuildSummary(summary: BuildSummary): void {
+	const duration = summary.endTime ? summary.endTime - summary.startTime : 0;
+
+	console.log(`\n${COLORS.bright}📊 Build Summary${COLORS.reset}`);
+	console.log(`${COLORS.bright}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLORS.reset}`);
+
+	// Overall stats
+	console.log(`${COLORS.cyan}⏱️  Total time:${COLORS.reset} ${formatDuration(duration)}`);
+	console.log(`${COLORS.cyan}📦 Total packages:${COLORS.reset} ${summary.totalPackages}`);
+	console.log(`${COLORS.green}✅ Built packages:${COLORS.reset} ${summary.builtPackages.length}`);
+
+	if (summary.skippedPackages.length > 0) {
+		console.log(`${COLORS.yellow}⏭️  Skipped packages:${COLORS.reset} ${summary.skippedPackages.length}`);
+	}
+
+	// Group breakdown
+	console.log(`\n${COLORS.bright}📋 Build Groups:${COLORS.reset}`);
+	summary.buildGroups.forEach((group, index) => {
+		const groupIcon = index === 0 ? "🔧" : index === 1 ? "📝" : "🚀";
+		console.log(`  ${groupIcon} ${COLORS.bright}${group.name}${COLORS.reset} (${formatDuration(group.duration)})`);
+
+		if (group.builtPackages.length > 0) {
+			group.builtPackages.forEach((pkg) => {
+				console.log(
+					`    ${COLORS.green}✓${COLORS.reset} ${pkg.name} ${COLORS.dim}(${formatDuration(pkg.duration)})${COLORS.reset}`,
+				);
+			});
+		}
+
+		if (group.skippedPackages.length > 0) {
+			console.log(`    ${COLORS.yellow}⏭${COLORS.reset} Skipped: ${group.skippedPackages.join(", ")}`);
+		}
+	});
+
+	// Package details with individual timing
+	if (summary.builtPackages.length > 0) {
+		console.log(`\n${COLORS.bright}🔨 Built Packages (Individual Timing):${COLORS.reset}`);
+
+		// Sort packages by build time (slowest first)
+		const sortedPackages = [...summary.builtPackages].sort((a, b) => b.duration - a.duration);
+
+		sortedPackages.forEach((pkg, index) => {
+			const config = PACKAGE_CONFIGS[pkg.name];
+			const typeInfo = config?.hasTypes ? "TS" : "JS";
+			const buildTool = config?.usesWebpack ? "Webpack" : "Bun";
+			const timeColor = pkg.duration > 5000 ? COLORS.red : pkg.duration > 2000 ? COLORS.yellow : COLORS.green;
+			const rankEmoji = index === 0 ? "🐌" : index === 1 ? "🚶" : "🏃";
+
+			console.log(
+				`  ${rankEmoji} ${pkg.name} ${COLORS.dim}(${typeInfo}, ${buildTool})${COLORS.reset} - ${timeColor}${formatDuration(pkg.duration)}${COLORS.reset}`,
+			);
+		});
+
+		// Build time statistics
+		const buildTimes = summary.builtPackages.map((p) => p.duration);
+		const avgTime = buildTimes.reduce((sum, time) => sum + time, 0) / buildTimes.length;
+		const maxTime = Math.max(...buildTimes);
+		const minTime = Math.min(...buildTimes);
+
+		console.log(`\n${COLORS.bright}📈 Build Statistics:${COLORS.reset}`);
+		console.log(`  ${COLORS.cyan}Average:${COLORS.reset} ${formatDuration(avgTime)}`);
+		console.log(`  ${COLORS.cyan}Fastest:${COLORS.reset} ${formatDuration(minTime)}`);
+		console.log(`  ${COLORS.cyan}Slowest:${COLORS.reset} ${formatDuration(maxTime)}`);
+	}
+
+	console.log(`${COLORS.bright}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLORS.reset}`);
+	console.log(`${COLORS.bright}✨ Build completed successfully!${COLORS.reset}\n`);
+}
 
 async function packageExists(packageName: string): Promise<boolean> {
 	try {
@@ -137,9 +255,10 @@ async function getAvailablePackages(): Promise<string[]> {
 	}
 }
 
-async function buildPackage(packageName: string): Promise<boolean> {
+async function buildPackage(packageName: string): Promise<PackageBuildResult> {
 	const config = PACKAGE_CONFIGS[packageName] || {};
 	const packagePath = path.join("packages", packageName);
+	const startTime = Date.now();
 
 	log.step(`Building ${packageName}...`);
 
@@ -156,38 +275,73 @@ async function buildPackage(packageName: string): Promise<boolean> {
 			throw new Error(`Build failed for ${packageName}`);
 		}
 
-		log.success(`${packageName} built successfully`);
-		return true;
+		const duration = Date.now() - startTime;
+		log.success(`${packageName} built successfully ${COLORS.dim}(${formatDuration(duration)})${COLORS.reset}`);
+
+		return {
+			name: packageName,
+			success: true,
+			duration,
+		};
 	} catch (error) {
+		const duration = Date.now() - startTime;
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		log.error(`Failed to build ${packageName}: ${errorMessage}`);
-		throw error;
+
+		return {
+			name: packageName,
+			success: false,
+			duration,
+		};
 	}
 }
 
-async function buildGroup(group: BuildGroup): Promise<void> {
+async function buildGroup(group: BuildGroup): Promise<BuildGroupResult> {
+	const groupStartTime = Date.now();
+
 	log.info(`${COLORS.bright}Building ${group.name}${COLORS.reset}`);
 	log.info(`${COLORS.dim}${group.description}${COLORS.reset}`);
 
 	const availablePackages = await getAvailablePackages();
 	const packagesToBuild = group.packages.filter((pkg) => availablePackages.includes(pkg));
+	const skippedPackages = group.packages.filter((pkg) => !availablePackages.includes(pkg));
 
 	if (packagesToBuild.length === 0) {
 		log.warn(`No packages found for ${group.name}`);
-		return;
+		return {
+			name: group.name,
+			builtPackages: [],
+			skippedPackages: group.packages,
+			duration: Date.now() - groupStartTime,
+		};
 	}
 
 	if (packagesToBuild.length !== group.packages.length) {
-		const missing = group.packages.filter((pkg) => !availablePackages.includes(pkg));
-		log.warn(`Missing packages: ${missing.join(", ")}`);
+		log.warn(`Missing packages: ${skippedPackages.join(", ")}`);
 	}
 
 	// Build packages in parallel within the same group
 	const buildPromises = packagesToBuild.map((packageName) => buildPackage(packageName));
 
 	try {
-		await Promise.all(buildPromises);
+		const buildResults = await Promise.all(buildPromises);
+
+		// Check if any packages failed
+		const failedPackages = buildResults.filter((result) => !result.success);
+		if (failedPackages.length > 0) {
+			throw new Error(
+				`${failedPackages.length} package(s) failed to build: ${failedPackages.map((p) => p.name).join(", ")}`,
+			);
+		}
+
 		log.success(`${group.name} completed successfully`);
+
+		return {
+			name: group.name,
+			builtPackages: buildResults,
+			skippedPackages,
+			duration: Date.now() - groupStartTime,
+		};
 	} catch (error) {
 		const errorMessage = error instanceof Error ? `${error.message}\n${error.stack}` : String(error);
 		log.error(`${group.name} failed: ${errorMessage}`);
@@ -250,17 +404,32 @@ async function main(): Promise<void> {
 		await validateEnvironment();
 
 		switch (command) {
-			case "build":
+			case "build": {
+				const buildSummary: BuildSummary = {
+					startTime: Date.now(),
+					totalPackages: 0,
+					builtPackages: [],
+					skippedPackages: [],
+					buildGroups: [],
+				};
+
 				log.info("Starting full build process...");
 
 				// Build each group in sequence (groups have dependencies between them)
 				for (const group of BUILD_ORDER) {
-					await buildGroup(group);
+					const groupResult = await buildGroup(group);
+					buildSummary.buildGroups.push(groupResult);
+					buildSummary.builtPackages.push(...groupResult.builtPackages);
+					buildSummary.skippedPackages.push(...groupResult.skippedPackages);
 					console.log(); // Add spacing between groups
 				}
 
-				log.success(`${COLORS.bright}✨ All packages built successfully!${COLORS.reset}`);
+				buildSummary.endTime = Date.now();
+				buildSummary.totalPackages = buildSummary.builtPackages.length + buildSummary.skippedPackages.length;
+
+				displayBuildSummary(buildSummary);
 				break;
+			}
 
 			case "clean":
 				await cleanAll();
@@ -278,7 +447,15 @@ async function main(): Promise<void> {
 					process.exit(1);
 				}
 
-				await buildPackage(packageName);
+				const packageResult = await buildPackage(packageName);
+				const summary: BuildSummary = {
+					startTime: Date.now(),
+					totalPackages: 1,
+					builtPackages: [packageResult],
+					skippedPackages: [],
+					buildGroups: [],
+				};
+				displayBuildSummary(summary);
 				break;
 			}
 

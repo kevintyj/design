@@ -8,7 +8,7 @@
 		"generate-colors": "./dist/index.js"
 	},
 	"scripts": {
-		"build": "bun build src/index.ts --outdir dist --target bun && chmod +x dist/cli.js",
+		"build": "bun build src/index.ts --outdir dist --target bun && chmod +x dist/index.js",
 		"dev": "bun --watch src/index.ts",
 		"test": "bun test",
 		"lint": "biome check src/",

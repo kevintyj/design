@@ -137,10 +137,10 @@ export async function loadColorDefinitions(filePath: string): Promise<ColorInput
 		const colorModule = await import(filePath);
 
 		// Try to find the color definitions in various export patterns
-		const light = colorModule._light || colorModule.light || colorModule.lightColors;
-		const dark = colorModule._dark || colorModule.dark || colorModule.darkColors;
-		const constantsLight = colorModule._constantsLight || colorModule.constantsLight || colorModule.light_constants;
-		const constantsDark = colorModule._constantsDark || colorModule.constantsDark || colorModule.dark_constants;
+		const light = colorModule.light || colorModule._light || colorModule.lightColors;
+		const dark = colorModule.dark || colorModule._dark || colorModule.darkColors;
+		const constantsLight = colorModule.constantsLight || colorModule._constantsLight || colorModule.light_constants;
+		const constantsDark = colorModule.constantsDark || colorModule._constantsDark || colorModule.dark_constants;
 
 		if (!light || !dark || !constantsLight || !constantsDark) {
 			throw new Error("Required color definitions not found. Expected: light, dark, constantsLight, constantsDark");

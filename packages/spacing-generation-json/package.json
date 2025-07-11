@@ -1,0 +1,48 @@
+{
+	"name": "@design/spacing-generation-json",
+	"version": "1.0.0",
+	"description": "JSON generation for spacing scales",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "rm -rf dist && bun build src/index.ts --target=browser --outfile=dist/index.js --format=esm && bun run build:types",
+		"build:types": "tsc src/index.ts --declaration --emitDeclarationOnly --outDir dist --moduleResolution node --esModuleInterop --allowSyntheticDefaultImports",
+		"dev": "bun --watch src/index.ts",
+		"test": "bun test",
+		"lint": "biome check src/",
+		"format": "biome format --write src/"
+	},
+	"dependencies": {
+		"@design/spacing-generation-core": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"typescript": "^5.0.0"
+	},
+	"keywords": [
+		"spacing",
+		"json",
+		"design-system",
+		"spacing-scales",
+		"typescript"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/your-username/design-system",
+		"directory": "packages/spacing-generation-json"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	}
+}

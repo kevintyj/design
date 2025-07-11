@@ -1,17 +1,28 @@
-# Design System Color Generation Monorepo
+# Design System Generation Monorepo
 
-A comprehensive color generation system based on Radix UI colors, built as a modular TypeScript monorepo with Bun.
+A comprehensive design system with color and spacing generation based on Radix UI colors, built as a modular TypeScript monorepo with Bun.
 
-## 🎨 Features
+## ✨ Features
 
+### 🎨 Color System
 - **12-step color progressions** for each color using Radix UI methodology
 - **Alpha channel variants** for transparency effects
 - **Wide gamut P3 support** for modern displays  
 - **Gray scale variants** contextual to each color
+- **Special colors** (contrast, surface, indicator)
+
+### 📏 Spacing System
+- **26 spacing values** from 0px to 80px with 4px base multiplier
+- **Pixel and REM variants** for flexible sizing
+- **Utility classes** for margin, padding, and gap
+- **Tailwind-compatible** naming conventions
+
+### 🛠 Generation Options
 - **Multiple output formats**: CSS custom properties, JSON, design tokens, Tailwind config
 - **CLI tool** for easy generation from any project
 - **TypeScript support** with full type safety
 - **Configurable output** directories and options
+- **Organized folder structure** (colors/, spacing/, combined/)
 
 ## 📦 Packages
 
@@ -20,10 +31,15 @@ A comprehensive color generation system based on Radix UI colors, built as a mod
 - **[@design/color-generation-core](./packages/color-generation-core)** - Core color generation logic
 - **[@design/color-generation-css](./packages/color-generation-css)** - CSS generation utilities  
 - **[@design/color-generation-json](./packages/color-generation-json)** - JSON format generation
+- **[@design/spacing-generation-core](./packages/spacing-generation-core)** - Core spacing generation logic
+- **[@design/spacing-generation-css](./packages/spacing-generation-css)** - Spacing CSS utilities
+- **[@design/spacing-generation-json](./packages/spacing-generation-json)** - Spacing JSON formats
 - **[@design/cli](./packages/cli)** - Command-line interface
 
 ### Supporting Packages
 
+- **[@design/figma-plugin](./packages/figma-plugin)** - Figma plugin for design system management
+- **[@design/figma-to-json](./packages/figma-to-json)** - Export Figma variables to JSON
 - **[@design/examples](./packages/examples)** - Usage examples and demos
 
 ## 🚀 Quick Start
@@ -34,9 +50,16 @@ A comprehensive color generation system based on Radix UI colors, built as a mod
 bun install
 ```
 
-### 2. Validate Your Colors
+### 2. Build the System
 
-Your `colors.ts` file is already set up with 9 beautiful colors:
+```bash
+# Build all packages in dependency order
+bun run build
+```
+
+### 3. Validate Your Definitions
+
+Your `base.ts` file is already set up with 9 beautiful colors and 26 spacing values:
 
 ```bash
 # Validate color definitions
@@ -44,16 +67,19 @@ bun run colors:validate
 
 # List all available colors
 bun run colors:list
+
+# View spacing definitions (coming soon)
+bun run spacing:validate
 ```
 
-### 3. Generate Colors
+### 4. Generate Design System
 
 ```bash
 # Quick generation with all features
 bun run colors:quick
 
 # Custom output directory
-bun run colors:quick --output ./dist/colors
+bun run colors:quick --output ./dist
 
 # Full control with all options
 bun run colors:generate --verbose --output ./styles
@@ -67,7 +93,7 @@ bun run colors:generate --formats json
 
 ## 🎯 Available Colors
 
-Your `colors.ts` currently includes:
+Your `base.ts` currently includes:
 
 - **🔥 blaze** - Vibrant orange-red (`#FC4B32` / `#FD563D`)
 - **🍂 autumn** - Warm brown (`#311318` / `#30181B`) 
@@ -81,15 +107,42 @@ Your `colors.ts` currently includes:
 
 Each color generates **12-step progressions** for light and dark modes with alpha variants, wide gamut P3 colors, and contextual gray scales.
 
+## 📏 Available Spacing
+
+Your `base.ts` includes 26 spacing values following a 4px multiplier system:
+
+- **Core values**: `0`, `1` (4px), `2` (8px), `3` (12px), `4` (16px), `5` (20px)
+- **Extended values**: `6` through `20` for larger spacing needs
+- **Pixel variants**: `px` (1px), `2px`, `3px`, `5px`, `6px`, `10px`, `14px`
+- **REM equivalents**: Auto-generated for all values (e.g., `1rem` = 16px)
+
 ## 📚 CLI Commands
+
+### Color Commands
 
 | Command | Description | Example |
 |---------|-------------|---------|
 | `bun run colors:validate` | Validate color definitions | `bun run colors:validate` |
 | `bun run colors:list` | List all available colors | `bun run colors:list` |
-| `bun run colors:quick` | Quick generation (all features) | `bun run colors:quick --output ./css` |
+| `bun run colors:quick` | Quick generation (all features) | `bun run colors:quick` |
 | `bun run colors:generate` | Full control generation | `bun run colors:generate --verbose` |
-| `bun run colors` | Show CLI help | `bun run colors --help` |
+| `bun run colors:figma` | Generate Figma JSON | `bun run colors:figma` |
+
+### Spacing Commands (Coming Soon)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `bun run spacing:validate` | Validate spacing definitions | 🚧 CLI integration pending |
+| `bun run spacing:quick` | Quick spacing generation | 🚧 CLI integration pending |
+| `bun run spacing:generate` | Full spacing generation | 🚧 CLI integration pending |
+
+### System Commands (Coming Soon)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `bun run system:validate` | Validate both colors and spacing | 🚧 Partial (colors only) |
+| `bun run system:quick` | Generate complete design system | 🚧 CLI integration pending |
+| `bun run system:generate` | Full system generation | 🚧 CLI integration pending |
 
 ### Advanced Generation Options
 
@@ -113,112 +166,173 @@ bun run colors:generate --json-format tokens --json-pretty --formats json
 bun run colors:generate --verbose
 ```
 
-## 🎯 Generated Output
+## 🎯 Generated Output Structure
 
-### CSS Custom Properties
-
-```css
-:root {
-  /* Main color scale */
-  --color-blue-1: #fcfdff;
-  --color-blue-2: #f6f9ff;
-  --color-blue-3: #ebf2ff;
-  /* ... steps 4-12 */
-  
-  /* Alpha variants */
-  --color-blue-a1: rgba(40, 110, 220, 0.05);
-  --color-blue-a2: rgba(40, 110, 220, 0.10);
-  /* ... */
-  
-  /* Wide gamut P3 */
-  --color-blue-p3-1: oklch(99.4% 0.0025 259.5);
-  /* ... */
-  
-  /* Special colors */
-  --color-blue-contrast: #ffffff;
-  --color-blue-surface: rgba(40, 110, 220, 0.1);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Dark mode variants */
-  }
-}
 ```
-
-### JSON Formats
-
-**Flat Format:**
-```json
-{
-  "blue-1": "#fcfdff",
-  "blue-2": "#f6f9ff",
-  "blue-contrast": "#ffffff"
-}
-```
-
-**Design Tokens:**
-```json
-{
-  "color": {
-    "blue": {
-      "1": { "value": "#fcfdff", "type": "color" },
-      "contrast": { "value": "#ffffff", "type": "color" }
-    }
-  }
-}
-```
-
-**Tailwind Configuration:**
-```json
-{
-  "blue": {
-    "50": "#fcfdff",
-    "500": "#286edc",
-    "950": "#133161"
-  }
-}
+output/
+├── css/
+│   ├── colors/
+│   │   ├── colors-light.css
+│   │   ├── colors-dark.css
+│   │   ├── colors-combined.css
+│   │   └── colors-full-*.css
+│   ├── spacing/            # 🚧 Coming via CLI
+│   │   ├── spacing.css
+│   │   ├── spacing-utilities.css
+│   │   └── spacing-rem.css
+│   └── combined/           # 🚧 Coming soon
+│       └── design-system.css
+├── json/
+│   ├── colors/
+│   │   ├── colors-flat.json
+│   │   ├── colors-nested.json
+│   │   ├── colors-tokens.json
+│   │   └── colors-tailwind.json
+│   ├── spacing/            # 🚧 Coming via CLI
+│   │   ├── spacing-flat.json
+│   │   ├── spacing-tokens.json
+│   │   └── spacing-tailwind.json
+│   └── combined/           # 🚧 Coming soon
+│       └── design-system.json
+└── figma/
+    ├── figma-colors.json
+    ├── figma-spacing.json  # 🚧 Coming soon
+    └── figma-combined.json # 🚧 Coming soon
 ```
 
 ## 💻 Programmatic Usage
 
+### Color Generation
+
 ```typescript
-// Import from source (no build required)
 import { 
-  createColorInput, 
+  loadColorDefinitions,
   generateColorSystem 
-} from './packages/color-generation-core/src/index';
-import { generateCSSFiles } from './packages/color-generation-css/src/index';
-import { generateJSONFiles } from './packages/color-generation-json/src/index';
+} from '@design/color-generation-core';
+import { generateCSSFiles } from '@design/color-generation-css';
+import { generateJSONFiles } from '@design/color-generation-json';
 
-// Create color input
-const colorInput = createColorInput(
-  { primary: '#0066CC', secondary: '#6366F1' },
-  { primary: '#3B82F6', secondary: '#8B5CF6' },
-  { gray: '#6B7280', background: '#FFFFFF' },
-  { gray: '#9CA3AF', background: '#111827' }
-);
-
-// Generate color system
+// Load from base.ts
+const colorInput = await loadColorDefinitions('./base.ts');
 const colorSystem = generateColorSystem(colorInput);
 
 // Generate CSS files
 const cssFiles = generateCSSFiles(colorSystem, {
-  outputDir: './output',
   includeAlpha: true,
   includeWideGamut: true
 });
 
 // Generate JSON files  
 const jsonFiles = generateJSONFiles(colorSystem, {
-  outputDir: './output',
   format: 'all'
+});
+```
+
+### Spacing Generation
+
+```typescript
+import { 
+  loadSpacingDefinitions,
+  generateSpacingSystem 
+} from '@design/spacing-generation-core';
+import { generateCSSFiles } from '@design/spacing-generation-css';
+import { generateJSONFiles } from '@design/spacing-generation-json';
+
+// Load from base.ts
+const spacingInput = await loadSpacingDefinitions('./base.ts');
+const spacingSystem = generateSpacingSystem(spacingInput);
+
+// Generate CSS files
+const cssFiles = generateCSSFiles(spacingSystem, {
+  variant: 'full',
+  generateUtilityClasses: true
+});
+
+// Generate JSON files
+const jsonFiles = generateJSONFiles(spacingSystem, {
+  format: 'tailwind'
 });
 ```
 
 ## 🎨 Examples
 
-Run the included examples to see the system in action:
+### Generated CSS Output
+
+**Color Custom Properties:**
+```css
+:root {
+  /* Color scale */
+  --color-blue-1: #fcfdff;
+  --color-blue-2: #f6f9ff;
+  --color-blue-12: #113161;
+  
+  /* Alpha variants */
+  --color-blue-a1: rgba(40, 110, 220, 0.05);
+  --color-blue-a12: rgba(40, 110, 220, 0.95);
+  
+  /* Wide gamut P3 */
+  --color-blue-p3-1: oklch(99.4% 0.0025 259.5);
+  
+  /* Special colors */
+  --color-blue-contrast: #ffffff;
+  --color-blue-surface: rgba(40, 110, 220, 0.1);
+}
+```
+
+**Spacing Custom Properties:**
+```css
+:root {
+  /* Pixel values */
+  --spacing-0: 0px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-4: 16px;
+  
+  /* REM values */
+  --spacing-1-rem: 0.25rem;
+  --spacing-2-rem: 0.5rem;
+  --spacing-4-rem: 1rem;
+}
+
+/* Utility classes */
+.m-1 { margin: 4px; }
+.p-2 { padding: 8px; }
+.gap-4 { gap: 16px; }
+```
+
+### Generated JSON Output
+
+**Tailwind Colors:**
+```json
+{
+  "theme": {
+    "colors": {
+      "blue": {
+        "50": "#fcfdff",
+        "500": "#286edc",
+        "950": "#113161"
+      }
+    }
+  }
+}
+```
+
+**Tailwind Spacing:**
+```json
+{
+  "theme": {
+    "spacing": {
+      "0": "0px",
+      "1": "4px",
+      "2": "8px",
+      "4": "16px",
+      "px": "1px"
+    }
+  }
+}
+```
+
+### Run Examples
 
 ```bash
 # Basic color generation example
@@ -230,25 +344,44 @@ bun run example:advanced
 
 ## 🛠 Development
 
-### Scripts
+### Build Commands
 
 ```bash
 # Install dependencies
 bun install
 
-# Build all packages (optional - not required for basic usage)
+# Build all packages in dependency order
 bun run build
 
+# Build specific package
+bun run build:package spacing-generation-core
+
+# Clean build artifacts
+bun run build:clean
+
+# List available packages
+bun run build:list
+```
+
+### Development Scripts
+
+```bash
 # Run linting
 bun run lint
 
-# Clean build artifacts
+# Format code
+bun run precommit
+
+# Run tests
+bun run test
+
+# Clean everything
 bun run clean
 ```
 
 ### Adding New Colors
 
-1. Edit your `colors.ts` file to add new colors:
+1. Edit your `base.ts` file to add new colors:
 
 ```typescript
 export const light = {
@@ -271,24 +404,49 @@ bun run colors:validate
 bun run colors:quick
 ```
 
+### Adding New Spacing Values
+
+1. Edit the `spacing` object in `base.ts`:
+
+```typescript
+export const spacing = {
+  // ... existing values
+  "24": 96,    // 24 * 4px = 96px
+  "32": 128    // 32 * 4px = 128px
+};
+```
+
+2. Use the spacing packages directly:
+
+```typescript
+import { loadSpacingDefinitions, generateSpacingSystem } from '@design/spacing-generation-core';
+// Generate spacing as shown in programmatic usage
+```
+
 ### Project Structure
 
 ```
 design/
 ├── packages/
-│   ├── color-generation-core/    # Core generation logic
-│   ├── color-generation-css/     # CSS output generation
-│   ├── color-generation-json/    # JSON output generation  
-│   ├── cli/                      # Command-line interface
-│   └── examples/                 # Usage examples
-├── colors.ts                     # Your color definitions
-├── package.json                  # Monorepo configuration
-└── generated/                    # Output directory (gitignored)
+│   ├── color-generation-core/     # Core color generation
+│   ├── color-generation-css/      # Color CSS output
+│   ├── color-generation-json/     # Color JSON output
+│   ├── spacing-generation-core/   # Core spacing generation
+│   ├── spacing-generation-css/    # Spacing CSS output
+│   ├── spacing-generation-json/   # Spacing JSON output
+│   ├── cli/                       # Command-line interface
+│   ├── figma-plugin/              # Figma integration
+│   ├── figma-to-json/             # Figma variable export
+│   └── examples/                  # Usage examples
+├── base.ts                        # Your design definitions
+├── package.json                   # Monorepo configuration
+├── build.ts                       # Custom build system
+└── output/                        # Generated files
 ```
 
-## 🎨 Color Scale Methodology
+## 🎨 Design System Methodology
 
-This system uses the Radix UI color methodology:
+### Color Scale (Radix UI)
 
 - **Steps 1-2**: Backgrounds, subtle borders
 - **Steps 3-5**: UI component backgrounds  
@@ -296,51 +454,83 @@ This system uses the Radix UI color methodology:
 - **Steps 9-10**: Solid backgrounds, primary actions
 - **Steps 11-12**: High contrast text, active states
 
-### Alpha Variants
+### Spacing Scale (4px Base)
 
-Semi-transparent versions of each step, perfect for:
-- Overlays and backdrops
-- Hover states
-- Subtle backgrounds over images
-- Layered components
+- **Micro spacing** (0-4px): `0`, `px`, `2px`, `3px`, `1`
+- **Small spacing** (4-16px): `1`, `5px`, `6px`, `2`, `10px`, `3`, `14px`, `4`
+- **Medium spacing** (16-48px): `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`
+- **Large spacing** (48px+): `13`, `14`, `15`, `16`, `18`, `20`
 
-### Wide Gamut P3
+## 📖 Package APIs
 
-Enhanced color versions for modern displays:
-- More vibrant colors on supported devices
-- Automatic fallback to sRGB
-- Future-proof color definitions
+### Color Generation
 
-## 📖 API Reference
+- **Core**: `createColorInput()`, `generateColorSystem()`, `validateColorInput()`
+- **CSS**: `generateCSSFiles()`, `generateCSSForColorSystem()`
+- **JSON**: `generateJSONFiles()`, `generateFlatJSON()`, `generateTailwindJSON()`
 
-### Core Package
+### Spacing Generation
 
-- `createColorInput()` - Create color input from objects
-- `generateColorSystem()` - Generate complete color system
-- `getColorScale()` - Get specific color scale
-- `validateColorInput()` - Validate color definitions
-- `loadColorDefinitions()` - Load colors from file
+- **Core**: `createSpacingInput()`, `generateSpacingSystem()`, `validateSpacingInput()`
+- **CSS**: `generateCSSFiles()`, `generateSpacingUtilityClasses()`
+- **JSON**: `generateJSONFiles()`, `generateTailwindSpacingJSON()`
 
-### CSS Package
+## 🎯 Figma Integration
 
-- `generateCSSFiles()` - Generate CSS files
-- `generateCSSForColorSystem()` - Generate CSS strings
-- `generateUtilityClasses()` - Generate utility classes
+### Figma Plugin
 
-### JSON Package
+- Import/export design system configurations
+- Generate color scales directly in Figma
+- Manage design system variables
+- Export to multiple formats
 
-- `generateJSONFiles()` - Generate JSON files
-- `generateFlatJSON()` - Flat format generation
-- `generateNestedJSON()` - Nested format generation
-- `generateDesignTokensJSON()` - Design tokens format
-- `generateTailwindJSON()` - Tailwind config format
+### Figma Variable Export
+
+- Export Figma variables to JSON
+- Convert to design system format
+- Support for color and spacing variables
+
+```bash
+# Develop Figma plugin
+bun run figma:dev
+
+# Build Figma plugin for production
+bun run figma:build
+```
+
+## 🏗️ Build System
+
+This project uses a custom TypeScript build system with advanced features:
+
+### Build Process
+
+1. **Core Packages**: Color and spacing generation cores
+2. **Extension Packages**: CSS, JSON, and Figma integrations  
+3. **Application Packages**: CLI and examples
+
+### Build Features
+
+- 🔍 **Environment validation** with Bun version checking
+- 📦 **Dependency-aware ordering** prevents build failures
+- 🎨 **Rich console output** with colors and progress
+- 🚀 **Parallel execution** within build groups
+- 📊 **Build statistics** with timing and performance data
+- 🧹 **Smart cleanup** and artifact management
+
+### Build Statistics
+
+The build system provides detailed statistics:
+- Individual package build times
+- Group build summaries  
+- Performance rankings
+- Total build time and package counts
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create your feature branch: `git checkout -b feature/amazing-feature`
 3. Make your changes
-4. Run tests: `bun test`
+4. Build and test: `bun run build && bun run test`
 5. Run linting: `bun run lint`
 6. Commit your changes: `git commit -m 'Add amazing feature'`
 7. Push to the branch: `git push origin feature/amazing-feature`
@@ -348,52 +538,36 @@ Enhanced color versions for modern displays:
 
 ## 📄 License
 
-MIT License - see the [LICENSE](LICENSE) file for details.
+BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
 - [Radix UI](https://www.radix-ui.com/colors) for the color methodology
-- [Bun](https://bun.sh) for the fast JavaScript runtime
+- [Bun](https://bun.sh) for the fast JavaScript runtime and build tools
+- [Tailwind CSS](https://tailwindcss.com) for spacing and utility inspiration
 - All contributors to this project
 
-## 🏗️ Build System
+## 🔮 Roadmap
 
-This project uses a custom TypeScript build system (`build.ts`) that handles complex dependency ordering using Bun's APIs.
+### Short Term
+- ✅ Complete color generation system
+- ✅ Complete spacing generation system  
+- ✅ CLI integration for colors
+- 🚧 CLI integration for spacing
+- 🚧 Combined system generation
 
-### Build Commands
+### Medium Term
+- 🚧 Enhanced Figma plugin with spacing support
+- 🚧 Web-based design system editor
+- 🚧 Design token standard compliance
+- 🚧 Advanced utility class generation
 
-```bash
-# Build all packages in dependency order
-bun run build
+### Long Term
+- 🚧 Typography scale generation
+- 🚧 Component primitive generation
+- 🚧 Design system documentation site
+- 🚧 VS Code extension for design system management
 
-# Build a specific package
-bun run build:package <package-name>
+---
 
-# Clean all build artifacts
-bun run build:clean
-
-# List all available packages
-bun run build:list
-
-# Legacy build (runs all packages in parallel)
-bun run build:legacy
-```
-
-### Build Process
-
-The build system automatically handles dependency ordering:
-
-1. **Core Package**: `color-generation-core` - Core color generation logic
-2. **Extension Packages**: `color-generation-css`, `color-generation-json` - Output formatters
-3. **Application Packages**: `figma-plugin`, `cli` - Applications and tools
-
-Packages within the same group are built in parallel for efficiency, while groups are built sequentially to respect dependencies.
-
-### Build Script Features
-
-- 🔍 **Environment validation** - Checks Bun version and project structure
-- 📦 **Dependency-aware ordering** - Builds packages in the correct order
-- 🎨 **Colored output** - Easy-to-read build progress
-- 🚀 **Parallel execution** - Builds packages within groups simultaneously
-- 🧹 **Smart cleanup** - Removes build artifacts only when needed
-- 📊 **Package discovery** - Automatically finds available packages
+**🎨 Ready to build beautiful, consistent design systems with automated color and spacing generation!**

@@ -1,0 +1,45 @@
+{
+	"name": "@design/spacing-generation-core",
+	"version": "1.0.0",
+	"description": "Core spacing generation logic for design systems",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "rm -rf dist && bun build src/index.ts --target=browser --outfile=dist/index.js --format=esm && bun run build:types",
+		"build:types": "tsc src/index.ts --declaration --emitDeclarationOnly --outDir dist --moduleResolution node --esModuleInterop --allowSyntheticDefaultImports",
+		"dev": "bun --watch src/index.ts",
+		"test": "bun test",
+		"lint": "biome check src/",
+		"format": "biome format --write src/"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"typescript": "^5.0.0"
+	},
+	"keywords": [
+		"spacing",
+		"design-system",
+		"spacing-scales",
+		"typescript"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/your-username/design-system",
+		"directory": "packages/spacing-generation-core"
+	},
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	}
+}
