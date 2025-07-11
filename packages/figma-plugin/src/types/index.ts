@@ -20,7 +20,7 @@ export interface FigmaVariable {
 	valuesByMode: { [modeId: string]: any };
 }
 
-export type Tab = "configure" | "export" | "variables";
+export type Tab = "configure" | "export" | "variables" | "preferences";
 
 export interface UserPreferences {
 	saveColorSystem: boolean;

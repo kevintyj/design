@@ -1,7 +1,8 @@
 import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
+import { TrashIcon } from "lucide-react";
 import type React from "react";
 import { useCallback } from "react";
-import type { ColorSystem, UserPreferences } from "../types";
+import type { ColorSystem } from "../types";
 import { FileDropzone } from "./FileDropzone";
 import GeneratedColorTable from "./GeneratedColorTable";
 
@@ -9,11 +10,8 @@ interface ConfigureTabProps {
 	colorSystem: ColorSystem | null;
 	generatedColorSystem: ColorSystemCore | null;
 	isLoading: boolean;
-	preferences: UserPreferences;
 	onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
-	onImportToFigma: () => void;
 	onGenerateColorSystem: () => void;
-	onPreferenceChange: (key: keyof UserPreferences, enabled: boolean) => void;
 	onResetColorSystem: () => void;
 }
 
@@ -45,11 +43,8 @@ export const ConfigureTab: React.FC<ConfigureTabProps> = ({
 	colorSystem,
 	generatedColorSystem,
 	isLoading,
-	preferences,
 	onFileUpload,
-	onImportToFigma,
 	onGenerateColorSystem,
-	onPreferenceChange,
 	onResetColorSystem,
 }) => {
 	// Create a wrapper that resets the input value after processing
@@ -68,42 +63,19 @@ export const ConfigureTab: React.FC<ConfigureTabProps> = ({
 		<div className="py-3 px-5">
 			<h2 className="text-base font-serif font-medium text-gray-12">Configure color system</h2>
 
-			{/* Save preferences */}
-			<div className="space-y-2 pt-3 pb-2">
-				<div className="flex items-center gap-2">
-					<input
-						type="checkbox"
-						id="save-color-system"
-						checked={preferences.saveColorSystem}
-						onChange={(e) => onPreferenceChange("saveColorSystem", e.target.checked)}
-						className="checkbox"
-					/>
-					<label htmlFor="save-color-system" className="text-sm text-gray-11 cursor-pointer">
-						Save color configuration to Figma storage
-					</label>
-				</div>
-
-				<div className="flex items-center gap-2 ml-6">
-					<input
-						type="checkbox"
-						id="auto-generate-on-load"
-						checked={preferences.autoGenerateOnLoad}
-						onChange={(e) => onPreferenceChange("autoGenerateOnLoad", e.target.checked)}
-						disabled={!preferences.saveColorSystem}
-						className="checkbox"
-					/>
-					<label
-						htmlFor="auto-generate-on-load"
-						className={`text-sm cursor-pointer ${preferences.saveColorSystem ? "text-gray-11" : "text-gray-9"}`}
-					>
-						Auto-generate color scales when loading saved configuration
-					</label>
-				</div>
-			</div>
-
-			<div className="space-y-3 pt-2">
+			<div className="space-y-3 pt-4">
 				<div className="flex gap-2">
-					<div className="flex-1">
+					<div className="flex-1 relative">
+						{colorSystem && (
+							<button
+								type="button"
+								onClick={onResetColorSystem}
+								className="btn bg-red-9 hover:bg-red-10 text-[white] border-red-11 absolute right-0 flex items-center gap-x-2 top-[-4px] text-xs"
+							>
+								<TrashIcon className="w-3.5 h-3.5" />
+								Reset
+							</button>
+						)}
 						<FileDropzone
 							id="color-file-upload"
 							accept=".json,.ts,.js"
@@ -133,25 +105,15 @@ export const ConfigureTab: React.FC<ConfigureTabProps> = ({
 					</>
 				)}
 
-				<div className="flex gap-2">
+				<div className="flex gap-2 pb-6">
 					<button
 						type="button"
 						disabled={!colorSystem || isLoading}
 						onClick={onGenerateColorSystem}
-						className="btn bg-blaze-9 hover:bg-blaze-10 text-[white] border-blaze-11"
+						className="btn bg-teal-9 hover:bg-teal-10 text-[white] border-teal-11"
 					>
 						{isLoading ? "Loading..." : "Generate full color scale"}
 					</button>
-
-					{colorSystem && (
-						<button
-							type="button"
-							onClick={onResetColorSystem}
-							className="btn bg-red-9 hover:bg-red-10 text-[white] border-red-11"
-						>
-							Reset
-						</button>
-					)}
 				</div>
 
 				{generatedColorSystem && <GeneratedColorTable generatedColorSystem={generatedColorSystem} />}

@@ -14,7 +14,7 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({ isLoading, onExportV
 
 			<div className="space-y-4">
 				{/* Export Variables */}
-				<div className="border-t border-b border-gray-6 py-4">
+				<div className="py-4">
 					<h3 className="text-sm font-medium text-gray-12">Export Current Variables</h3>
 					<p className="text-xs text-gray-11 mb-3">
 						Export all color variables from your current Figma file as a JSON collection.
@@ -23,14 +23,14 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({ isLoading, onExportV
 						type="button"
 						onClick={onExportVariables}
 						disabled={isLoading}
-						className="btn bg-blaze-9 hover:bg-blaze-10 text-[white] border-blaze-11"
+						className="btn bg-teal-9 hover:bg-teal-10 text-[white] border-teal-11"
 					>
 						{isLoading ? "Exporting..." : "Export Variables"}
 					</button>
 				</div>
 
 				{/* Import Variables */}
-				<div className="border-t border-b border-gray-6 py-4">
+				<div className="border-t border-b border-gray-6 py-6">
 					<h3 className="text-sm font-medium text-gray-12">Import Variables Collection</h3>
 					<p className="text-xs text-gray-11 mb-3">Import variables from a JSON collection file to your Figma file.</p>
 					<FileDropzone

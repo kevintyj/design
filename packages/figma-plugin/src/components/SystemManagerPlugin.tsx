@@ -5,8 +5,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useFileHandling } from "../hooks/useFileHandling";
 import { usePluginMessaging } from "../hooks/usePluginMessaging";
 import type { ColorSystem, Tab, UserPreferences } from "../types";
+import { downloadGeneratedColorScalesZip } from "../utils/download";
 import { ConfigureTab } from "./ConfigureTab";
 import { ExportTab } from "./ExportTab";
+import { PreferencesTab } from "./PreferencesTab";
 import { StatusMessage } from "./StatusMessage";
 import { VariablesTab } from "./VariablesTab";
 
@@ -172,17 +174,6 @@ export const SystemManagerPlugin: React.FC = () => {
 		sendPluginMessage,
 	});
 
-	// Handle color import to Figma
-	const handleImportToFigma = useCallback(() => {
-		if (!colorSystem) {
-			setMessageWithKey("Please load a color system first.");
-			return;
-		}
-
-		setIsLoading(true);
-		sendPluginMessage("import-colors", colorSystem);
-	}, [colorSystem, sendPluginMessage, setMessageWithKey]);
-
 	// Handle export as CSS
 	const handleExportCSS = useCallback(() => {
 		if (!colorSystem) {
@@ -228,6 +219,42 @@ export const SystemManagerPlugin: React.FC = () => {
 		setMessageWithKey("Color system reset");
 	}, [setMessageWithKey]);
 
+	// Handle export generated color scales as CSS
+	const handleExportGeneratedCSS = useCallback(async () => {
+		if (!generatedColorSystem) {
+			setMessageWithKey("Please generate color scales first.");
+			return;
+		}
+
+		setIsLoading(true);
+		try {
+			const message = await downloadGeneratedColorScalesZip(generatedColorSystem, "css");
+			setMessageWithKey(message);
+		} catch (error) {
+			setMessageWithKey(`Error exporting generated CSS: ${error}`);
+		} finally {
+			setIsLoading(false);
+		}
+	}, [generatedColorSystem, setMessageWithKey]);
+
+	// Handle export generated color scales as JSON
+	const handleExportGeneratedJSON = useCallback(async () => {
+		if (!generatedColorSystem) {
+			setMessageWithKey("Please generate color scales first.");
+			return;
+		}
+
+		setIsLoading(true);
+		try {
+			const message = await downloadGeneratedColorScalesZip(generatedColorSystem, "json");
+			setMessageWithKey(message);
+		} catch (error) {
+			setMessageWithKey(`Error exporting generated JSON: ${error}`);
+		} finally {
+			setIsLoading(false);
+		}
+	}, [generatedColorSystem, setMessageWithKey]);
+
 	const renderTabContent = () => {
 		switch (activeTab) {
 			case "configure":
@@ -236,11 +263,8 @@ export const SystemManagerPlugin: React.FC = () => {
 						colorSystem={colorSystem}
 						generatedColorSystem={generatedColorSystem}
 						isLoading={isLoading}
-						preferences={preferences}
 						onFileUpload={handleFileUpload}
-						onImportToFigma={handleImportToFigma}
 						onGenerateColorSystem={handleGenerateColorSystem}
-						onPreferenceChange={handlePreferenceChange}
 						onResetColorSystem={handleResetColorSystem}
 					/>
 				);
@@ -248,9 +272,12 @@ export const SystemManagerPlugin: React.FC = () => {
 				return (
 					<ExportTab
 						colorSystem={colorSystem}
+						generatedColorSystem={generatedColorSystem}
 						isLoading={isLoading}
 						onExportCSS={handleExportCSS}
 						onExportJSON={handleExportJSON}
+						onExportGeneratedCSS={handleExportGeneratedCSS}
+						onExportGeneratedJSON={handleExportGeneratedJSON}
 					/>
 				);
 			case "variables":
@@ -261,6 +288,8 @@ export const SystemManagerPlugin: React.FC = () => {
 						onImportVariables={handleFigmaVariablesUpload}
 					/>
 				);
+			case "preferences":
+				return <PreferencesTab preferences={preferences} onPreferenceChange={handlePreferenceChange} />;
 			default:
 				return null;
 		}
@@ -308,6 +337,7 @@ export const SystemManagerPlugin: React.FC = () => {
 					{tabButton("Configure", () => setActiveTab("configure"), activeTab === "configure")}
 					{tabButton("Export", () => setActiveTab("export"), activeTab === "export")}
 					{tabButton("Variables", () => setActiveTab("variables"), activeTab === "variables")}
+					{tabButton("Preferences", () => setActiveTab("preferences"), activeTab === "preferences")}
 				</nav>
 			</div>
 

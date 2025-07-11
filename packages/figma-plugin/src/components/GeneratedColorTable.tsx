@@ -224,7 +224,7 @@ const GeneratedColorTable: React.FC<GeneratedColorTableProps> = ({ generatedColo
 		}));
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-6 border-t border-gray-6 pt-6">
 			<h2 className="text-base font-serif font-medium text-gray-12">Generated color system</h2>
 
 			{/* Grayscale */}
