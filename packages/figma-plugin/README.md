@@ -1,4 +1,6 @@
-# @design/figma-plugin
+![Design System Manager](../../assets/banner-figma-plugin.svg)
+
+# Design System Manager | @kevintyj/design
 
 Figma plugin for design system management. Generate, import, and manage color systems directly within Figma using the design system generation tools.
 

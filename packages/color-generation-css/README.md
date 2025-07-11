@@ -1,3 +1,5 @@
+![Color Generation CSS](../../assets/banner-color-generation-css.svg)
+
 # @design/color-generation-css
 
 CSS generation utilities for design system colors. Converts color systems into CSS custom properties, utility classes, and theme files.

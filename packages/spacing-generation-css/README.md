@@ -1,3 +1,5 @@
+![Spacing Generation CSS](../../assets/banner-spacing-generation-css.svg)
+
 # @design/spacing-generation-css
 
 CSS generation utilities for design system spacing. Converts spacing systems into CSS custom properties and utility classes for margin, padding, and gap.

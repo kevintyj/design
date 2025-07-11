@@ -1,3 +1,5 @@
+![Color Generation Core](../../assets/banner-color-generation-core.svg)
+
 # @design/color-generation-core
 
 Core color generation logic using Radix UI color methodology for generating comprehensive color scales.

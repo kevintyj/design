@@ -1,3 +1,5 @@
+![CLI Tool](../../assets/banner-cli.svg)
+
 # @design/cli
 
 Command-line interface for design system generation. Generate colors, spacing, and complete design systems from your `base.ts` configuration file.
@@ -21,6 +23,9 @@ bun add @design/cli
 ## 🚀 Quick Start
 
 ```bash
+# Help
+bun run help # from root
+
 # Generate colors from base.ts
 bun @design/cli quick
 

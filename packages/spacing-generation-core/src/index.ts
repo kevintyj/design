@@ -47,28 +47,69 @@ export const defaultSpacingConfig: Required<SpacingGenerationConfig> = {
 };
 
 /**
- * Generate complete spacing scale from spacing definitions
+ * Optimized config merger with validation
  */
-export function generateSpacingSystem(spacingInput: SpacingInput, config: SpacingGenerationConfig = {}): SpacingSystem {
-	const fullConfig = { ...defaultSpacingConfig, ...config };
+function mergeAndValidateConfig(
+	spacingInput: SpacingInput & { remValue?: number },
+	config: SpacingGenerationConfig = {},
+): Required<SpacingGenerationConfig> {
+	const fullConfig = {
+		...defaultSpacingConfig,
+		...config,
+		// Use remValue from spacingInput if provided, otherwise use config or default
+		remBase: config.remBase || (spacingInput as any).remValue || defaultSpacingConfig.remBase,
+	};
 
+	// Validate remBase
+	if (fullConfig.remBase <= 0 || !Number.isFinite(fullConfig.remBase)) {
+		throw new Error(`Invalid remBase: ${fullConfig.remBase}. Must be a positive finite number.`);
+	}
+
+	return fullConfig;
+}
+
+/**
+ * Generate complete spacing scale from spacing definitions
+ * Optimized for performance with batch processing
+ */
+export function generateSpacingSystem(
+	spacingInput: SpacingInput & { remValue?: number },
+	config: SpacingGenerationConfig = {},
+): SpacingSystem {
+	// Validate input before processing
+	validateSpacingInput(spacingInput);
+
+	const fullConfig = mergeAndValidateConfig(spacingInput, config);
+	const spacingEntries = Object.entries(spacingInput.spacing);
+	const totalValues = spacingEntries.length;
+
+	// Pre-allocate objects for better performance
 	const values: Record<string, number> = {};
 	const remValues: Record<string, string> = {};
 	const pxValues: Record<string, string> = {};
 
-	// Process each spacing value
-	for (const [name, value] of Object.entries(spacingInput.spacing)) {
+	// Sort once and process all formats in a single pass
+	const sortedSpacingEntries = spacingEntries.sort(([, a], [, b]) => a - b);
+
+	// Batch process all entries to reduce loop overhead
+	for (const [name, value] of sortedSpacingEntries) {
+		// All values in base.ts are already final pixel values
 		values[name] = value;
 
+		// Generate px values if needed
 		if (fullConfig.includePx) {
 			pxValues[name] = `${value}px`;
 		}
 
+		// Generate rem values if needed
 		if (fullConfig.includeRem) {
-			remValues[name] = `${(value / fullConfig.remBase).toFixed(4).replace(/\.?0+$/, "")}rem`;
+			// Optimized rem calculation with cached base
+			const remValue = value / fullConfig.remBase;
+			remValues[name] = `${remValue.toFixed(4).replace(/\.?0+$/, "")}rem`;
 		}
 	}
 
+	// Create spacing scale with optimized structure
 	const spacingScale: SpacingScale = {
 		values,
 		remValues,
@@ -77,16 +118,19 @@ export function generateSpacingSystem(spacingInput: SpacingInput, config: Spacin
 		metadata: {
 			unit: "px",
 			baseMultiplier: spacingInput.multiplier,
-			totalValues: Object.keys(spacingInput.spacing).length,
+			totalValues,
 		},
 	};
+
+	// Generate metadata once
+	const generatedAt = new Date().toISOString();
 
 	return {
 		spacing: spacingScale,
 		sourceSpacing: spacingInput,
 		metadata: {
-			generatedAt: new Date().toISOString(),
-			totalValues: Object.keys(spacingInput.spacing).length,
+			generatedAt,
+			totalValues,
 			config: fullConfig,
 		},
 	};
@@ -95,7 +139,7 @@ export function generateSpacingSystem(spacingInput: SpacingInput, config: Spacin
 /**
  * Load spacing definitions from a TypeScript/JavaScript file
  */
-export async function loadSpacingDefinitions(filePath: string): Promise<SpacingInput> {
+export async function loadSpacingDefinitions(filePath: string): Promise<SpacingInput & { remValue?: number }> {
 	try {
 		// Import the spacing definitions dynamically
 		const spacingModule = await import(filePath);
@@ -103,6 +147,7 @@ export async function loadSpacingDefinitions(filePath: string): Promise<SpacingI
 		// Try to find the spacing definitions in various export patterns
 		const spacing = spacingModule.spacing || spacingModule._spacing;
 		const multiplier = spacingModule.spacingMultiplier || spacingModule.multiplier || spacingModule._spacingMultiplier;
+		const remValue = spacingModule.remValue || spacingModule._remValue;
 
 		if (!spacing || multiplier === undefined) {
 			throw new Error("Required spacing definitions not found. Expected: spacing, spacingMultiplier");
@@ -111,6 +156,7 @@ export async function loadSpacingDefinitions(filePath: string): Promise<SpacingI
 		return {
 			spacing,
 			multiplier,
+			remValue,
 		};
 	} catch (error) {
 		throw new Error(`Failed to load spacing definitions from ${filePath}: ${error}`);

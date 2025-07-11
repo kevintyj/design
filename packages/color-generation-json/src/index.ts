@@ -876,7 +876,7 @@ export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerati
 					? JSON.stringify(tailwindConfig, null, 2)
 					: JSON.stringify(tailwindConfig);
 
-				files.push({ name: `tailwind-colors${fullConfig.fileExtension}`, content: tailwindJson });
+				files.push({ name: `colors-tailwind${fullConfig.fileExtension}`, content: tailwindJson });
 				break;
 			}
 
@@ -887,7 +887,7 @@ export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerati
 					? JSON.stringify(collectionsData, null, 2)
 					: JSON.stringify(collectionsData);
 
-				files.push({ name: `collections${fullConfig.fileExtension}`, content: collectionsJson });
+				files.push({ name: `colors-collections${fullConfig.fileExtension}`, content: collectionsJson });
 				break;
 			}
 		}
@@ -898,7 +898,7 @@ export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerati
 		const metadata = generateMetadataJSON(colorSystem, fullConfig);
 		const metadataJson = fullConfig.prettyPrint ? JSON.stringify(metadata, null, 2) : JSON.stringify(metadata);
 
-		files.push({ name: `metadata${fullConfig.fileExtension}`, content: metadataJson });
+		files.push({ name: `colors-metadata${fullConfig.fileExtension}`, content: metadataJson });
 	}
 
 	return files;

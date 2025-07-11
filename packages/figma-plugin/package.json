@@ -1,7 +1,7 @@
 {
 	"name": "@design/figma-plugin",
 	"version": "1.0.0",
-	"description": "Figma plugin for color management and variable import/export",
+	"description": "Design System Manager | @kevintyj/design - Figma plugin for design system management and variable import/export",
 	"main": "dist/code.js",
 	"scripts": {
 		"build": "webpack --mode production",

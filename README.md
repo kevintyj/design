@@ -1,3 +1,5 @@
+![Design System Core](./assets/banner-core.svg)
+
 # Design System Generation Monorepo
 
 A comprehensive design system with color and spacing generation based on Radix UI colors, built as a modular TypeScript monorepo with Bun.
@@ -128,21 +130,21 @@ Your `base.ts` includes 26 spacing values following a 4px multiplier system:
 | `bun run colors:generate` | Full control generation | `bun run colors:generate --verbose` |
 | `bun run colors:figma` | Generate Figma JSON | `bun run colors:figma` |
 
-### Spacing Commands (Coming Soon)
+### Spacing Commands
 
 | Command | Description | Status |
 |---------|-------------|--------|
-| `bun run spacing:validate` | Validate spacing definitions | 🚧 CLI integration pending |
-| `bun run spacing:quick` | Quick spacing generation | 🚧 CLI integration pending |
-| `bun run spacing:generate` | Full spacing generation | 🚧 CLI integration pending |
+| `bun run spacing:validate` | Validate spacing definitions | ✅ Available |
+| `bun run spacing:quick` | Quick spacing generation | ✅ Available |
+| `bun run spacing:generate` | Full spacing generation | ✅ Available |
 
-### System Commands (Coming Soon)
+### System Commands
 
 | Command | Description | Status |
 |---------|-------------|--------|
-| `bun run system:validate` | Validate both colors and spacing | 🚧 Partial (colors only) |
-| `bun run system:quick` | Generate complete design system | 🚧 CLI integration pending |
-| `bun run system:generate` | Full system generation | 🚧 CLI integration pending |
+| `bun run system:validate` | Validate both colors and spacing | ✅ Available |
+| `bun run system:quick` | Generate complete design system | ✅ Available |
+| `bun run system:generate` | Full system generation | ✅ Available |
 
 ### Advanced Generation Options
 
@@ -176,10 +178,11 @@ output/
 │   │   ├── colors-dark.css
 │   │   ├── colors-combined.css
 │   │   └── colors-full-*.css
-│   ├── spacing/            # 🚧 Coming via CLI
+│   ├── spacing/
 │   │   ├── spacing.css
-│   │   ├── spacing-utilities.css
-│   │   └── spacing-rem.css
+│   │   ├── spacing-px.css
+│   │   ├── spacing-rem.css
+│   │   └── spacing-combined.css
 │   └── combined/           # 🚧 Coming soon
 │       └── design-system.css
 ├── json/
@@ -188,10 +191,12 @@ output/
 │   │   ├── colors-nested.json
 │   │   ├── colors-tokens.json
 │   │   └── colors-tailwind.json
-│   ├── spacing/            # 🚧 Coming via CLI
+│   ├── spacing/
 │   │   ├── spacing-flat.json
+│   │   ├── spacing-nested.json
 │   │   ├── spacing-tokens.json
-│   │   └── spacing-tailwind.json
+│   │   ├── spacing-tailwind.json
+│   │   └── spacing-collections.json
 │   └── combined/           # 🚧 Coming soon
 │       └── design-system.json
 └── figma/
@@ -416,11 +421,11 @@ export const spacing = {
 };
 ```
 
-2. Use the spacing packages directly:
+2. Generate spacing using the CLI:
 
-```typescript
-import { loadSpacingDefinitions, generateSpacingSystem } from '@design/spacing-generation-core';
-// Generate spacing as shown in programmatic usage
+```bash
+bun run spacing:validate
+bun run spacing:quick
 ```
 
 ### Project Structure
@@ -549,22 +554,17 @@ BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
 
 ## 🔮 Roadmap
 
-### Short Term
 - ✅ Complete color generation system
 - ✅ Complete spacing generation system  
 - ✅ CLI integration for colors
-- 🚧 CLI integration for spacing
-- 🚧 Combined system generation
-
-### Medium Term
+- ✅ CLI integration for spacing
+- ✅ Combined system generation
+- 🚧 Typography scale generation
+- 🚧 Component primitive generation
 - 🚧 Enhanced Figma plugin with spacing support
 - 🚧 Web-based design system editor
 - 🚧 Design token standard compliance
 - 🚧 Advanced utility class generation
-
-### Long Term
-- 🚧 Typography scale generation
-- 🚧 Component primitive generation
 - 🚧 Design system documentation site
 - 🚧 VS Code extension for design system management
 

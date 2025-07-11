@@ -54,6 +54,157 @@ export const defaultJSONSpacingConfig: Required<JSONSpacingGenerationConfig> = {
 	collectionName: "Generated Spacing",
 };
 
+// Import optimized utilities
+// Utilities are now defined directly in this file for better performance
+
+/**
+ * Get sorted entries by spacing values with optimized performance
+ */
+function getSortedSpacingEntries(spacingValues: Record<string, number>): [string, number][] {
+	const entries = Object.entries(spacingValues);
+	return entries.sort(([, a], [, b]) => a - b);
+}
+
+/**
+ * Optimized config merging
+ */
+function mergeConfig<T extends Record<string, any>>(defaults: Required<T>, override: Partial<T> = {}): Required<T> {
+	return { ...defaults, ...override };
+}
+
+/**
+ * Create prefixed key efficiently
+ */
+function createPrefixedKey(prefix: string, name: string, suffix?: string): string {
+	return suffix ? `${prefix}-${name}-${suffix}` : `${prefix}-${name}`;
+}
+
+/**
+ * Validate spacing configuration
+ */
+function validateSpacingConfig<T extends { remBase?: number }>(config: T): T {
+	if (config.remBase !== undefined && (config.remBase <= 0 || !Number.isFinite(config.remBase))) {
+		throw new Error(`Invalid remBase: ${config.remBase}. Must be a positive finite number.`);
+	}
+	return config;
+}
+
+/**
+ * Batch process spacing entries efficiently
+ */
+function batchProcessSpacingEntries(
+	sortedEntries: [string, number][],
+	processors: {
+		raw?: (name: string, value: number) => void;
+		px?: (name: string, value: number, pxValue: string) => void;
+		rem?: (name: string, value: number, remValue: string) => void;
+	},
+	options: {
+		includePx: boolean;
+		includeRem: boolean;
+		remBase: number;
+	},
+): void {
+	for (const [name, value] of sortedEntries) {
+		// Process raw values
+		if (processors.raw) {
+			processors.raw(name, value);
+		}
+
+		// Process px values if needed
+		if (options.includePx && processors.px) {
+			const pxValue = `${value}px`;
+			processors.px(name, value, pxValue);
+		}
+
+		// Process rem values if needed
+		if (options.includeRem && processors.rem) {
+			const remValue = `${(value / options.remBase).toFixed(4).replace(/\.?0+$/, "")}rem`;
+			processors.rem(name, value, remValue);
+		}
+	}
+}
+
+/**
+ * Create spacing variable for collections
+ */
+function createSpacingVariable(value: string | number, type: "string" | "number" = "number") {
+	return {
+		type,
+		values: {
+			default: value,
+		},
+	};
+}
+
+/**
+ * Create a properly ordered object from spacing entries
+ * This function bypasses JavaScript's automatic key ordering by using Map
+ */
+function _createOrderedSpacingObject<T>(
+	entries: [string, T][],
+	sorter: (a: [string, T], b: [string, T]) => number,
+): Record<string, T> {
+	// Sort the entries
+	const sortedEntries = entries.sort(sorter);
+
+	// Use a Map to maintain order, then convert to object
+	const orderedMap = new Map(sortedEntries);
+	return Object.fromEntries(orderedMap);
+}
+
+/**
+ * Reorder object properties by spacing values (smallest to largest)
+ * This solves JavaScript's object property ordering limitations
+ */
+function reorderBySpacingValues<T>(obj: Record<string, T>, spacingValues: Record<string, number>): Record<string, T> {
+	const entries = Object.entries(obj);
+
+	// Sort entries by their corresponding spacing pixel values
+	const sortedEntries = entries.sort(([keyA], [keyB]) => {
+		const valueA = spacingValues[keyA] ?? Infinity; // Unknown keys go to end
+		const valueB = spacingValues[keyB] ?? Infinity;
+		return valueA - valueB;
+	});
+
+	return Object.fromEntries(sortedEntries);
+}
+
+/**
+ * Recursively reorder spacing-related objects by their values
+ * This function can be applied to any spacing output to ensure consistent ordering
+ */
+export function reorderSpacingOutput(output: any, spacingValues: Record<string, number>): any {
+	if (output === null || typeof output !== "object") {
+		return output;
+	}
+
+	if (Array.isArray(output)) {
+		return output.map((item) => reorderSpacingOutput(item, spacingValues));
+	}
+
+	const result: any = {};
+
+	// Check if this object looks like a spacing values object
+	const keys = Object.keys(output);
+	const hasSpacingKeys = keys.some((key) => key in spacingValues);
+
+	if (hasSpacingKeys) {
+		// This looks like a spacing object - reorder by values
+		const reordered = reorderBySpacingValues(output, spacingValues);
+		for (const [key, value] of Object.entries(reordered)) {
+			result[key] = reorderSpacingOutput(value, spacingValues);
+		}
+	} else {
+		// Regular object - maintain order but recurse into values
+		for (const [key, value] of Object.entries(output)) {
+			result[key] = reorderSpacingOutput(value, spacingValues);
+		}
+	}
+
+	return result;
+}
+
 /**
  * Generate comprehensive metadata JSON for spacing system
  */
@@ -68,8 +219,10 @@ export function generateSpacingMetadataJSON(
 		totalValues: spacingSystem.spacing.metadata.totalValues,
 		multiplier: spacingSystem.spacing.multiplier,
 		unit: spacingSystem.spacing.metadata.unit,
-		remBase: fullConfig.remBase,
-		formats: fullConfig.format === "all" ? ["flat", "nested", "tokens", "tailwind"] : [fullConfig.format],
+		baseFontSize: fullConfig.remBase, // More descriptive name
+		remBase: fullConfig.remBase, // Keep for backward compatibility
+		formats:
+			fullConfig.format === "all" ? ["flat", "nested", "tokens", "tailwind", "collections"] : [fullConfig.format],
 		config: {
 			includeRem: fullConfig.includeRem,
 			includePx: fullConfig.includePx,
@@ -78,40 +231,57 @@ export function generateSpacingMetadataJSON(
 			prettyPrint: fullConfig.prettyPrint,
 		},
 		systemMetadata: spacingSystem.metadata,
+		// Enhanced metadata
+		spacingInfo: {
+			baseUnit: spacingSystem.spacing.metadata.unit,
+			baseMultiplier: spacingSystem.spacing.multiplier,
+			baseFontSize: fullConfig.remBase,
+			totalSpacingValues: spacingSystem.spacing.metadata.totalValues,
+			hasRemValues: fullConfig.includeRem,
+			hasPxValues: fullConfig.includePx,
+		},
 	};
 }
 
 /**
  * Generate flat JSON format (all spacing values at root level)
+ * Optimized for performance with batch processing
  */
 export function generateFlatSpacingJSON(
 	spacingSystem: SpacingSystem,
 	config: JSONSpacingGenerationConfig = {},
 ): Record<string, string | number> {
-	const fullConfig = { ...defaultJSONSpacingConfig, ...config };
-	const { values, pxValues, remValues } = spacingSystem.spacing;
+	// Use optimized config merging and validation
+	const fullConfig = mergeConfig(defaultJSONSpacingConfig, validateSpacingConfig(config));
+	const { values } = spacingSystem.spacing;
 	const result: Record<string, string | number> = {};
 
-	// Add raw values
-	for (const [name, value] of Object.entries(values)) {
-		result[`spacing-${name}`] = value;
-	}
+	// Get sorted entries once
+	const sortedEntries = getSortedSpacingEntries(values);
 
-	// Add px values
-	if (fullConfig.includePx) {
-		for (const [name, value] of Object.entries(pxValues)) {
-			result[`spacing-${name}-px`] = value;
-		}
-	}
+	// Use batch processing for optimal performance
+	batchProcessSpacingEntries(
+		sortedEntries,
+		{
+			raw: (name, value) => {
+				result[createPrefixedKey("spacing", name)] = value;
+			},
+			px: (name, _value, pxValue) => {
+				result[createPrefixedKey("spacing", name, "px")] = pxValue;
+			},
+			rem: (name, _value, remValue) => {
+				result[createPrefixedKey("spacing", name, "rem")] = remValue;
+			},
+		},
+		{
+			includePx: fullConfig.includePx,
+			includeRem: fullConfig.includeRem,
+			remBase: fullConfig.remBase,
+		},
+	);
 
-	// Add rem values
-	if (fullConfig.includeRem) {
-		for (const [name, value] of Object.entries(remValues)) {
-			result[`spacing-${name}-rem`] = value;
-		}
-	}
-
-	return result;
+	// Apply final reordering to ensure consistent output
+	return reorderSpacingOutput(result, values);
 }
 
 /**
@@ -124,6 +294,9 @@ export function generateNestedSpacingJSON(
 	const fullConfig = { ...defaultJSONSpacingConfig, ...config };
 	const { values, pxValues, remValues, multiplier } = spacingSystem.spacing;
 
+	// Use consistent sorting approach
+	const sortedEntries = getSortedSpacingEntries(values);
+
 	const result: Record<string, any> = {
 		spacing: {
 			multiplier,
@@ -131,24 +304,34 @@ export function generateNestedSpacingJSON(
 		},
 	};
 
-	// Add raw values
-	result.spacing.values.raw = values;
-
-	// Add px values
-	if (fullConfig.includePx) {
-		result.spacing.values.px = pxValues;
+	// Add raw values in sorted order
+	result.spacing.values.raw = {};
+	for (const [name, value] of sortedEntries) {
+		result.spacing.values.raw[name] = value;
 	}
 
-	// Add rem values
+	// Add px values in sorted order
+	if (fullConfig.includePx) {
+		result.spacing.values.px = {};
+		for (const [name, _] of sortedEntries) {
+			result.spacing.values.px[name] = pxValues[name];
+		}
+	}
+
+	// Add rem values in sorted order
 	if (fullConfig.includeRem) {
-		result.spacing.values.rem = remValues;
+		result.spacing.values.rem = {};
+		for (const [name, _] of sortedEntries) {
+			result.spacing.values.rem[name] = remValues[name];
+		}
 	}
 
 	if (fullConfig.includeMetadata) {
 		result.spacing.metadata = spacingSystem.spacing.metadata;
 	}
 
-	return result;
+	// Apply final reordering to ensure consistent output
+	return reorderSpacingOutput(result, values);
 }
 
 /**
@@ -165,8 +348,11 @@ export function generateDesignTokensSpacingJSON(
 		spacing: {},
 	};
 
+	// Use consistent sorting approach
+	const sortedEntries = getSortedSpacingEntries(values);
+
 	// Generate tokens for each spacing value
-	for (const [name, value] of Object.entries(values)) {
+	for (const [name, value] of sortedEntries) {
 		tokens.spacing[name] = {
 			$type: "dimension",
 			$value: fullConfig.includePx ? pxValues[name] : `${value}px`,
@@ -189,7 +375,8 @@ export function generateDesignTokensSpacingJSON(
 		};
 	}
 
-	return tokens;
+	// Apply final reordering to ensure consistent output
+	return reorderSpacingOutput(tokens, values);
 }
 
 /**
@@ -208,8 +395,11 @@ export function generateTailwindSpacingJSON(
 		},
 	};
 
-	// Use the format preferred by the config
-	for (const [name, _] of Object.entries(values)) {
+	// Use consistent sorting approach
+	const sortedEntries = getSortedSpacingEntries(values);
+
+	// Build spacing object in sorted order
+	for (const [name, _] of sortedEntries) {
 		if (fullConfig.includeRem && !fullConfig.includePx) {
 			// Rem only
 			tailwindConfig.theme.spacing[name] = remValues[name];
@@ -219,60 +409,65 @@ export function generateTailwindSpacingJSON(
 		}
 	}
 
-	if (fullConfig.includeMetadata) {
-		(tailwindConfig.theme.spacing as any)["// metadata"] = {
-			multiplier: spacingSystem.spacing.multiplier,
-			totalValues: spacingSystem.spacing.metadata.totalValues,
-			generatedAt: spacingSystem.metadata.generatedAt,
-		};
-	}
-
-	return tailwindConfig;
+	// Apply final reordering to ensure consistent output
+	return reorderSpacingOutput(tailwindConfig, values);
 }
 
 /**
- * Generate collections JSON format (Figma-compatible)
+ * Generate collections JSON format (matching color collections format)
+ *
+ * NOTE: Due to JavaScript's object property ordering rules, integer-like keys
+ * (0, 1, 2, etc.) will always be ordered numerically before string keys
+ * (1px, 2px, etc.), regardless of their actual values. This is a fundamental
+ * JavaScript engine behavior that cannot be overridden.
  */
 export function generateCollectionsSpacingJSON(
 	spacingSystem: SpacingSystem,
 	config: JSONSpacingGenerationConfig = {},
 ): any {
-	const fullConfig = { ...defaultJSONSpacingConfig, ...config };
+	// Use optimized config merging and validation
+	const fullConfig = mergeConfig(defaultJSONSpacingConfig, validateSpacingConfig(config));
 	const { values, pxValues, remValues } = spacingSystem.spacing;
+	const collectionName = fullConfig.collectionName || "Generated Spacing";
 
-	const collection: any = {
-		[fullConfig.collectionName]: {
-			$type: "spacing",
-			$description: "Design system spacing scale",
-			spacing: {} as Record<string, any>,
+	// Get sorted entries by value (this represents the desired logical order)
+	const sortedEntries = getSortedSpacingEntries(values);
+
+	const result: any = {
+		collections: {
+			name: collectionName,
+			modes: ["default"],
+			variables: {
+				spacing: {},
+			},
 		},
 	};
 
-	// Generate spacing variables
-	for (const [name, value] of Object.entries(values)) {
-		collection[fullConfig.collectionName].spacing[name] = {
-			$type: "dimension",
-			$value: fullConfig.includePx ? pxValues[name] : `${value}px`,
-		};
+	// Add px and rem collections if enabled
+	if (fullConfig.includePx) {
+		result.collections.variables["spacing-px"] = {};
+	}
+	if (fullConfig.includeRem) {
+		result.collections.variables["spacing-rem"] = {};
+	}
 
-		// Add rem variant if enabled
-		if (fullConfig.includeRem) {
-			collection[fullConfig.collectionName].spacing[`${name}_rem`] = {
-				$type: "dimension",
-				$value: remValues[name],
-			};
+	// Build spacing variables in sorted order for all formats
+	for (const [name, value] of sortedEntries) {
+		// Raw numeric values
+		result.collections.variables.spacing[name] = createSpacingVariable(value);
+
+		// Px string values
+		if (fullConfig.includePx && pxValues[name]) {
+			result.collections.variables["spacing-px"][name] = createSpacingVariable(pxValues[name], "string");
+		}
+
+		// Rem string values
+		if (fullConfig.includeRem && remValues[name]) {
+			result.collections.variables["spacing-rem"][name] = createSpacingVariable(remValues[name], "string");
 		}
 	}
 
-	if (fullConfig.includeMetadata) {
-		collection[fullConfig.collectionName].$metadata = {
-			generatedAt: spacingSystem.metadata.generatedAt,
-			multiplier: spacingSystem.spacing.multiplier,
-			totalValues: spacingSystem.spacing.metadata.totalValues,
-		};
-	}
-
-	return { collections: collection };
+	return result;
 }
 
 /**

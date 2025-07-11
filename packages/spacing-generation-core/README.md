@@ -1,3 +1,5 @@
+![Spacing Generation Core](../../assets/banner-spacing-generation-core.svg)
+
 # @design/spacing-generation-core
 
 Core spacing generation logic for design system spacing scales with 4px base multiplier system and comprehensive utilities.

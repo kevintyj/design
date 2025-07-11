@@ -1,3 +1,5 @@
+![Color Generation JSON](../../assets/banner-color-generation-json.svg)
+
 # @design/color-generation-json
 
 JSON generation utilities for design system colors. Converts color systems into various JSON formats including design tokens, Tailwind config, and Figma collections.

@@ -1,3 +1,5 @@
+![Examples](../../assets/banner-examples.svg)
+
 # @design/examples
 
 Usage examples and demos for the design system generation packages. Learn how to use the color and spacing generation systems with practical examples.

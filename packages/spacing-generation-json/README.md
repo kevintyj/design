@@ -1,3 +1,5 @@
+![Spacing Generation JSON](../../assets/banner-spacing-generation-json.svg)
+
 # @design/spacing-generation-json
 
 JSON generation utilities for design system spacing. Converts spacing systems into various JSON formats including design tokens, Tailwind config, and Figma collections.
@@ -365,6 +367,35 @@ import {
 const flatSpacing = generateFlatJSON(spacingSystem);
 const tailwindSpacing = generateTailwindSpacingJSON(spacingSystem);
 const designTokens = generateDesignTokensJSON(spacingSystem);
+```
+
+### Reordering Output
+
+All generated formats are automatically ordered by spacing value (smallest to largest), but you can also apply reordering to any spacing-related object:
+
+```typescript
+import { reorderSpacingOutput } from '@design/spacing-generation-json';
+
+// Reorder any object by spacing values
+const unorderedSpacing = {
+  "xl": "24px",
+  "xs": "4px", 
+  "lg": "16px",
+  "sm": "8px"
+};
+
+const spacingValues = { "xs": 4, "sm": 8, "lg": 16, "xl": 24 };
+const reordered = reorderSpacingOutput(unorderedSpacing, spacingValues);
+// Result: { "xs": "4px", "sm": "8px", "lg": "16px", "xl": "24px" }
+
+// Works recursively on nested objects
+const complexObject = {
+  theme: {
+    spacing: unorderedSpacing,
+    colors: { /* preserved */ }
+  }
+};
+const reorderedComplex = reorderSpacingOutput(complexObject, spacingValues);
 ```
 
 ## 🛠 Integration Examples

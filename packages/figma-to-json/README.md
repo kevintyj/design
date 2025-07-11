@@ -1,3 +1,5 @@
+![Figma to JSON](../../assets/banner-core.svg)
+
 # @design/figma-to-json
 
 Export Figma variables and design tokens to JSON format. Convert Figma variable collections into design system compatible JSON files for use with build tools and development workflows.
