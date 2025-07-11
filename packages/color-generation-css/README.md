@@ -13,6 +13,7 @@ CSS generation utilities for design system colors. Converts color systems into C
 - **Wide Gamut P3** color support
 - **Alpha Variants** for transparency effects
 - **Configurable Prefixes** and naming conventions
+- **TypeScript Support** with full type definitions
 
 ## 📦 Installation
 
@@ -39,7 +40,8 @@ const cssFiles = generateCSSFiles(colorSystem, {
 // Write files to disk
 cssFiles.forEach(file => {
   console.log(`Generated: ${file.filename}`);
-  console.log(`Content: ${file.content.substring(0, 100)}...`);
+  console.log(`Type: ${file.type}`);
+  console.log(`Size: ${file.content.length} bytes`);
 });
 ```
 
@@ -48,6 +50,8 @@ cssFiles.forEach(file => {
 ### Types
 
 #### `CSSGenerationConfig`
+Configuration options for CSS generation.
+
 ```typescript
 interface CSSGenerationConfig {
   includeAlpha?: boolean;          // Include alpha variants (default: true)
@@ -55,10 +59,14 @@ interface CSSGenerationConfig {
   generateUtilityClasses?: boolean; // Generate utility classes (default: false)
   cssPrefix?: string;              // Custom property prefix (default: "--color")
   outputVariant?: OutputVariant;   // Output format (default: "combined")
+  includeGrayScale?: boolean;      // Include gray scale variants (default: true)
+  includeSpecialColors?: boolean;  // Include contrast/surface/indicator (default: true)
 }
 ```
 
 #### `OutputVariant`
+Different CSS output formats.
+
 ```typescript
 type OutputVariant = 
   | "separate"    // Light and dark in separate files
@@ -67,42 +75,122 @@ type OutputVariant =
 ```
 
 #### `CSSFile`
+Generated CSS file structure.
+
 ```typescript
 interface CSSFile {
   filename: string;
   content: string;
-  type: "light" | "dark" | "combined" | "utilities";
+  type: "light" | "dark" | "combined" | "utilities" | "full";
+  size: number;
+  metadata: {
+    colorCount: number;
+    propertyCount: number;
+    hasAlpha: boolean;
+    hasP3: boolean;
+    hasUtilities: boolean;
+  };
 }
 ```
 
-### Functions
+### Core Functions
 
 #### `generateCSSFiles(colorSystem, config?)`
 
-Generates CSS files from a color system.
+Generates CSS files from a color system with specified configuration.
 
 **Parameters:**
-- `colorSystem: ColorSystem` - Generated color system
+- `colorSystem: ColorSystem` - Generated color system from core package
 - `config?: CSSGenerationConfig` - Configuration options
 
 **Returns:** `CSSFile[]`
 
+**Example:**
+```typescript
+const cssFiles = generateCSSFiles(colorSystem, {
+  includeAlpha: true,
+  includeWideGamut: true,
+  generateUtilityClasses: true,
+  cssPrefix: '--color',
+  outputVariant: 'combined'
+});
+
+// Results in files like:
+// - colors-light.css
+// - colors-dark.css
+// - colors-combined.css
+// - colors-utilities.css (if utilities enabled)
+```
+
 #### `generateCSSForColorSystem(colorSystem, config?)`
 
-Generates CSS content as strings without file structure.
+Generates CSS content as strings without file structure for programmatic use.
 
 **Parameters:**
-- `colorSystem: ColorSystem` - Generated color system  
+- `colorSystem: ColorSystem` - Generated color system
 - `config?: CSSGenerationConfig` - Configuration options
 
 **Returns:** `{ light: string; dark: string; combined: string; utilities?: string }`
 
-#### `generateUtilityClasses(colorSystem)`
+**Example:**
+```typescript
+const cssContent = generateCSSForColorSystem(colorSystem, {
+  includeAlpha: false,
+  generateUtilityClasses: true
+});
 
-Generates utility classes for colors.
+console.log('Light CSS:', cssContent.light);
+console.log('Dark CSS:', cssContent.dark);
+console.log('Utilities:', cssContent.utilities);
+```
+
+#### `generateUtilityClasses(colorSystem, config?)`
+
+Generates utility classes for colors with Tailwind-compatible naming.
 
 **Parameters:**
 - `colorSystem: ColorSystem` - Generated color system
+- `config?: Pick<CSSGenerationConfig, 'includeAlpha' | 'includeSpecialColors'>` - Configuration subset
+
+**Returns:** `string`
+
+**Example:**
+```typescript
+const utilities = generateUtilityClasses(colorSystem, {
+  includeAlpha: true,
+  includeSpecialColors: true
+});
+```
+
+### Utility Functions
+
+#### `generateLightModeCSS(colorSystem, config?)`
+
+Generates CSS for light mode only.
+
+**Parameters:**
+- `colorSystem: ColorSystem` - Generated color system
+- `config?: CSSGenerationConfig` - Configuration options
+
+**Returns:** `string`
+
+#### `generateDarkModeCSS(colorSystem, config?)`
+
+Generates CSS for dark mode only.
+
+**Parameters:**
+- `colorSystem: ColorSystem` - Generated color system
+- `config?: CSSGenerationConfig` - Configuration options
+
+**Returns:** `string`
+
+#### `generateCombinedCSS(colorSystem, config?)`
+
+Generates CSS with light/dark modes using media queries.
+
+**Parameters:**
+- `colorSystem: ColorSystem` - Generated color system
+- `config?: CSSGenerationConfig` - Configuration options
 
 **Returns:** `string`
 
@@ -112,30 +200,53 @@ Generates utility classes for colors.
 
 ```css
 :root {
-  /* Main color scales */
+  /* Main color scales (1-12) */
   --color-blue-1: #fcfdff;
   --color-blue-2: #f6f9ff;
+  --color-blue-3: #eef4ff;
+  --color-blue-4: #e1ecff;
+  --color-blue-5: #cee0ff;
+  --color-blue-6: #b7d0ff;
+  --color-blue-7: #96bbff;
+  --color-blue-8: #5e9eff;
+  --color-blue-9: #0066cc;
+  --color-blue-10: #0058b3;
+  --color-blue-11: #004799;
   --color-blue-12: #113161;
   
-  /* Alpha variants */
-  --color-blue-a1: rgba(40, 110, 220, 0.05);
-  --color-blue-a12: rgba(40, 110, 220, 0.95);
+  /* Alpha variants (a1-a12) */
+  --color-blue-a1: rgba(0, 102, 204, 0.02);
+  --color-blue-a2: rgba(0, 102, 204, 0.04);
+  --color-blue-a3: rgba(0, 102, 204, 0.08);
+  --color-blue-a9: rgba(0, 102, 204, 0.9);
+  --color-blue-a12: rgba(0, 102, 204, 0.95);
   
-  /* Wide gamut P3 */
+  /* Wide gamut P3 (p3-1 to p3-12) */
   --color-blue-p3-1: oklch(99.4% 0.0025 259.5);
+  --color-blue-p3-9: oklch(65.8% 0.142 259.5);
   --color-blue-p3-12: oklch(45.2% 0.142 259.5);
   
   /* Special colors */
   --color-blue-contrast: #ffffff;
-  --color-blue-surface: rgba(40, 110, 220, 0.1);
-  --color-blue-indicator: #286edc;
+  --color-blue-surface: rgba(0, 102, 204, 0.1);
+  --color-blue-indicator: #0066cc;
+  
+  /* Gray scale contextual to blue */
+  --color-blue-gray-1: #fcfcfd;
+  --color-blue-gray-12: #1c2024;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     /* Dark mode overrides */
     --color-blue-1: #0d1520;
+    --color-blue-2: #111927;
+    --color-blue-9: #3a80e0;
     --color-blue-12: #b8d4ff;
+    
+    /* Dark mode special colors */
+    --color-blue-contrast: #0d1520;
+    --color-blue-surface: rgba(58, 128, 224, 0.1);
   }
 }
 ```
@@ -145,17 +256,31 @@ Generates utility classes for colors.
 ```css
 /* Background colors */
 .bg-blue-1 { background-color: var(--color-blue-1); }
+.bg-blue-9 { background-color: var(--color-blue-9); }
 .bg-blue-12 { background-color: var(--color-blue-12); }
 
 /* Text colors */
 .text-blue-1 { color: var(--color-blue-1); }
+.text-blue-9 { color: var(--color-blue-9); }
 .text-blue-contrast { color: var(--color-blue-contrast); }
 
 /* Border colors */
+.border-blue-1 { border-color: var(--color-blue-1); }
 .border-blue-6 { border-color: var(--color-blue-6); }
+.border-blue-9 { border-color: var(--color-blue-9); }
 
 /* Alpha variants */
-.bg-blue-a3 { background-color: var(--color-blue-a3); }
+.bg-blue-a1 { background-color: var(--color-blue-a1); }
+.bg-blue-a6 { background-color: var(--color-blue-a6); }
+.text-blue-a9 { color: var(--color-blue-a9); }
+
+/* Special colors */
+.bg-blue-surface { background-color: var(--color-blue-surface); }
+.text-blue-indicator { color: var(--color-blue-indicator); }
+
+/* Gray scale utilities */
+.bg-blue-gray-1 { background-color: var(--color-blue-gray-1); }
+.text-blue-gray-12 { color: var(--color-blue-gray-12); }
 ```
 
 ## 💡 Usage Examples
@@ -167,10 +292,16 @@ import { generateCSSFiles } from '@design/color-generation-css';
 
 const cssFiles = generateCSSFiles(colorSystem);
 
-// Outputs:
+// Default output files:
 // - colors-light.css
 // - colors-dark.css  
 // - colors-combined.css
+
+cssFiles.forEach(file => {
+  console.log(`File: ${file.filename}`);
+  console.log(`Colors: ${file.metadata.colorCount}`);
+  console.log(`Properties: ${file.metadata.propertyCount}`);
+});
 ```
 
 ### Custom Configuration
@@ -183,13 +314,19 @@ const cssFiles = generateCSSFiles(colorSystem, {
   cssPrefix: '--theme',       // Custom prefix
   outputVariant: 'full'       // Single file output
 });
+
+// Results in:
+// - colors-full.css (everything in one file)
+// - colors-utilities.css (utility classes)
 ```
 
 ### Separate Light/Dark Files
 
 ```typescript
 const cssFiles = generateCSSFiles(colorSystem, {
-  outputVariant: 'separate'
+  outputVariant: 'separate',
+  includeAlpha: true,
+  includeWideGamut: true
 });
 
 // Outputs:
@@ -201,147 +338,255 @@ const cssFiles = generateCSSFiles(colorSystem, {
 
 ```typescript
 const cssFiles = generateCSSFiles(colorSystem, {
-  outputVariant: 'combined'
+  outputVariant: 'combined',
+  generateUtilityClasses: false,
+  cssPrefix: '--color'
 });
 
 // Outputs:
-// - colors-combined.css (with @media queries)
+// - colors-combined.css (light + dark with @media queries)
 ```
 
-### Full Output with Utilities
-
-```typescript
-const cssFiles = generateCSSFiles(colorSystem, {
-  outputVariant: 'full',
-  generateUtilityClasses: true
-});
-
-// Outputs:
-// - colors-full.css (everything in one file)
-// - colors-utilities.css (utility classes)
-```
-
-### Custom Prefix
-
-```typescript
-const cssFiles = generateCSSFiles(colorSystem, {
-  cssPrefix: '--theme-color'
-});
-
-// Generates: --theme-color-blue-1 instead of --color-blue-1
-```
-
-### String-only Generation
+### Programmatic CSS Generation
 
 ```typescript
 import { generateCSSForColorSystem } from '@design/color-generation-css';
 
-const css = generateCSSForColorSystem(colorSystem, {
+const cssContent = generateCSSForColorSystem(colorSystem, {
   includeAlpha: true,
   generateUtilityClasses: true
 });
 
-console.log(css.light);      // Light mode CSS
-console.log(css.dark);       // Dark mode CSS
-console.log(css.combined);   // Combined CSS with media queries
-console.log(css.utilities);  // Utility classes
+// Use strings directly
+const lightCSS = cssContent.light;
+const darkCSS = cssContent.dark;
+const combinedCSS = cssContent.combined;
+const utilitiesCSS = cssContent.utilities;
+
+// Write to custom files or inject into page
+document.head.appendChild(
+  createStyleElement(combinedCSS)
+);
 ```
 
-## 🎨 Output Variants
+### Minimal Output for Performance
+
+```typescript
+const cssFiles = generateCSSFiles(colorSystem, {
+  includeAlpha: false,           // No alpha variants
+  includeWideGamut: false,       // No P3 colors
+  includeGrayScale: false,       // No gray scales
+  includeSpecialColors: false,   // No contrast/surface/indicator
+  generateUtilityClasses: false, // No utility classes
+  outputVariant: 'combined'      // Single file
+});
+
+// Results in minimal CSS with just main color scales
+```
+
+### Custom Naming and Prefixes
+
+```typescript
+const cssFiles = generateCSSFiles(colorSystem, {
+  cssPrefix: '--theme-color',    // Custom prefix
+  outputVariant: 'separate',
+  generateUtilityClasses: true
+});
+
+// Generated CSS will use:
+// --theme-color-blue-1: #fcfdff;
+// --theme-color-blue-9: #0066cc;
+// etc.
+```
+
+## 🎨 CSS Output Variants
 
 ### Separate Files
-- **colors-light.css**: Light mode custom properties only
-- **colors-dark.css**: Dark mode custom properties only
-- Best for: Build systems that handle mode switching
 
-### Combined Files
-- **colors-combined.css**: Both modes with `@media (prefers-color-scheme)`
-- Best for: Simple implementations with automatic mode switching
+**colors-light.css:**
+```css
+:root {
+  --color-primary-1: #fcfdff;
+  --color-primary-9: #0066cc;
+  /* Light mode colors only */
+}
+```
 
-### Full Files
-- **colors-full.css**: All colors, variants, and modes in one file
-- Best for: Quick prototyping and testing
+**colors-dark.css:**
+```css
+:root {
+  --color-primary-1: #0d1520;
+  --color-primary-9: #3a80e0;
+  /* Dark mode colors only */
+}
+```
+
+### Combined File
+
+**colors-combined.css:**
+```css
+:root {
+  --color-primary-1: #fcfdff;
+  --color-primary-9: #0066cc;
+  /* Light mode colors */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary-1: #0d1520;
+    --color-primary-9: #3a80e0;
+    /* Dark mode overrides */
+  }
+}
+```
+
+### Full File
+
+**colors-full.css:**
+```css
+:root {
+  /* Light mode */
+  --color-primary-1: #fcfdff;
+  --color-primary-a1: rgba(0, 102, 204, 0.02);
+  --color-primary-p3-1: oklch(99.4% 0.0025 259.5);
+  
+  /* All variants included */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark mode overrides */
+  }
+}
+
+/* Utility classes included at bottom */
+.bg-primary-1 { background-color: var(--color-primary-1); }
+/* ... all utilities ... */
+```
+
+## 🔧 Advanced Configuration
+
+### Performance Optimization
+
+```typescript
+// Minimal CSS for fast loading
+const minimalConfig = {
+  includeAlpha: false,
+  includeWideGamut: false,
+  includeGrayScale: false,
+  includeSpecialColors: false,
+  generateUtilityClasses: false,
+  outputVariant: 'combined' as const
+};
+
+// Full-featured CSS for comprehensive design systems
+const fullConfig = {
+  includeAlpha: true,
+  includeWideGamut: true,
+  includeGrayScale: true,
+  includeSpecialColors: true,
+  generateUtilityClasses: true,
+  outputVariant: 'full' as const
+};
+```
+
+### Framework Integration
+
+```typescript
+// Tailwind CSS compatible
+const tailwindConfig = {
+  cssPrefix: '--tw',
+  generateUtilityClasses: true,
+  outputVariant: 'combined' as const
+};
+
+// CSS Modules compatible
+const cssModulesConfig = {
+  generateUtilityClasses: false,
+  outputVariant: 'separate' as const
+};
+
+// Styled Components compatible
+const styledComponentsConfig = {
+  generateUtilityClasses: false,
+  outputVariant: 'combined' as const,
+  cssPrefix: '--sc'
+};
+```
 
 ## 🛠 Integration Examples
 
-### With Build Tools
+### Build Tools
 
 ```typescript
-import { writeFileSync } from 'fs';
+// Webpack integration
 import { generateCSSFiles } from '@design/color-generation-css';
 
 const cssFiles = generateCSSFiles(colorSystem);
-
 cssFiles.forEach(file => {
-  writeFileSync(`./dist/css/${file.filename}`, file.content);
+  fs.writeFileSync(`./dist/css/${file.filename}`, file.content);
 });
 ```
 
-### With PostCSS
+### React Integration
 
 ```typescript
-import postcss from 'postcss';
-import { generateCSSForColorSystem } from '@design/color-generation-css';
-
-const css = generateCSSForColorSystem(colorSystem);
-const processed = await postcss([
-  // your PostCSS plugins
-]).process(css.combined, { from: undefined });
+// React hook for dynamic CSS
+function useColorCSS(colorSystem: ColorSystem) {
+  const [css, setCSS] = useState('');
+  
+  useEffect(() => {
+    const { combined } = generateCSSForColorSystem(colorSystem);
+    setCSS(combined);
+  }, [colorSystem]);
+  
+  return css;
+}
 ```
 
-### With Sass/SCSS
+### Node.js Script
 
 ```typescript
-// Generate CSS custom properties
-const cssFiles = generateCSSFiles(colorSystem, {
-  outputVariant: 'separate'
-});
+// Generate CSS files script
+import { writeFile } from 'fs/promises';
+import { generateCSSFiles } from '@design/color-generation-css';
 
-// Include in Sass files:
-// @import 'colors-light.css';
-// @import 'colors-dark.css';
+async function generateColorCSS() {
+  const cssFiles = generateCSSFiles(colorSystem, {
+    outputVariant: 'combined',
+    generateUtilityClasses: true
+  });
+  
+  await Promise.all(
+    cssFiles.map(file =>
+      writeFile(`./output/css/colors/${file.filename}`, file.content)
+    )
+  );
+  
+  console.log(`Generated ${cssFiles.length} CSS files`);
+}
 ```
 
 ## 🧪 Testing
 
-```bash
-# Run tests
-bun test
+```typescript
+import { generateCSSFiles, generateUtilityClasses } from '@design/color-generation-css';
 
-# Test with different configurations
-bun test --coverage
+// Test CSS generation
+const cssFiles = generateCSSFiles(testColorSystem);
+console.assert(cssFiles.length > 0);
+console.assert(cssFiles[0].filename.endsWith('.css'));
 
-# Watch mode
-bun test --watch
+// Test utility generation
+const utilities = generateUtilityClasses(testColorSystem);
+console.assert(utilities.includes('.bg-'));
+console.assert(utilities.includes('.text-'));
 ```
-
-## 🛠 Development
-
-```bash
-# Install dependencies
-bun install
-
-# Build the package
-bun run build
-
-# Run linting
-bun run lint
-
-# Format code
-bun run format
-```
-
-## 🎯 Performance
-
-- **Optimized output**: Minimal CSS with no redundancy
-- **Treeshaking friendly**: Only includes requested variants
-- **Efficient selectors**: Uses CSS custom properties for better performance
-- **Small bundle size**: Typically 2-5KB per color set
 
 ## 🤝 Related Packages
 
-- **[@design/color-generation-core](../color-generation-core)** - Core color generation
-- **[@design/color-generation-json](../color-generation-json)** - JSON output formats
+- **[@design/color-generation-core](../color-generation-core)** - Core color generation logic
+- **[@design/color-generation-json](../color-generation-json)** - JSON format generation
 - **[@design/cli](../cli)** - Command-line interface
 
 ## 📄 License

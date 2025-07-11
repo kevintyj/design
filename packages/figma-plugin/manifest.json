@@ -8,6 +8,10 @@
 	"enableProposedApi": false,
 	"editorType": ["figma"],
 	"networkAccess": {
-		"allowedDomains": ["none"]
+		"allowedDomains": [
+			"https://raw.githubusercontent.com/kevintyj/design/refs/heads/main/assets/",
+			"https://api.fontshare.com/v2/",
+			"https://cdn.fontshare.com/"
+		]
 	}
 }

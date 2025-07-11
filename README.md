@@ -30,19 +30,28 @@ A comprehensive design system with color and spacing generation based on Radix U
 
 ### Core Packages
 
-- **[@design/color-generation-core](./packages/color-generation-core)** - Core color generation logic
-- **[@design/color-generation-css](./packages/color-generation-css)** - CSS generation utilities  
-- **[@design/color-generation-json](./packages/color-generation-json)** - JSON format generation
-- **[@design/spacing-generation-core](./packages/spacing-generation-core)** - Core spacing generation logic
-- **[@design/spacing-generation-css](./packages/spacing-generation-css)** - Spacing CSS utilities
-- **[@design/spacing-generation-json](./packages/spacing-generation-json)** - Spacing JSON formats
-- **[@design/cli](./packages/cli)** - Command-line interface
+| Package | Description | Status |
+|---------|-------------|---------|
+| **[@design/color-generation-core](./packages/color-generation-core)** | Core color generation logic | ✅ Complete |
+| **[@design/spacing-generation-core](./packages/spacing-generation-core)** | Core spacing generation logic | ✅ Complete |
 
-### Supporting Packages
+### Generation Packages
 
-- **[@design/figma-plugin](./packages/figma-plugin)** - Figma plugin for design system management
-- **[@design/figma-to-json](./packages/figma-to-json)** - Export Figma variables to JSON
-- **[@design/examples](./packages/examples)** - Usage examples and demos
+| Package | Description | Status |
+|---------|-------------|---------|
+| **[@design/color-generation-css](./packages/color-generation-css)** | CSS generation utilities | ✅ Complete |
+| **[@design/color-generation-json](./packages/color-generation-json)** | JSON format generation | ✅ Complete |
+| **[@design/spacing-generation-css](./packages/spacing-generation-css)** | Spacing CSS utilities | ✅ Complete |
+| **[@design/spacing-generation-json](./packages/spacing-generation-json)** | Spacing JSON formats | ✅ Complete |
+
+### Application Packages
+
+| Package | Description | Status |
+|---------|-------------|---------|
+| **[@design/cli](./packages/cli)** | Command-line interface | ✅ Complete |
+| **[@design/figma-plugin](./packages/figma-plugin)** | Figma plugin for design system management | ✅ Complete |
+| **[@design/figma-to-json](./packages/figma-to-json)** | Export Figma variables to JSON | ✅ Complete |
+| **[@design/examples](./packages/examples)** | Usage examples and demos | ✅ Complete |
 
 ## 🚀 Quick Start
 
@@ -70,7 +79,7 @@ bun run colors:validate
 # List all available colors
 bun run colors:list
 
-# View spacing definitions (coming soon)
+# Validate spacing definitions
 bun run spacing:validate
 ```
 
@@ -78,19 +87,19 @@ bun run spacing:validate
 
 ```bash
 # Quick generation with all features
+bun run system:quick
+
+# Generate colors only
 bun run colors:quick
 
+# Generate spacing only
+bun run spacing:quick
+
 # Custom output directory
-bun run colors:quick --output ./dist
+bun run system:quick --output ./dist
 
 # Full control with all options
-bun run colors:generate --verbose --output ./styles
-
-# Generate only CSS files
-bun run colors:generate --formats css
-
-# Generate only JSON files  
-bun run colors:generate --formats json
+bun run system:generate --verbose --output ./styles
 ```
 
 ## 🎯 Available Colors
@@ -120,31 +129,44 @@ Your `base.ts` includes 26 spacing values following a 4px multiplier system:
 
 ## 📚 CLI Commands
 
-### Color Commands
+### Quick Commands
 
 | Command | Description | Example |
 |---------|-------------|---------|
+| `bun run system:quick` | Generate complete design system | `bun run system:quick --output ./dist` |
+| `bun run colors:quick` | Quick color generation (all features) | `bun run colors:quick` |
+| `bun run spacing:quick` | Quick spacing generation | `bun run spacing:quick` |
+
+### Validation Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `bun run system:validate` | Validate both colors and spacing | `bun run system:validate` |
 | `bun run colors:validate` | Validate color definitions | `bun run colors:validate` |
+| `bun run spacing:validate` | Validate spacing definitions | `bun run spacing:validate` |
+
+### List Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
 | `bun run colors:list` | List all available colors | `bun run colors:list` |
-| `bun run colors:quick` | Quick generation (all features) | `bun run colors:quick` |
-| `bun run colors:generate` | Full control generation | `bun run colors:generate --verbose` |
-| `bun run colors:figma` | Generate Figma JSON | `bun run colors:figma` |
+| `bun run spacing:list` | List all spacing values | `bun run spacing:list` |
 
-### Spacing Commands
+### Generation Commands
 
-| Command | Description | Status |
-|---------|-------------|--------|
-| `bun run spacing:validate` | Validate spacing definitions | ✅ Available |
-| `bun run spacing:quick` | Quick spacing generation | ✅ Available |
-| `bun run spacing:generate` | Full spacing generation | ✅ Available |
+| Command | Description | Example |
+|---------|-------------|---------|
+| `bun run system:generate` | Full system generation | `bun run system:generate --verbose` |
+| `bun run colors:generate` | Full control color generation | `bun run colors:generate --formats css,json` |
+| `bun run spacing:generate` | Full spacing generation | `bun run spacing:generate --formats css` |
 
-### System Commands
+### Figma Integration
 
-| Command | Description | Status |
-|---------|-------------|--------|
-| `bun run system:validate` | Validate both colors and spacing | ✅ Available |
-| `bun run system:quick` | Generate complete design system | ✅ Available |
-| `bun run system:generate` | Full system generation | ✅ Available |
+| Command | Description | Example |
+|---------|-------------|---------|
+| `bun run system:figma` | Generate complete Figma JSON | `bun run system:figma` |
+| `bun run colors:figma` | Generate Figma color JSON | `bun run colors:figma` |
+| `bun run spacing:figma` | Generate Figma spacing JSON | `bun run spacing:figma` |
 
 ### Advanced Generation Options
 
@@ -165,7 +187,7 @@ bun run colors:generate --css-prefix "--theme" --formats css
 bun run colors:generate --json-format tokens --json-pretty --formats json
 
 # Verbose output to see all generated files
-bun run colors:generate --verbose
+bun run system:generate --verbose
 ```
 
 ## 🎯 Generated Output Structure
@@ -200,9 +222,9 @@ output/
 │   └── combined/           # 🚧 Coming soon
 │       └── design-system.json
 └── figma/
-    ├── figma-colors.json
-    ├── figma-spacing.json  # 🚧 Coming soon
-    └── figma-combined.json # 🚧 Coming soon
+    ├── colors-figma.json
+    ├── spacing-figma.json
+    └── system-figma.json   # 🚧 Coming soon
 ```
 
 ## 💻 Programmatic Usage
@@ -257,6 +279,35 @@ const cssFiles = generateCSSFiles(spacingSystem, {
 const jsonFiles = generateJSONFiles(spacingSystem, {
   format: 'tailwind'
 });
+```
+
+### Combined System Generation
+
+```typescript
+import { 
+  loadColorDefinitions,
+  loadSpacingDefinitions,
+  generateColorSystem,
+  generateSpacingSystem
+} from '@design/color-generation-core';
+
+// Load definitions
+const colorInput = await loadColorDefinitions('./base.ts');
+const spacingInput = await loadSpacingDefinitions('./base.ts');
+
+// Generate systems
+const colorSystem = generateColorSystem(colorInput);
+const spacingSystem = generateSpacingSystem(spacingInput);
+
+// Generate combined output
+const designSystem = {
+  colors: colorSystem,
+  spacing: spacingSystem,
+  metadata: {
+    generatedAt: new Date().toISOString(),
+    version: '1.0.0'
+  }
+};
 ```
 
 ## 🎨 Examples
@@ -340,7 +391,7 @@ const jsonFiles = generateJSONFiles(spacingSystem, {
 ### Run Examples
 
 ```bash
-# Basic color generation example
+# Basic color and spacing generation example
 bun run example:basic
 
 # Advanced usage patterns
@@ -359,7 +410,7 @@ bun install
 bun run build
 
 # Build specific package
-bun run build:package spacing-generation-core
+bun run build:package cli
 
 # Clean build artifacts
 bun run build:clean

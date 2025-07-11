@@ -537,6 +537,14 @@ export const SystemManagerPlugin: React.FC = () => {
 			<div className="pb-8 pt-24">
 				{renderTabContent()}
 				<div className="px-5 py-6 mt-auto">
+					<div className="flex items-center gap-x-2 py-2">
+						<img
+							src="https://raw.githubusercontent.com/kevintyj/design/refs/heads/main/assets/icon.svg"
+							alt="Logo"
+							className="w-6 h-6"
+						/>
+						<h3 className="font-serif text-gray-12">@kevintyj/design</h3>
+					</div>
 					<span className="text-xs font-mono text-gray-11">
 						By{" "}
 						<a

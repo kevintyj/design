@@ -11,6 +11,7 @@ CSS generation utilities for design system spacing. Converts spacing systems int
 - **Multiple Output Variants** (px-only, rem-only, combined)
 - **Tailwind-compatible** utility naming
 - **Responsive Variants** with breakpoint support
+- **Negative Margins** for advanced layouts
 - **Zero Dependencies** and lightweight output
 - **TypeScript Support** with full type definitions
 
@@ -39,6 +40,7 @@ const cssFiles = generateCSSFiles(spacingSystem, {
 // Write files to disk
 cssFiles.forEach(file => {
   console.log(`Generated: ${file.filename}`);
+  console.log(`Type: ${file.type}`);
   console.log(`Size: ${file.content.length} bytes`);
 });
 ```
@@ -48,6 +50,8 @@ cssFiles.forEach(file => {
 ### Types
 
 #### `CSSGenerationConfig`
+Configuration options for CSS generation.
+
 ```typescript
 interface CSSGenerationConfig {
   variant?: CSSVariant;              // Output variant (default: "full")
@@ -56,10 +60,14 @@ interface CSSGenerationConfig {
   cssPrefix?: string;                // Custom property prefix (default: "--spacing")
   utilityPrefix?: string;            // Utility class prefix (default: "")
   includeNegative?: boolean;         // Include negative margins (default: false)
+  includeBreakpoints?: boolean;      // Include responsive utilities (default: false)
+  breakpoints?: Record<string, string>; // Custom breakpoints
 }
 ```
 
 #### `CSSVariant`
+Different CSS output formats.
+
 ```typescript
 type CSSVariant = 
   | "px-only"     // Pixel values only
@@ -69,30 +77,56 @@ type CSSVariant =
 ```
 
 #### `CSSFile`
+Generated CSS file structure.
+
 ```typescript
 interface CSSFile {
   filename: string;
   content: string;
-  type: "custom-properties" | "utilities" | "combined";
+  type: "custom-properties" | "utilities" | "combined" | "responsive";
   variant: CSSVariant;
+  size: number;
+  metadata: {
+    spacingCount: number;
+    propertyCount: number;
+    hasRem: boolean;
+    hasUtilities: boolean;
+    hasNegative: boolean;
+    hasResponsive: boolean;
+  };
 }
 ```
 
-### Functions
+### Core Functions
 
 #### `generateCSSFiles(spacingSystem, config?)`
 
-Generates CSS files from a spacing system.
+Generates CSS files from a spacing system with specified configuration.
 
 **Parameters:**
-- `spacingSystem: SpacingSystem` - Generated spacing system
+- `spacingSystem: SpacingSystem` - Generated spacing system from core package
 - `config?: CSSGenerationConfig` - Configuration options
 
 **Returns:** `CSSFile[]`
 
+**Example:**
+```typescript
+const cssFiles = generateCSSFiles(spacingSystem, {
+  variant: 'combined',
+  generateUtilityClasses: true,
+  includeRem: true,
+  includeNegative: true
+});
+
+// Results in files like:
+// - spacing.css (custom properties)
+// - spacing-utilities.css (utility classes)
+// - spacing-combined.css (everything)
+```
+
 #### `generateSpacingCustomProperties(spacingSystem, config?)`
 
-Generates CSS custom properties for spacing.
+Generates CSS custom properties for spacing with optional REM variants.
 
 **Parameters:**
 - `spacingSystem: SpacingSystem` - Generated spacing system
@@ -100,13 +134,72 @@ Generates CSS custom properties for spacing.
 
 **Returns:** `string`
 
+**Example:**
+```typescript
+const customProperties = generateSpacingCustomProperties(spacingSystem, {
+  includeRem: true,
+  cssPrefix: '--space'
+});
+```
+
 #### `generateSpacingUtilityClasses(spacingSystem, config?)`
 
-Generates utility classes for spacing.
+Generates utility classes for spacing with Tailwind-compatible naming.
 
 **Parameters:**
 - `spacingSystem: SpacingSystem` - Generated spacing system
 - `config?: CSSGenerationConfig` - Configuration options
+
+**Returns:** `string`
+
+**Example:**
+```typescript
+const utilities = generateSpacingUtilityClasses(spacingSystem, {
+  includeNegative: true,
+  utilityPrefix: 'tw-',
+  includeBreakpoints: true
+});
+```
+
+### Utility Functions
+
+#### `generateMarginUtilities(spacingSystem, config?)`
+
+Generates margin utility classes only.
+
+**Parameters:**
+- `spacingSystem: SpacingSystem` - Generated spacing system
+- `config?: CSSGenerationConfig` - Configuration options
+
+**Returns:** `string`
+
+#### `generatePaddingUtilities(spacingSystem, config?)`
+
+Generates padding utility classes only.
+
+**Parameters:**
+- `spacingSystem: SpacingSystem` - Generated spacing system
+- `config?: CSSGenerationConfig` - Configuration options
+
+**Returns:** `string`
+
+#### `generateGapUtilities(spacingSystem, config?)`
+
+Generates gap utility classes for flexbox and grid.
+
+**Parameters:**
+- `spacingSystem: SpacingSystem` - Generated spacing system
+- `config?: CSSGenerationConfig` - Configuration options
+
+**Returns:** `string`
+
+#### `generateResponsiveUtilities(spacingSystem, config?)`
+
+Generates responsive variants of utility classes.
+
+**Parameters:**
+- `spacingSystem: SpacingSystem` - Generated spacing system
+- `config?: CSSGenerationConfig` - Configuration options with breakpoints
 
 **Returns:** `string`
 
@@ -119,10 +212,22 @@ Generates utility classes for spacing.
   /* Pixel values */
   --spacing-0: 0px;
   --spacing-px: 1px;
+  --spacing-2px: 2px;
+  --spacing-3px: 3px;
   --spacing-1: 4px;
+  --spacing-5px: 5px;
+  --spacing-6px: 6px;
   --spacing-2: 8px;
+  --spacing-10px: 10px;
+  --spacing-3: 12px;
+  --spacing-14px: 14px;
   --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
   --spacing-8: 32px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+  --spacing-20: 80px;
   
   /* REM values */
   --spacing-0-rem: 0rem;
@@ -131,56 +236,126 @@ Generates utility classes for spacing.
   --spacing-2-rem: 0.5rem;
   --spacing-4-rem: 1rem;
   --spacing-8-rem: 2rem;
+  --spacing-12-rem: 3rem;
+  --spacing-16-rem: 4rem;
+  --spacing-20-rem: 5rem;
 }
 ```
 
 ### Utility Classes
 
+#### Margin Utilities
+
 ```css
-/* Margin utilities */
+/* All sides margin */
 .m-0 { margin: var(--spacing-0); }
 .m-px { margin: var(--spacing-px); }
 .m-1 { margin: var(--spacing-1); }
 .m-2 { margin: var(--spacing-2); }
+.m-4 { margin: var(--spacing-4); }
+.m-8 { margin: var(--spacing-8); }
 
-/* Margin directional */
+/* Directional margins */
+.mx-0 { margin-left: var(--spacing-0); margin-right: var(--spacing-0); }
 .mx-1 { margin-left: var(--spacing-1); margin-right: var(--spacing-1); }
+.my-0 { margin-top: var(--spacing-0); margin-bottom: var(--spacing-0); }
 .my-1 { margin-top: var(--spacing-1); margin-bottom: var(--spacing-1); }
-.mt-1 { margin-top: var(--spacing-1); }
-.mr-1 { margin-right: var(--spacing-1); }
-.mb-1 { margin-bottom: var(--spacing-1); }
-.ml-1 { margin-left: var(--spacing-1); }
 
-/* Padding utilities */
+/* Individual sides */
+.mt-0 { margin-top: var(--spacing-0); }
+.mt-1 { margin-top: var(--spacing-1); }
+.mr-0 { margin-right: var(--spacing-0); }
+.mr-1 { margin-right: var(--spacing-1); }
+.mb-0 { margin-bottom: var(--spacing-0); }
+.mb-1 { margin-bottom: var(--spacing-1); }
+.ml-0 { margin-left: var(--spacing-0); }
+.ml-1 { margin-left: var(--spacing-1); }
+```
+
+#### Padding Utilities
+
+```css
+/* All sides padding */
 .p-0 { padding: var(--spacing-0); }
+.p-px { padding: var(--spacing-px); }
 .p-1 { padding: var(--spacing-1); }
 .p-2 { padding: var(--spacing-2); }
+.p-4 { padding: var(--spacing-4); }
+.p-8 { padding: var(--spacing-8); }
 
-/* Padding directional */
+/* Directional padding */
+.px-0 { padding-left: var(--spacing-0); padding-right: var(--spacing-0); }
 .px-1 { padding-left: var(--spacing-1); padding-right: var(--spacing-1); }
+.py-0 { padding-top: var(--spacing-0); padding-bottom: var(--spacing-0); }
 .py-1 { padding-top: var(--spacing-1); padding-bottom: var(--spacing-1); }
-.pt-1 { padding-top: var(--spacing-1); }
-.pr-1 { padding-right: var(--spacing-1); }
-.pb-1 { padding-bottom: var(--spacing-1); }
-.pl-1 { padding-left: var(--spacing-1); }
 
-/* Gap utilities */
+/* Individual sides */
+.pt-0 { padding-top: var(--spacing-0); }
+.pt-1 { padding-top: var(--spacing-1); }
+.pr-0 { padding-right: var(--spacing-0); }
+.pr-1 { padding-right: var(--spacing-1); }
+.pb-0 { padding-bottom: var(--spacing-0); }
+.pb-1 { padding-bottom: var(--spacing-1); }
+.pl-0 { padding-left: var(--spacing-0); }
+.pl-1 { padding-left: var(--spacing-1); }
+```
+
+#### Gap Utilities
+
+```css
+/* Gap for flexbox and grid */
 .gap-0 { gap: var(--spacing-0); }
 .gap-1 { gap: var(--spacing-1); }
 .gap-2 { gap: var(--spacing-2); }
+.gap-4 { gap: var(--spacing-4); }
+.gap-8 { gap: var(--spacing-8); }
+
+/* Directional gaps */
+.gap-x-0 { column-gap: var(--spacing-0); }
 .gap-x-1 { column-gap: var(--spacing-1); }
+.gap-y-0 { row-gap: var(--spacing-0); }
 .gap-y-1 { row-gap: var(--spacing-1); }
 ```
 
-### Negative Margins (Optional)
+#### Negative Margins
 
 ```css
-/* Negative margin utilities */
+/* Negative margin utilities (when includeNegative: true) */
 .-m-1 { margin: calc(var(--spacing-1) * -1); }
+.-m-2 { margin: calc(var(--spacing-2) * -1); }
+.-m-4 { margin: calc(var(--spacing-4) * -1); }
+
+/* Negative directional margins */
+.-mx-1 { margin-left: calc(var(--spacing-1) * -1); margin-right: calc(var(--spacing-1) * -1); }
+.-my-1 { margin-top: calc(var(--spacing-1) * -1); margin-bottom: calc(var(--spacing-1) * -1); }
+
+/* Negative individual sides */
 .-mt-1 { margin-top: calc(var(--spacing-1) * -1); }
 .-mr-1 { margin-right: calc(var(--spacing-1) * -1); }
 .-mb-1 { margin-bottom: calc(var(--spacing-1) * -1); }
 .-ml-1 { margin-left: calc(var(--spacing-1) * -1); }
+```
+
+#### Responsive Variants
+
+```css
+/* Responsive utilities (when includeBreakpoints: true) */
+@media (min-width: 640px) {
+  .sm\:m-0 { margin: var(--spacing-0); }
+  .sm\:m-1 { margin: var(--spacing-1); }
+  .sm\:p-0 { padding: var(--spacing-0); }
+  .sm\:p-1 { padding: var(--spacing-1); }
+}
+
+@media (min-width: 768px) {
+  .md\:m-0 { margin: var(--spacing-0); }
+  .md\:p-0 { padding: var(--spacing-0); }
+}
+
+@media (min-width: 1024px) {
+  .lg\:m-0 { margin: var(--spacing-0); }
+  .lg\:p-0 { padding: var(--spacing-0); }
+}
 ```
 
 ## 💡 Usage Examples
@@ -192,9 +367,16 @@ import { generateCSSFiles } from '@design/spacing-generation-css';
 
 const cssFiles = generateCSSFiles(spacingSystem);
 
-// Outputs:
+// Default output files:
 // - spacing.css (custom properties)
 // - spacing-utilities.css (utility classes)
+
+cssFiles.forEach(file => {
+  console.log(`File: ${file.filename}`);
+  console.log(`Type: ${file.type}`);
+  console.log(`Spacing values: ${file.metadata.spacingCount}`);
+  console.log(`Properties: ${file.metadata.propertyCount}`);
+});
 ```
 
 ### Pixel-only Output
@@ -202,10 +384,13 @@ const cssFiles = generateCSSFiles(spacingSystem);
 ```typescript
 const cssFiles = generateCSSFiles(spacingSystem, {
   variant: 'px-only',
-  includeRem: false
+  includeRem: false,
+  generateUtilityClasses: true
 });
 
-// Only generates pixel-based spacing
+// Results in:
+// - spacing-px.css (pixel custom properties only)
+// - spacing-utilities-px.css (utilities with px values)
 ```
 
 ### REM-only Output
@@ -213,10 +398,13 @@ const cssFiles = generateCSSFiles(spacingSystem, {
 ```typescript
 const cssFiles = generateCSSFiles(spacingSystem, {
   variant: 'rem-only',
-  includeRem: true
+  includeRem: true,
+  generateUtilityClasses: true
 });
 
-// Only generates REM-based spacing
+// Results in:
+// - spacing-rem.css (REM custom properties only)
+// - spacing-utilities-rem.css (utilities with REM values)
 ```
 
 ### Combined Output
@@ -224,200 +412,361 @@ const cssFiles = generateCSSFiles(spacingSystem, {
 ```typescript
 const cssFiles = generateCSSFiles(spacingSystem, {
   variant: 'combined',
-  generateUtilityClasses: true
-});
-
-// Generates both custom properties and utilities
-```
-
-### Custom Prefixes
-
-```typescript
-const cssFiles = generateCSSFiles(spacingSystem, {
-  cssPrefix: '--space',
-  utilityPrefix: 'sp-'
-});
-
-// Generates: --space-1, .sp-m-1, .sp-p-1, etc.
-```
-
-### With Negative Margins
-
-```typescript
-const cssFiles = generateCSSFiles(spacingSystem, {
+  includeRem: true,
   generateUtilityClasses: true,
   includeNegative: true
 });
 
-// Includes negative margin utilities: .-m-1, .-mt-2, etc.
+// Results in:
+// - spacing-combined.css (both px and REM properties)
+// - spacing-utilities-combined.css (utilities with negative margins)
 ```
 
-### Individual Generation
+### Full Output with Everything
+
+```typescript
+const cssFiles = generateCSSFiles(spacingSystem, {
+  variant: 'full',
+  includeRem: true,
+  generateUtilityClasses: true,
+  includeNegative: true,
+  includeBreakpoints: true,
+  breakpoints: {
+    sm: '640px',
+    md: '768px', 
+    lg: '1024px',
+    xl: '1280px'
+  }
+});
+
+// Results in:
+// - spacing-full.css (everything in one file)
+```
+
+### Custom Prefixes and Configuration
+
+```typescript
+const cssFiles = generateCSSFiles(spacingSystem, {
+  cssPrefix: '--space',           // Custom property prefix
+  utilityPrefix: 'tw-',          // Utility class prefix
+  includeNegative: true,
+  includeBreakpoints: false
+});
+
+// Generated CSS will use:
+// --space-1: 4px;
+// .tw-m-1 { margin: var(--space-1); }
+```
+
+### Programmatic CSS Generation
 
 ```typescript
 import { 
-  generateSpacingCustomProperties,
+  generateSpacingCustomProperties, 
   generateSpacingUtilityClasses 
 } from '@design/spacing-generation-css';
 
 // Generate only custom properties
-const customProps = generateSpacingCustomProperties(spacingSystem);
-
-// Generate only utility classes
-const utilities = generateSpacingUtilityClasses(spacingSystem, {
-  includeNegative: true
+const customProperties = generateSpacingCustomProperties(spacingSystem, {
+  includeRem: true,
+  cssPrefix: '--spacing'
 });
+
+// Generate only utilities
+const utilities = generateSpacingUtilityClasses(spacingSystem, {
+  includeNegative: false,
+  utilityPrefix: ''
+});
+
+// Use strings directly
+document.head.appendChild(
+  createStyleElement(customProperties + utilities)
+);
 ```
 
-## 🎨 Output Variants
+### Minimal Output for Performance
 
-### Px-only Variant
-- **spacing.css**: Pixel-based custom properties only
-- Best for: Fixed layouts and pixel-perfect designs
+```typescript
+const cssFiles = generateCSSFiles(spacingSystem, {
+  variant: 'px-only',            // Pixel values only
+  includeRem: false,             // No REM variants
+  generateUtilityClasses: false, // No utility classes
+  includeNegative: false,        // No negative margins
+  includeBreakpoints: false      // No responsive variants
+});
 
-### REM-only Variant  
-- **spacing-rem.css**: REM-based custom properties only
-- Best for: Responsive designs and accessibility
+// Results in minimal CSS with just px custom properties
+```
+
+## 🎨 CSS Output Variants
+
+### Pixel-only Variant
+
+**spacing-px.css:**
+```css
+:root {
+  --spacing-0: 0px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-4: 16px;
+  /* Pixel values only */
+}
+```
+
+### REM-only Variant
+
+**spacing-rem.css:**
+```css
+:root {
+  --spacing-0-rem: 0rem;
+  --spacing-1-rem: 0.25rem;
+  --spacing-2-rem: 0.5rem;
+  --spacing-4-rem: 1rem;
+  /* REM values only */
+}
+```
 
 ### Combined Variant
-- **spacing-combined.css**: Both pixel and REM properties
-- Best for: Flexible designs with mixed requirements
+
+**spacing-combined.css:**
+```css
+:root {
+  /* Pixel values */
+  --spacing-0: 0px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  
+  /* REM values */
+  --spacing-0-rem: 0rem;
+  --spacing-1-rem: 0.25rem;
+  --spacing-2-rem: 0.5rem;
+}
+
+/* Utility classes */
+.m-0 { margin: var(--spacing-0); }
+.p-1 { padding: var(--spacing-1); }
+```
 
 ### Full Variant
-- **spacing.css**: Custom properties
-- **spacing-utilities.css**: Complete utility classes
-- **spacing-rem.css**: REM variants (if enabled)
-- Best for: Complete design systems
+
+**spacing-full.css:**
+```css
+:root {
+  /* All custom properties */
+  --spacing-0: 0px;
+  --spacing-1-rem: 0.25rem;
+  /* ... all spacing values ... */
+}
+
+/* All utility classes */
+.m-0 { margin: var(--spacing-0); }
+.p-1 { padding: var(--spacing-1); }
+.-m-1 { margin: calc(var(--spacing-1) * -1); }
+
+/* Responsive variants */
+@media (min-width: 640px) {
+  .sm\:m-0 { margin: var(--spacing-0); }
+}
+```
+
+## 🔧 Advanced Configuration
+
+### Performance Optimization
+
+```typescript
+// Minimal CSS for fast loading
+const minimalConfig = {
+  variant: 'px-only' as const,
+  includeRem: false,
+  generateUtilityClasses: false,
+  includeNegative: false,
+  includeBreakpoints: false
+};
+
+// Full-featured CSS for comprehensive design systems
+const fullConfig = {
+  variant: 'full' as const,
+  includeRem: true,
+  generateUtilityClasses: true,
+  includeNegative: true,
+  includeBreakpoints: true,
+  breakpoints: {
+    sm: '640px',
+    md: '768px',
+    lg: '1024px',
+    xl: '1280px',
+    '2xl': '1536px'
+  }
+};
+```
+
+### Framework Integration
+
+```typescript
+// Tailwind CSS compatible
+const tailwindConfig = {
+  utilityPrefix: '',
+  includeNegative: true,
+  includeBreakpoints: true,
+  variant: 'combined' as const
+};
+
+// Bootstrap compatible
+const bootstrapConfig = {
+  cssPrefix: '--bs-spacing',
+  utilityPrefix: 'bs-',
+  includeBreakpoints: true,
+  breakpoints: {
+    sm: '576px',
+    md: '768px',
+    lg: '992px',
+    xl: '1200px'
+  }
+};
+
+// Custom framework
+const customConfig = {
+  cssPrefix: '--my-space',
+  utilityPrefix: 'space-',
+  includeRem: true,
+  variant: 'full' as const
+};
+```
+
+### Responsive Breakpoints
+
+```typescript
+const responsiveConfig = {
+  includeBreakpoints: true,
+  breakpoints: {
+    mobile: '480px',
+    tablet: '768px',
+    desktop: '1024px',
+    wide: '1280px'
+  }
+};
+
+// Results in responsive utilities like:
+// .mobile\:m-4, .tablet\:p-8, .desktop\:gap-12
+```
 
 ## 🛠 Integration Examples
 
-### With Tailwind CSS
+### Build Tools
 
 ```typescript
-// Generate utilities similar to Tailwind
-const cssFiles = generateCSSFiles(spacingSystem, {
-  variant: 'full',
-  generateUtilityClasses: true,
-  utilityPrefix: ''  // No prefix for Tailwind compatibility
-});
-
-// Use directly as Tailwind replacement or supplement
-```
-
-### With PostCSS
-
-```typescript
-import postcss from 'postcss';
-import { generateSpacingCustomProperties } from '@design/spacing-generation-css';
-
-const spacing = generateSpacingCustomProperties(spacingSystem);
-const processed = await postcss([
-  // your PostCSS plugins
-]).process(spacing, { from: undefined });
-```
-
-### With CSS-in-JS
-
-```typescript
-import { generateSpacingCustomProperties } from '@design/spacing-generation-css';
-
-const spacingCSS = generateSpacingCustomProperties(spacingSystem);
-
-// Inject into styled-components, emotion, etc.
-const GlobalStyle = createGlobalStyle`
-  ${spacingCSS}
-`;
-```
-
-### With Build Tools
-
-```typescript
-import { writeFileSync } from 'fs';
+// Webpack integration
 import { generateCSSFiles } from '@design/spacing-generation-css';
 
 const cssFiles = generateCSSFiles(spacingSystem, {
-  variant: 'full'
+  variant: 'combined',
+  generateUtilityClasses: true
 });
 
 cssFiles.forEach(file => {
-  writeFileSync(`./dist/css/spacing/${file.filename}`, file.content);
+  fs.writeFileSync(`./dist/css/${file.filename}`, file.content);
 });
 ```
 
-## 🎯 Performance
+### React Integration
 
-- **Lightweight Output**: Typically 3-8KB for complete spacing system
-- **Efficient Selectors**: Uses CSS custom properties for better performance
-- **Minimal Duplication**: Smart generation avoids redundant rules
-- **Tree-shakeable**: Include only needed variants
+```typescript
+// React hook for dynamic spacing CSS
+function useSpacingCSS(spacingSystem: SpacingSystem) {
+  const [css, setCSS] = useState('');
+  
+  useEffect(() => {
+    const customProperties = generateSpacingCustomProperties(spacingSystem);
+    const utilities = generateSpacingUtilityClasses(spacingSystem);
+    setCSS(customProperties + utilities);
+  }, [spacingSystem]);
+  
+  return css;
+}
+
+// Component using spacing utilities
+function SpacedComponent() {
+  return (
+    <div className="p-4 m-2 gap-3">
+      <div className="mt-8 mb-4">Content</div>
+    </div>
+  );
+}
+```
+
+### Node.js Script
+
+```typescript
+// Generate spacing CSS files script
+import { writeFile } from 'fs/promises';
+import { generateCSSFiles } from '@design/spacing-generation-css';
+
+async function generateSpacingCSS() {
+  const cssFiles = generateCSSFiles(spacingSystem, {
+    variant: 'full',
+    includeNegative: true,
+    includeBreakpoints: true
+  });
+  
+  await Promise.all(
+    cssFiles.map(file =>
+      writeFile(`./output/css/spacing/${file.filename}`, file.content)
+    )
+  );
+  
+  console.log(`Generated ${cssFiles.length} spacing CSS files`);
+  cssFiles.forEach(file => {
+    console.log(`  ${file.filename} (${file.size} bytes)`);
+  });
+}
+```
+
+### PostCSS Integration
+
+```typescript
+// PostCSS plugin for spacing generation
+import { generateSpacingCustomProperties } from '@design/spacing-generation-css';
+
+const spacingPlugin = (spacingSystem) => {
+  return {
+    postcssPlugin: 'spacing-generation',
+    Root(root) {
+      const spacingCSS = generateSpacingCustomProperties(spacingSystem);
+      root.prepend(spacingCSS);
+    }
+  };
+};
+```
 
 ## 🧪 Testing
 
-```bash
-# Run tests
-bun test
+```typescript
+import { 
+  generateCSSFiles, 
+  generateSpacingUtilityClasses,
+  generateSpacingCustomProperties 
+} from '@design/spacing-generation-css';
 
-# Test all variants
-bun test --coverage
+// Test CSS generation
+const cssFiles = generateCSSFiles(testSpacingSystem);
+console.assert(cssFiles.length > 0);
+console.assert(cssFiles[0].filename.endsWith('.css'));
 
-# Watch mode
-bun test --watch
+// Test utility generation
+const utilities = generateSpacingUtilityClasses(testSpacingSystem);
+console.assert(utilities.includes('.m-'));
+console.assert(utilities.includes('.p-'));
+console.assert(utilities.includes('.gap-'));
+
+// Test custom properties
+const properties = generateSpacingCustomProperties(testSpacingSystem);
+console.assert(properties.includes('--spacing-'));
 ```
-
-## 🛠 Development
-
-```bash
-# Install dependencies
-bun install
-
-# Build the package
-bun run build
-
-# Run linting
-bun run lint
-
-# Format code
-bun run format
-```
-
-## 🎯 Utility Class Reference
-
-### Margin Classes
-
-| Class | Property | Description |
-|-------|----------|-------------|
-| `.m-{size}` | `margin` | All sides |
-| `.mx-{size}` | `margin-left, margin-right` | Horizontal |
-| `.my-{size}` | `margin-top, margin-bottom` | Vertical |
-| `.mt-{size}` | `margin-top` | Top |
-| `.mr-{size}` | `margin-right` | Right |
-| `.mb-{size}` | `margin-bottom` | Bottom |
-| `.ml-{size}` | `margin-left` | Left |
-
-### Padding Classes
-
-| Class | Property | Description |
-|-------|----------|-------------|
-| `.p-{size}` | `padding` | All sides |
-| `.px-{size}` | `padding-left, padding-right` | Horizontal |
-| `.py-{size}` | `padding-top, padding-bottom` | Vertical |
-| `.pt-{size}` | `padding-top` | Top |
-| `.pr-{size}` | `padding-right` | Right |
-| `.pb-{size}` | `padding-bottom` | Bottom |
-| `.pl-{size}` | `padding-left` | Left |
-
-### Gap Classes
-
-| Class | Property | Description |
-|-------|----------|-------------|
-| `.gap-{size}` | `gap` | Grid/flex gap |
-| `.gap-x-{size}` | `column-gap` | Horizontal gap |
-| `.gap-y-{size}` | `row-gap` | Vertical gap |
 
 ## 🤝 Related Packages
 
-- **[@design/spacing-generation-core](../spacing-generation-core)** - Core spacing generation
-- **[@design/spacing-generation-json](../spacing-generation-json)** - JSON output formats
+- **[@design/spacing-generation-core](../spacing-generation-core)** - Core spacing generation logic
+- **[@design/spacing-generation-json](../spacing-generation-json)** - JSON format generation
 - **[@design/cli](../cli)** - Command-line interface
 
 ## 📄 License
