@@ -3,17 +3,20 @@
 	"version": "1.0.0",
 	"description": "CSS generation utilities for color scales",
 	"main": "dist/index.js",
-	"module": "dist/index.mjs",
 	"types": "dist/index.d.ts",
 	"exports": {
-		".": "./src/index.ts"
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		}
 	},
 	"files": [
 		"dist"
 	],
 	"scripts": {
-		"build": "bun build src/index.ts --outdir dist --target bun && bun run build:types",
-		"build:types": "tsc --emitDeclarationOnly --outDir dist",
+		"build": "rm -rf dist && bun build src/index.ts --target=browser --outfile=dist/index.js --format=esm && bun run build:types",
+		"build:types": "tsc src/index.ts --declaration --emitDeclarationOnly --outDir dist --moduleResolution node --esModuleInterop --allowSyntheticDefaultImports",
 		"dev": "bun --watch src/index.ts",
 		"test": "bun test",
 		"lint": "biome check src/",

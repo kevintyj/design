@@ -569,9 +569,40 @@
 }
 
 @layer components {
+	/* Custom checkbox styles */
+	.checkbox {
+		@apply w-5 h-5 border border-gray-7 rounded overflow-hidden transition-all duration-80 cursor-pointer hover:translate-y-[-1px] active:translate-y-0 relative;
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		background-color: var(--color-gray-1);
+		box-shadow:
+			inset 0 1px 0 0 var(--color-overlay-white-9),
+			inset 0 1px 2px 0.5px var(--color-overlay-white-7),
+			inset 0 -0.5px 0 0.5px var(--color-overlay-black-5),
+			inset 0 -1.5px 3px 0 var(--color-overlay-black-6);
+	}
+
+	.checkbox:checked {
+		@apply bg-blaze-9 border-blaze-11;
+		background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m9 12 2 2 4-4'/%3e%3c/svg%3e");
+		background-size: 20px 20px;
+		background-position: center;
+		background-repeat: no-repeat;
+	}
+
+	.checkbox:disabled {
+		@apply opacity-50 cursor-not-allowed hover:translate-y-0;
+	}
+
+	.checkbox:focus {
+		@apply ring-2 ring-blaze-8 ring-offset-1;
+		outline: none;
+	}
+
 	/* Custom button styles */
 	.btn {
-		@apply border outline-none px-3 py-1.5 text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-80 cursor-pointer hover:translate-y-[-2px];
+		@apply border outline-none px-3 py-1.5 text-sm font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-80 cursor-pointer hover:translate-y-[-2px] active:translate-y-0;
 		box-shadow:
 			inset 0 1px 0 0 var(--color-overlay-white-9),
 			inset 0 1px 2px 0.5px var(--color-overlay-white-7),

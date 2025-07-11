@@ -3,7 +3,6 @@
 	"version": "1.0.0",
 	"description": "Core color generation logic using Radix UI color system",
 	"main": "dist/index.js",
-	"module": "dist/index.mjs",
 	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
@@ -16,8 +15,8 @@
 		"dist"
 	],
 	"scripts": {
-		"build": "bun build src/index.ts --outdir dist --target bun && bun run build:types",
-		"build:types": "tsc --emitDeclarationOnly --outDir dist",
+		"build": "rm -rf dist && bun build src/index.ts --target=browser --outfile=dist/index.js --format=esm && bun run build:types",
+		"build:types": "tsc src/index.ts --declaration --emitDeclarationOnly --outDir dist --moduleResolution node --esModuleInterop --allowSyntheticDefaultImports",
 		"dev": "bun --watch src/index.ts",
 		"test": "bun test",
 		"lint": "biome check src/",

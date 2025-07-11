@@ -1,12 +1,20 @@
+import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
 import type React from "react";
-import type { ColorSystem } from "../types";
+import { useCallback } from "react";
+import type { ColorSystem, UserPreferences } from "../types";
 import { FileDropzone } from "./FileDropzone";
+import GeneratedColorTable from "./GeneratedColorTable";
 
 interface ConfigureTabProps {
 	colorSystem: ColorSystem | null;
+	generatedColorSystem: ColorSystemCore | null;
 	isLoading: boolean;
+	preferences: UserPreferences;
 	onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
 	onImportToFigma: () => void;
+	onGenerateColorSystem: () => void;
+	onPreferenceChange: (key: keyof UserPreferences, enabled: boolean) => void;
+	onResetColorSystem: () => void;
 }
 
 const colorList = (colorSystem: ColorSystem) => {
@@ -35,23 +43,77 @@ const colorList = (colorSystem: ColorSystem) => {
 
 export const ConfigureTab: React.FC<ConfigureTabProps> = ({
 	colorSystem,
+	generatedColorSystem,
 	isLoading,
+	preferences,
 	onFileUpload,
 	onImportToFigma,
+	onGenerateColorSystem,
+	onPreferenceChange,
+	onResetColorSystem,
 }) => {
+	// Create a wrapper that resets the input value after processing
+	const handleFileUpload = useCallback(
+		(event: React.ChangeEvent<HTMLInputElement>) => {
+			onFileUpload(event);
+			// Reset the input value so the same file can be selected again
+			if (event.target) {
+				event.target.value = "";
+			}
+		},
+		[onFileUpload],
+	);
+
 	return (
 		<div className="py-3 px-5">
 			<h2 className="text-base font-serif font-medium text-gray-12">Configure color system</h2>
 
-			<div className="space-y-3 pt-4">
-				<FileDropzone
-					id="color-file-upload"
-					accept=".json,.ts,.js"
-					onChange={onFileUpload}
-					label="Load Color System File"
-					primaryText={colorSystem ? "Click to replace or drag & drop" : "Click to upload or drag & drop"}
-					secondaryText="JSON, TypeScript, or JavaScript files"
-				/>
+			{/* Save preferences */}
+			<div className="space-y-2 pt-3 pb-2">
+				<div className="flex items-center gap-2">
+					<input
+						type="checkbox"
+						id="save-color-system"
+						checked={preferences.saveColorSystem}
+						onChange={(e) => onPreferenceChange("saveColorSystem", e.target.checked)}
+						className="checkbox"
+					/>
+					<label htmlFor="save-color-system" className="text-sm text-gray-11 cursor-pointer">
+						Save color configuration to Figma storage
+					</label>
+				</div>
+
+				<div className="flex items-center gap-2 ml-6">
+					<input
+						type="checkbox"
+						id="auto-generate-on-load"
+						checked={preferences.autoGenerateOnLoad}
+						onChange={(e) => onPreferenceChange("autoGenerateOnLoad", e.target.checked)}
+						disabled={!preferences.saveColorSystem}
+						className="checkbox"
+					/>
+					<label
+						htmlFor="auto-generate-on-load"
+						className={`text-sm cursor-pointer ${preferences.saveColorSystem ? "text-gray-11" : "text-gray-9"}`}
+					>
+						Auto-generate color scales when loading saved configuration
+					</label>
+				</div>
+			</div>
+
+			<div className="space-y-3 pt-2">
+				<div className="flex gap-2">
+					<div className="flex-1">
+						<FileDropzone
+							id="color-file-upload"
+							accept=".json,.ts,.js"
+							onChange={handleFileUpload}
+							label="Load Color System File"
+							primaryText={colorSystem ? "Click to replace or drag & drop" : "Click to upload or drag & drop"}
+							secondaryText="JSON, TypeScript, or JavaScript files"
+						/>
+					</div>
+				</div>
 
 				{colorSystem && (
 					<>
@@ -71,13 +133,28 @@ export const ConfigureTab: React.FC<ConfigureTabProps> = ({
 					</>
 				)}
 
-				<button
-					type="button"
-					disabled={!colorSystem || isLoading}
-					className="btn bg-blaze-9 hover:bg-blaze-10 text-[white] border-blaze-11"
-				>
-					{isLoading ? "Loading..." : "Generate full color scale"}
-				</button>
+				<div className="flex gap-2">
+					<button
+						type="button"
+						disabled={!colorSystem || isLoading}
+						onClick={onGenerateColorSystem}
+						className="btn bg-blaze-9 hover:bg-blaze-10 text-[white] border-blaze-11"
+					>
+						{isLoading ? "Loading..." : "Generate full color scale"}
+					</button>
+
+					{colorSystem && (
+						<button
+							type="button"
+							onClick={onResetColorSystem}
+							className="btn bg-red-9 hover:bg-red-10 text-[white] border-red-11"
+						>
+							Reset
+						</button>
+					)}
+				</div>
+
+				{generatedColorSystem && <GeneratedColorTable generatedColorSystem={generatedColorSystem} />}
 			</div>
 		</div>
 	);

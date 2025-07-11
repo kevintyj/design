@@ -355,3 +355,45 @@ MIT License - see the [LICENSE](LICENSE) file for details.
 - [Radix UI](https://www.radix-ui.com/colors) for the color methodology
 - [Bun](https://bun.sh) for the fast JavaScript runtime
 - All contributors to this project
+
+## 🏗️ Build System
+
+This project uses a custom TypeScript build system (`build.ts`) that handles complex dependency ordering using Bun's APIs.
+
+### Build Commands
+
+```bash
+# Build all packages in dependency order
+bun run build
+
+# Build a specific package
+bun run build:package <package-name>
+
+# Clean all build artifacts
+bun run build:clean
+
+# List all available packages
+bun run build:list
+
+# Legacy build (runs all packages in parallel)
+bun run build:legacy
+```
+
+### Build Process
+
+The build system automatically handles dependency ordering:
+
+1. **Core Package**: `color-generation-core` - Core color generation logic
+2. **Extension Packages**: `color-generation-css`, `color-generation-json` - Output formatters
+3. **Application Packages**: `figma-plugin`, `cli` - Applications and tools
+
+Packages within the same group are built in parallel for efficiency, while groups are built sequentially to respect dependencies.
+
+### Build Script Features
+
+- 🔍 **Environment validation** - Checks Bun version and project structure
+- 📦 **Dependency-aware ordering** - Builds packages in the correct order
+- 🎨 **Colored output** - Easy-to-read build progress
+- 🚀 **Parallel execution** - Builds packages within groups simultaneously
+- 🧹 **Smart cleanup** - Removes build artifacts only when needed
+- 📊 **Package discovery** - Automatically finds available packages

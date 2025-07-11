@@ -28,7 +28,7 @@ interface FigmaVariableExport {
 }
 
 // Initialize the plugin UI
-figma.showUI(__html__, { width: 640, height: 480 });
+figma.showUI(__html__, { width: 720, height: 640 });
 
 // Handle messages from the UI
 figma.ui.onmessage = async (msg) => {
@@ -48,6 +48,72 @@ figma.ui.onmessage = async (msg) => {
 				break;
 			case "import-figma-variables":
 				await handleFigmaVariablesImport(msg.data);
+				break;
+			case "load-client-storage":
+				try {
+					console.log("Received load-client-storage message:", msg);
+
+					const preferencesKey = msg.data.preferencesKey;
+					const colorSystemKey = msg.data.colorSystemKey;
+					const generatedColorsKey = msg.data.generatedColorsKey;
+
+					console.log("Loading client storage with keys:", preferencesKey, colorSystemKey, generatedColorsKey);
+
+					if (!preferencesKey || !colorSystemKey) {
+						console.error("Missing required keys:", { preferencesKey, colorSystemKey });
+						return;
+					}
+
+					const preferences = await figma.clientStorage.getAsync(preferencesKey);
+					const colorSystem = await figma.clientStorage.getAsync(colorSystemKey);
+					const generatedColors = generatedColorsKey ? await figma.clientStorage.getAsync(generatedColorsKey) : null;
+
+					figma.ui.postMessage({
+						type: "client-storage-loaded",
+						data: {
+							preferences: preferences || null,
+							colorSystem: colorSystem || null,
+							generatedColors: generatedColors || null,
+						},
+					});
+				} catch (error) {
+					console.error("Error loading from client storage:", error);
+				}
+				break;
+			case "save-color-system":
+				try {
+					await figma.clientStorage.setAsync(msg.data.key, msg.data.colorSystem);
+				} catch (error) {
+					console.error("Error saving color system:", error);
+				}
+				break;
+			case "save-generated-colors":
+				try {
+					await figma.clientStorage.setAsync(msg.data.key, msg.data.generatedColors);
+				} catch (error) {
+					console.error("Error saving generated colors:", error);
+				}
+				break;
+			case "save-preferences":
+				try {
+					await figma.clientStorage.setAsync(msg.data.key, msg.data.preferences);
+				} catch (error) {
+					console.error("Error saving preferences:", error);
+				}
+				break;
+			case "remove-color-system":
+				try {
+					await figma.clientStorage.deleteAsync(msg.data.key);
+				} catch (error) {
+					console.error("Error removing color system:", error);
+				}
+				break;
+			case "remove-generated-colors":
+				try {
+					await figma.clientStorage.deleteAsync(msg.data.key);
+				} catch (error) {
+					console.error("Error removing generated colors:", error);
+				}
 				break;
 			default:
 				console.log("Unknown message type:", msg.type);
