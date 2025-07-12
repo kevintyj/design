@@ -1,4 +1,4 @@
-import { generateOverlayColors } from "@design/color-generation-core";
+import { generateOverlayColors } from "@kevintyj/design/color-generation-core";
 
 // Import types (will be resolved when packages are built)
 export interface ColorScale {

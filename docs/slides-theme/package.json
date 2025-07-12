@@ -11,7 +11,7 @@
 	},
 	"scripts": {
 		"build": "slidev build example.md",
-		"dev": "slidev example.md --open --port 3040",
+		"dev": "slidev example.md --open --port 3080",
 		"export": "slidev export example.md",
 		"screenshot": "slidev export example.md --format png"
 	},
@@ -26,8 +26,9 @@
 		"colorSchema": "both",
 		"defaults": {
 			"fonts": {
-				"sans": "Nunito Sans",
-				"mono": "Fira Code"
+				"sans": "Inter",
+				"mono": "Cygnus Mono",
+				"serif": "Recia Variable"
 			}
 		}
 	}

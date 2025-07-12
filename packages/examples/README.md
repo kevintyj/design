@@ -1,6 +1,6 @@
 ![Examples](../../assets/banner-examples.svg)
 
-# @design/examples
+# @kevintyj/design/examples
 
 Usage examples and demos for the design system generation packages. Learn how to use the color and spacing generation systems with practical examples.
 
@@ -16,7 +16,7 @@ Usage examples and demos for the design system generation packages. Learn how to
 ## 📦 Installation
 
 ```bash
-bun add @design/examples
+bun add @kevintyj/design/examples
 ```
 
 ## 🚀 Available Examples
@@ -111,8 +111,8 @@ bun packages/examples/src/build-tools.ts
 
 ```typescript
 // basic.ts example
-import { loadColorDefinitions, generateColorSystem } from '@design/color-generation-core';
-import { generateCSSFiles } from '@design/color-generation-css';
+import { loadColorDefinitions, generateColorSystem } from '@kevintyj/design/color-generation-core';
+import { generateCSSFiles } from '@kevintyj/design/color-generation-css';
 
 const colorInput = await loadColorDefinitions('./base.ts');
 const colorSystem = generateColorSystem(colorInput);
@@ -145,7 +145,7 @@ const cssFiles = generateCSSFiles(colorSystem, {
 
 ```typescript
 // json-formats.ts example
-import { generateJSONFiles } from '@design/color-generation-json';
+import { generateJSONFiles } from '@kevintyj/design/color-generation-json';
 
 const jsonFiles = generateJSONFiles(colorSystem, {
   format: 'all',
@@ -320,7 +320,7 @@ bun run format
 
 ```typescript
 // new-example.ts template
-import { generateColorSystem } from '@design/color-generation-core';
+import { generateColorSystem } from '@kevintyj/design/color-generation-core';
 
 console.log('🎨 New Example: [Description]');
 
@@ -333,11 +333,11 @@ console.log(`Generated: ${result.metadata.totalScales} color scales`);
 
 ## 🤝 Related Packages
 
-- **[@design/color-generation-core](../color-generation-core)** - Core color generation
-- **[@design/color-generation-css](../color-generation-css)** - CSS output generation
-- **[@design/color-generation-json](../color-generation-json)** - JSON output generation
-- **[@design/spacing-generation-core](../spacing-generation-core)** - Core spacing generation
-- **[@design/cli](../cli)** - Command-line interface
+- **[@kevintyj/design/color-generation-core](../color-generation-core)** - Core color generation
+- **[@kevintyj/design/color-generation-css](../color-generation-css)** - CSS output generation
+- **[@kevintyj/design/color-generation-json](../color-generation-json)** - JSON output generation
+- **[@kevintyj/design/spacing-generation-core](../spacing-generation-core)** - Core spacing generation
+- **[@kevintyj/design/cli](../cli)** - Command-line interface
 
 ## 📄 License
 

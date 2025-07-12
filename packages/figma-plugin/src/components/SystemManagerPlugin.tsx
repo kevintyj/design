@@ -1,10 +1,10 @@
-import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
-import { generateColorSystem } from "@design/color-generation-core";
-import { convertToJSON, generateCollectionsJSON } from "@design/color-generation-json";
-import type { SpacingSystem as SpacingSystemCore } from "@design/spacing-generation-core";
-import { generateSpacingSystem } from "@design/spacing-generation-core";
-import { generateCSSFiles } from "@design/spacing-generation-css";
-import { generateJSONFiles } from "@design/spacing-generation-json";
+import type { ColorSystem as ColorSystemCore } from "@kevintyj/design/color-generation-core";
+import { generateColorSystem } from "@kevintyj/design/color-generation-core";
+import { convertToJSON, generateCollectionsJSON } from "@kevintyj/design/color-generation-json";
+import type { SpacingSystem as SpacingSystemCore } from "@kevintyj/design/spacing-generation-core";
+import { generateSpacingSystem } from "@kevintyj/design/spacing-generation-core";
+import { generateCSSFiles } from "@kevintyj/design/spacing-generation-css";
+import { generateJSONFiles } from "@kevintyj/design/spacing-generation-json";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useFileHandling } from "../hooks/useFileHandling";

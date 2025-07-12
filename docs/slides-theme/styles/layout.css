@@ -1,24 +1,468 @@
 :root {
-  /* default theme color */
-  /* can be overrided by uses `themeConfig` option */
-  --slidev-theme-primary: #5d8392;
+	/* === SLIDEV THEME VARIABLES === */
+
+	/* Primary Color - Blaze */
+	--slidev-theme-primary: var(--color-blaze-9);
+
+	/* === TYPOGRAPHY SYSTEM === */
+
+	/* Font Families */
+	--font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--font-serif: "Recia Variable", Georgia, "Times New Roman", serif;
+	--font-mono: "Cygnus Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+
+	/* Font Weights */
+	--font-light: 300;
+	--font-normal: 400;
+	--font-medium: 500;
+	--font-semibold: 600;
+	--font-bold: 700;
+
+	/* Font Sizes */
+	--text-xs: 0.75rem;
+	--text-sm: 0.875rem;
+	--text-base: 1rem;
+	--text-lg: 1.125rem;
+	--text-xl: 1.25rem;
+	--text-2xl: 1.5rem;
+	--text-3xl: 1.875rem;
+	--text-4xl: 2.25rem;
+	--text-5xl: 3rem;
+	--text-6xl: 3.75rem;
+	--text-7xl: 4.5rem;
+	--text-8xl: 6rem;
+	--text-9xl: 8rem;
+
+	/* Line Heights */
+	--leading-none: 1;
+	--leading-tight: 1.25;
+	--leading-snug: 1.375;
+	--leading-normal: 1.5;
+	--leading-relaxed: 1.625;
+	--leading-loose: 2;
+
+	/* Letter Spacing */
+	--tracking-tight: -0.025em;
+	--tracking-normal: 0em;
+	--tracking-wide: 0.025em;
+	--tracking-wider: 0.05em;
+	--tracking-widest: 0.1em;
 }
 
-.slidev-layout.cover,
+/* === GLOBAL STYLES === */
+body {
+	font-family: var(--font-sans);
+	font-weight: var(--font-normal);
+	background-color: var(--color-background);
+	color: var(--color-gray-a11);
+	line-height: var(--leading-normal);
+}
+
+/* === TYPOGRAPHY STYLES === */
+
+.font-mono {
+	font-family: var(--font-mono) !important;
+}
+
+/* Headings - Use Serif with Medium Weight and blaze-10 Color */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-serif);
+	color: var(--color-blaze-a10);
+	font-weight: var(--font-medium);
+	letter-spacing: var(--tracking-tight);
+}
+
+h3,
+h4,
+h5,
+h6 {
+	color: var(--color-teal-a10);
+}
+
+h1 {
+	font-size: var(--text-6xl);
+	line-height: var(--leading-tight);
+	margin-bottom: 1.5rem;
+}
+
+h2 {
+	font-size: var(--text-5xl);
+	line-height: var(--leading-tight);
+	margin-bottom: 1.25rem;
+}
+
+h3 {
+	font-size: var(--text-4xl);
+	line-height: var(--leading-snug);
+	margin-bottom: 1rem;
+}
+
+h4 {
+	font-size: var(--text-3xl);
+	line-height: var(--leading-snug);
+	margin-bottom: 0.875rem;
+}
+
+h5 {
+	font-size: var(--text-2xl);
+	line-height: var(--leading-normal);
+	margin-bottom: 0.75rem;
+}
+
+h6 {
+	font-size: var(--text-xl);
+	line-height: var(--leading-normal);
+	margin-bottom: 0.5rem;
+}
+
+/* Body Text - Use Sans with Gray-A11 */
+p {
+	font-family: var(--font-sans);
+	color: var(--color-gray-a11);
+	margin-bottom: 1rem;
+	line-height: var(--leading-relaxed);
+}
+
+/* Emphasized Text - Use Gray-A12 with Medium Weight */
+strong,
+b,
+em,
+i {
+	font-weight: var(--font-medium);
+	color: var(--color-gray-a12);
+}
+
+/* Code - Use Mono */
+code,
+pre {
+	font-family: var(--font-mono);
+	background-color: var(--color-gray-1);
+	border-radius: 0.375rem;
+}
+
+code {
+	padding: 0.125rem 0.25rem;
+	font-size: 0.875em;
+	font-weight: var(--font-medium) !important;
+	color: var(--color-yellow-11);
+	background-color: var(--color-gray-2);
+}
+
+pre {
+	padding: 1rem;
+	margin: 1rem 0;
+	overflow-x: auto;
+	border: 1px solid var(--color-gray-4);
+	background-color: var(--color-gray-2);
+	color: var(--color-gray-a11);
+}
+
+pre code {
+	padding: 0;
+	background-color: transparent;
+	color: inherit;
+}
+
+/* Links */
+a {
+	color: var(--color-teal-9);
+	text-decoration: underline;
+	text-decoration-color: var(--color-teal-7);
+	transition: all 0.2s ease;
+}
+
+a:hover {
+	color: var(--color-blaze-11);
+	text-decoration-color: var(--color-blaze-9);
+}
+
+/* Clear anchor styles when btn class is applied */
+a.btn {
+	text-decoration: none;
+	color: inherit;
+}
+
+/* Lists */
+ul,
+ol {
+	margin-bottom: 1rem;
+	padding-left: 1.5rem;
+	color: var(--color-gray-a11);
+}
+
+li {
+	margin-bottom: 0.5rem;
+}
+
+/* Tables */
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-bottom: 1rem;
+	color: var(--color-gray-a11);
+}
+
+th,
+td {
+	padding: 0.75rem;
+	text-align: left;
+	border-bottom: 1px solid var(--color-gray-4);
+}
+
+th {
+	font-weight: var(--font-medium);
+	background-color: var(--color-gray-2);
+	color: var(--color-gray-a12);
+}
+
+/* Blockquotes */
+blockquote {
+	margin: 1.5rem 0;
+	padding-left: 1rem;
+	border-left: 4px solid var(--color-blaze-6);
+	color: var(--color-gray-a11);
+	font-style: italic;
+}
+
+/* Horizontal Rules */
+hr {
+	border: none;
+	border-top: 1px solid var(--color-gray-6);
+	margin: 2rem 0;
+}
+
+/* === COMPONENT STYLES === */
+
+/* Custom button styles */
+.btn {
+	@apply border outline-none px-3 !border-solid py-1.5 !text-md font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-80 cursor-pointer hover:translate-y-[-2px] active:translate-y-0;
+	box-shadow:
+		inset 0 1px 0 0 var(--color-overlay-white-9),
+		inset 0 1px 4px 0.5px var(--color-overlay-white-7),
+		inset 0 -0.5px 0 0.5px var(--color-overlay-black-5),
+		inset 0 -1.5px 3px 0 var(--color-overlay-black-6);
+	background-color: var(--color-teal-9);
+	border-color: var(--color-overlay-black-8) !important;
+	color: var(--color-white) !important;
+}
+
+.btn-secondary {
+	background-color: var(--color-gray-2);
+	color: var(--color-gray-a11) !important;
+}
+
+.btn-secondary:hover {
+	background-color: var(--color-gray-3) !important;
+}
+
+.btn-square {
+	@apply w-11 !important h-11 !important p-0;
+}
+
+.btn:hover {
+	background-color: var(--color-teal-10);
+}
+
+.btn:disabled {
+	@apply opacity-50 cursor-not-allowed hover:translate-y-0;
+}
+
+.btn:hover:not(:disabled) {
+	@apply opacity-90;
+}
+
+/* === LAYOUT STYLES === */
+
+/* Cover Layout */
+.slidev-layout.cover {
+	@apply h-full grid;
+	background: var(--color-background);
+	color: var(--color-gray-a11);
+
+	.my-auto {
+		text-align: start;
+	}
+
+	h1 {
+		font-size: var(--text-8xl);
+		line-height: var(--leading-none);
+		margin-bottom: 1rem;
+		color: var(--color-gray-a12);
+	}
+
+	h1 + p {
+		font-size: var(--text-xl);
+		color: var(--color-gray-a11);
+		margin-top: -0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	p + h2,
+	ul + h2,
+	table + h2 {
+		margin-top: 2.5rem;
+	}
+}
+
+/* Intro Layout */
 .slidev-layout.intro {
-  @apply h-full grid;
+	@apply h-full grid;
+	background: linear-gradient(135deg, var(--color-teal-1) 0%, var(--color-blaze-1) 100%);
+	color: var(--color-gray-a11);
 
-  h1 {
-    @apply text-6xl leading-20;
-  }
+	h1 {
+		font-size: var(--text-7xl);
+		line-height: var(--leading-tight);
+		margin-bottom: 1.5rem;
+		color: var(--color-blaze-10);
+	}
 
-  h1 + p {
-    @apply -mt-2 opacity-50 mb-4;
-  }
+	h1 + p {
+		font-size: var(--text-lg);
+		color: var(--color-gray-a11);
+		margin-top: -0.5rem;
+		margin-bottom: 1rem;
+	}
 
-  p + h2,
-  ul + h2,
-  table + h2 {
-    @apply mt-10;
-  }
+	p + h2,
+	ul + h2,
+	table + h2 {
+		margin-top: 2.5rem;
+	}
+}
+
+/* Default Layout */
+.slidev-layout {
+	background-color: var(--color-background);
+	color: var(--color-gray-a11);
+	padding: 2rem;
+}
+
+/* Code Blocks */
+.slidev-code {
+	background-color: var(--color-gray-2);
+	border: 1px solid var(--color-gray-4);
+	border-radius: 0.5rem;
+	padding: 1rem;
+	margin: 1rem 0;
+	font-family: var(--font-mono);
+	color: var(--color-gray-a11);
+}
+
+/* Navigation */
+.slidev-nav {
+	color: var(--color-gray-a11);
+}
+
+.slidev-nav-btn {
+	background-color: var(--color-gray-2);
+	color: var(--color-gray-a11);
+	border: 1px solid var(--color-gray-4);
+	border-radius: 0.375rem;
+	transition: all 0.2s ease;
+}
+
+.slidev-nav-btn:hover {
+	background-color: var(--color-blaze-2);
+	border-color: var(--color-blaze-6);
+	color: var(--color-blaze-11);
+}
+
+/* Slide Numbers */
+.slidev-page-indicator {
+	color: var(--color-gray-9);
+}
+
+/* Interactive Elements */
+.slidev-button {
+	background-color: var(--color-blaze-9);
+	color: var(--color-gray-1);
+	border: none;
+	border-radius: 0.375rem;
+	padding: 0.5rem 1rem;
+	font-weight: var(--font-medium);
+	transition: all 0.2s ease;
+}
+
+.slidev-button:hover {
+	background-color: var(--color-blaze-10);
+	transform: translateY(-1px);
+}
+
+.slidev-button.secondary {
+	background-color: var(--color-teal-9);
+}
+
+.slidev-button.secondary:hover {
+	background-color: var(--color-teal-10);
+}
+
+/* Focus States */
+:focus {
+	outline: 2px solid var(--color-blaze-6);
+	outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+	background-color: var(--color-blaze-6);
+	color: var(--color-gray-1);
+}
+
+/* Keyboard Shortcuts Display */
+kbd {
+	background-color: var(--color-gray-3);
+	border: 1px solid var(--color-gray-6);
+	border-radius: 0.25rem;
+	padding: 0.125rem 0.375rem;
+	font-size: 0.875em;
+	font-family: var(--font-mono);
+	color: var(--color-gray-a11);
+	box-shadow: 0 1px 2px var(--color-overlay-black-2);
+}
+
+/* Markdown Content Spacing */
+.markdown-body > *:first-child {
+	margin-top: 0;
+}
+
+.markdown-body > *:last-child {
+	margin-bottom: 0;
+}
+
+/* Print Styles */
+@media print {
+	.slidev-layout {
+		background: white !important;
+		color: black !important;
+	}
+
+	.slidev-nav,
+	.slidev-page-indicator {
+		display: none !important;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		color: black !important;
+	}
+
+	code {
+		background-color: #f5f5f5 !important;
+		color: #333 !important;
+	}
+
+	pre {
+		background-color: #f8f8f8 !important;
+		border: 1px solid #ddd !important;
+	}
 }

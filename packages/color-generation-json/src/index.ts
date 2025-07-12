@@ -1,4 +1,4 @@
-import { generateOverlayColors } from "@design/color-generation-core";
+import { generateOverlayColors } from "@kevintyj/design/color-generation-core";
 import Color from "colorjs.io";
 
 // Import types (will be resolved when packages are built)

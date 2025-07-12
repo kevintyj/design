@@ -10,9 +10,9 @@ import {
 	generateColorSystem,
 	loadColorDefinitions,
 	validateColorInput,
-} from "@design/color-generation-core";
-import { type CSSGenerationConfig, generateCSSFiles } from "@design/color-generation-css";
-import { generateJSONFiles, type JSONGenerationConfig } from "@design/color-generation-json";
+} from "@kevintyj/design/color-generation-core";
+import { type CSSGenerationConfig, generateCSSFiles } from "@kevintyj/design/color-generation-css";
+import { generateJSONFiles, type JSONGenerationConfig } from "@kevintyj/design/color-generation-json";
 
 // Spacing generation imports
 import {
@@ -21,16 +21,16 @@ import {
 	type SpacingGenerationConfig,
 	type SpacingInput,
 	validateSpacingInput,
-} from "@design/spacing-generation-core";
+} from "@kevintyj/design/spacing-generation-core";
 import {
 	type CSSSpacingGenerationConfig,
 	generateCSSFiles as generateSpacingCSSFiles,
-} from "@design/spacing-generation-css";
+} from "@kevintyj/design/spacing-generation-css";
 import {
 	generateJSONFiles as generateSpacingJSONFiles,
 	type JSONSpacingGenerationConfig,
 	reorderSpacingOutput,
-} from "@design/spacing-generation-json";
+} from "@kevintyj/design/spacing-generation-json";
 
 import chalk from "chalk";
 import { Command } from "commander";

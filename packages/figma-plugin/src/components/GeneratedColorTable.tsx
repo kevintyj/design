@@ -1,4 +1,4 @@
-import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
+import type { ColorSystem as ColorSystemCore } from "@kevintyj/design/color-generation-core";
 
 interface GeneratedColorTableProps {
 	generatedColorSystem: ColorSystemCore;

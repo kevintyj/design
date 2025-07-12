@@ -1,6 +1,6 @@
 ![Design System Manager](../../assets/banner-figma-plugin.svg)
 
-# Design System Manager | @design/figma-plugin
+# Design System Manager | @kevintyj/design/figma-plugin
 
 Figma plugin for design system management. Generate, import, and manage color and spacing systems directly within Figma using the design system generation tools.
 
@@ -402,7 +402,7 @@ module.exports = {
 
 ```typescript
 // Generate color system within plugin
-import { generateColorSystem } from '@design/color-generation-core';
+import { generateColorSystem } from '@kevintyj/design/color-generation-core';
 
 const colorSystem = generateColorSystem(colorInput, {
   includeAlpha: preferences.includeAlpha,
@@ -421,7 +421,7 @@ await createColorVariables(colorSystem, {
 
 ```typescript
 // Generate spacing system within plugin
-import { generateSpacingSystem } from '@design/spacing-generation-core';
+import { generateSpacingSystem } from '@kevintyj/design/spacing-generation-core';
 
 const spacingSystem = generateSpacingSystem(spacingInput, {
   generateRem: preferences.generateRem,
@@ -438,8 +438,8 @@ await createSpacingVariables(spacingSystem, {
 
 ```typescript
 // Export to multiple formats
-import { generateCSSFiles } from '@design/color-generation-css';
-import { generateJSONFiles } from '@design/color-generation-json';
+import { generateCSSFiles } from '@kevintyj/design/color-generation-css';
+import { generateJSONFiles } from '@kevintyj/design/color-generation-json';
 
 const cssFiles = generateCSSFiles(colorSystem, exportOptions.css);
 const jsonFiles = generateJSONFiles(colorSystem, exportOptions.json);
@@ -591,7 +591,7 @@ interface ExportOptions {
 
 ```typescript
 // Test color generation
-import { generateColorSystem } from '@design/color-generation-core';
+import { generateColorSystem } from '@kevintyj/design/color-generation-core';
 
 const testInput = {
   light: { test: '#FF0000' },
@@ -635,11 +635,11 @@ node scripts/validate-manifest.js
 
 ## 🤝 Related Packages
 
-- **[@design/color-generation-core](../color-generation-core)** - Core color generation logic
-- **[@design/spacing-generation-core](../spacing-generation-core)** - Core spacing generation logic
-- **[@design/color-generation-css](../color-generation-css)** - CSS output generation
-- **[@design/color-generation-json](../color-generation-json)** - JSON output generation
-- **[@design/cli](../cli)** - Command-line interface
+- **[@kevintyj/design/color-generation-core](../color-generation-core)** - Core color generation logic
+- **[@kevintyj/design/spacing-generation-core](../spacing-generation-core)** - Core spacing generation logic
+- **[@kevintyj/design/color-generation-css](../color-generation-css)** - CSS output generation
+- **[@kevintyj/design/color-generation-json](../color-generation-json)** - JSON output generation
+- **[@kevintyj/design/cli](../cli)** - Command-line interface
 
 ## 🔮 Roadmap
 

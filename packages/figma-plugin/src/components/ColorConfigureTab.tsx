@@ -1,4 +1,4 @@
-import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
+import type { ColorSystem as ColorSystemCore } from "@kevintyj/design/color-generation-core";
 import { TrashIcon } from "lucide-react";
 import type React from "react";
 import { useCallback } from "react";

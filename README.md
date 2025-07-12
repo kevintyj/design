@@ -32,26 +32,26 @@ A comprehensive design system with color and spacing generation based on Radix U
 
 | Package | Description | Status |
 |---------|-------------|---------|
-| **[@design/color-generation-core](./packages/color-generation-core)** | Core color generation logic | ✅ Complete |
-| **[@design/spacing-generation-core](./packages/spacing-generation-core)** | Core spacing generation logic | ✅ Complete |
+| **[@kevintyj/design/color-generation-core](./packages/color-generation-core)** | Core color generation logic | ✅ Complete |
+| **[@kevintyj/design/spacing-generation-core](./packages/spacing-generation-core)** | Core spacing generation logic | ✅ Complete |
 
 ### Generation Packages
 
 | Package | Description | Status |
 |---------|-------------|---------|
-| **[@design/color-generation-css](./packages/color-generation-css)** | CSS generation utilities | ✅ Complete |
-| **[@design/color-generation-json](./packages/color-generation-json)** | JSON format generation | ✅ Complete |
-| **[@design/spacing-generation-css](./packages/spacing-generation-css)** | Spacing CSS utilities | ✅ Complete |
-| **[@design/spacing-generation-json](./packages/spacing-generation-json)** | Spacing JSON formats | ✅ Complete |
+| **[@kevintyj/design/color-generation-css](./packages/color-generation-css)** | CSS generation utilities | ✅ Complete |
+| **[@kevintyj/design/color-generation-json](./packages/color-generation-json)** | JSON format generation | ✅ Complete |
+| **[@kevintyj/design/spacing-generation-css](./packages/spacing-generation-css)** | Spacing CSS utilities | ✅ Complete |
+| **[@kevintyj/design/spacing-generation-json](./packages/spacing-generation-json)** | Spacing JSON formats | ✅ Complete |
 
 ### Application Packages
 
 | Package | Description | Status |
 |---------|-------------|---------|
-| **[@design/cli](./packages/cli)** | Command-line interface | ✅ Complete |
-| **[@design/figma-plugin](./packages/figma-plugin)** | Figma plugin for design system management | ✅ Complete |
-| **[@design/figma-to-json](./packages/figma-to-json)** | Export Figma variables to JSON | ✅ Complete |
-| **[@design/examples](./packages/examples)** | Usage examples and demos | ✅ Complete |
+| **[@kevintyj/design/cli](./packages/cli)** | Command-line interface | ✅ Complete |
+| **[@kevintyj/design/figma-plugin](./packages/figma-plugin)** | Figma plugin for design system management | ✅ Complete |
+| **[@kevintyj/design/figma-to-json](./packages/figma-to-json)** | Export Figma variables to JSON | ✅ Complete |
+| **[@kevintyj/design/examples](./packages/examples)** | Usage examples and demos | ✅ Complete |
 
 ## 🚀 Quick Start
 
@@ -235,9 +235,9 @@ output/
 import { 
   loadColorDefinitions,
   generateColorSystem 
-} from '@design/color-generation-core';
-import { generateCSSFiles } from '@design/color-generation-css';
-import { generateJSONFiles } from '@design/color-generation-json';
+} from '@kevintyj/design/color-generation-core';
+import { generateCSSFiles } from '@kevintyj/design/color-generation-css';
+import { generateJSONFiles } from '@kevintyj/design/color-generation-json';
 
 // Load from base.ts
 const colorInput = await loadColorDefinitions('./base.ts');
@@ -261,9 +261,9 @@ const jsonFiles = generateJSONFiles(colorSystem, {
 import { 
   loadSpacingDefinitions,
   generateSpacingSystem 
-} from '@design/spacing-generation-core';
-import { generateCSSFiles } from '@design/spacing-generation-css';
-import { generateJSONFiles } from '@design/spacing-generation-json';
+} from '@kevintyj/design/spacing-generation-core';
+import { generateCSSFiles } from '@kevintyj/design/spacing-generation-css';
+import { generateJSONFiles } from '@kevintyj/design/spacing-generation-json';
 
 // Load from base.ts
 const spacingInput = await loadSpacingDefinitions('./base.ts');
@@ -289,7 +289,7 @@ import {
   loadSpacingDefinitions,
   generateColorSystem,
   generateSpacingSystem
-} from '@design/color-generation-core';
+} from '@kevintyj/design/color-generation-core';
 
 // Load definitions
 const colorInput = await loadColorDefinitions('./base.ts');

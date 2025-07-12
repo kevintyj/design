@@ -1,9 +1,8 @@
-import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
-import { generateCollectionsJSON } from "@design/color-generation-json";
-import { isSimpleCollectionOutputFormat } from "@design/figma-to-json";
-import type { SpacingSystem as SpacingSystemCore } from "@design/spacing-generation-core";
-import { generateCollectionsSpacingJSON } from "@design/spacing-generation-json";
-
+import type { ColorSystem as ColorSystemCore } from "@kevintyj/design/color-generation-core";
+import { generateCollectionsJSON } from "@kevintyj/design/color-generation-json";
+import { isSimpleCollectionOutputFormat } from "@kevintyj/design/figma-to-json";
+import type { SpacingSystem as SpacingSystemCore } from "@kevintyj/design/spacing-generation-core";
+import { generateCollectionsSpacingJSON } from "@kevintyj/design/spacing-generation-json";
 import { useCallback } from "react";
 import type { ColorSystem, SpacingSystem } from "../types";
 
@@ -188,7 +187,7 @@ function convertSimpleCollectionToRawFormat(data: any): any {
 	};
 
 	// Helper function to add variables from a variable group
-	const addVariables = (variables: any, prefix: string = "") => {
+	const addVariables = (variables: any, prefix: string = "", isRoot: boolean = false) => {
 		Object.entries(variables).forEach(([key, value]: [string, any]) => {
 			if (value && typeof value === "object") {
 				// Check if this is a variable definition (has type and values)
@@ -219,8 +218,9 @@ function convertSimpleCollectionToRawFormat(data: any): any {
 					});
 				} else {
 					// Recursively process nested objects
-					const newPrefix = prefix ? `${prefix}/${key}` : key;
-					addVariables(value, newPrefix);
+					// For root-level variables, don't add any prefix - flatten completely
+					const newPrefix = isRoot ? "" : prefix ? `${prefix}/${key}` : key;
+					addVariables(value, newPrefix, isRoot);
 				}
 			}
 		});
@@ -232,8 +232,8 @@ function convertSimpleCollectionToRawFormat(data: any): any {
 			if (categoryValue && typeof categoryValue === "object") {
 				// Special handling for root-level variables from figma-to-json
 				if (categoryKey === "__ROOT__") {
-					// Process root variables without any prefix
-					addVariables(categoryValue, "");
+					// Process root variables without any prefix and flatten completely
+					addVariables(categoryValue, "", true);
 				} else if (categoryKey === "solid") {
 					// Special handling for 'solid' category - check for single vs grouped variables
 					// Separate single variables (no prefix) from grouped variables (with prefix)

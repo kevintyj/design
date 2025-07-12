@@ -1,6 +1,6 @@
 ![Color Generation JSON](../../assets/banner-color-generation-json.svg)
 
-# @design/color-generation-json
+# @kevintyj/design/color-generation-json
 
 JSON generation utilities for design system colors. Converts color systems into various JSON formats including design tokens, Tailwind config, and Figma collections.
 
@@ -17,14 +17,14 @@ JSON generation utilities for design system colors. Converts color systems into 
 ## 📦 Installation
 
 ```bash
-bun add @design/color-generation-json
+bun add @kevintyj/design/color-generation-json
 ```
 
 ## 🚀 Quick Start
 
 ```typescript
-import { generateJSONFiles } from '@design/color-generation-json';
-import { generateColorSystem } from '@design/color-generation-core';
+import { generateJSONFiles } from '@kevintyj/design/color-generation-json';
+import { generateColorSystem } from '@kevintyj/design/color-generation-core';
 
 // Generate color system
 const colorSystem = generateColorSystem(colorInput);
@@ -262,7 +262,7 @@ Figma-compatible variable collections:
 ### Generate All Formats
 
 ```typescript
-import { generateJSONFiles } from '@design/color-generation-json';
+import { generateJSONFiles } from '@kevintyj/design/color-generation-json';
 
 const jsonFiles = generateJSONFiles(colorSystem, {
   format: 'all',
@@ -318,7 +318,7 @@ import {
   generateFlatJSON,
   generateTailwindJSON,
   generateDesignTokensJSON 
-} from '@design/color-generation-json';
+} from '@kevintyj/design/color-generation-json';
 
 // Generate specific formats
 const flatColors = generateFlatJSON(colorSystem);
@@ -331,7 +331,7 @@ const designTokens = generateDesignTokensJSON(colorSystem);
 ### With Tailwind CSS
 
 ```typescript
-import { generateTailwindJSON } from '@design/color-generation-json';
+import { generateTailwindJSON } from '@kevintyj/design/color-generation-json';
 
 const tailwindConfig = JSON.parse(generateTailwindJSON(colorSystem));
 
@@ -346,7 +346,7 @@ module.exports = {
 ### With Style Dictionary
 
 ```typescript
-import { generateDesignTokensJSON } from '@design/color-generation-json';
+import { generateDesignTokensJSON } from '@kevintyj/design/color-generation-json';
 
 const tokens = JSON.parse(generateDesignTokensJSON(colorSystem));
 
@@ -356,7 +356,7 @@ const tokens = JSON.parse(generateDesignTokensJSON(colorSystem));
 ### With Figma Plugin
 
 ```typescript
-import { generateFigmaCollectionsJSON } from '@design/color-generation-json';
+import { generateFigmaCollectionsJSON } from '@kevintyj/design/color-generation-json';
 
 const collections = JSON.parse(generateFigmaCollectionsJSON(colorSystem, {
   figmaCompatible: true
@@ -369,7 +369,7 @@ const collections = JSON.parse(generateFigmaCollectionsJSON(colorSystem, {
 
 ```typescript
 import { writeFileSync } from 'fs';
-import { generateJSONFiles } from '@design/color-generation-json';
+import { generateJSONFiles } from '@kevintyj/design/color-generation-json';
 
 const jsonFiles = generateJSONFiles(colorSystem, {
   format: 'all',
@@ -430,7 +430,7 @@ Generated files include rich metadata:
     "generatedAt": "2024-01-01T12:00:00.000Z",
     "totalColors": 9,
     "format": "tailwind",
-    "generator": "@design/color-generation-json",
+    "generator": "@kevintyj/design/color-generation-json",
     "version": "1.0.0"
   }
 }
@@ -438,9 +438,9 @@ Generated files include rich metadata:
 
 ## 🤝 Related Packages
 
-- **[@design/color-generation-core](../color-generation-core)** - Core color generation
-- **[@design/color-generation-css](../color-generation-css)** - CSS output generation
-- **[@design/cli](../cli)** - Command-line interface
+- **[@kevintyj/design/color-generation-core](../color-generation-core)** - Core color generation
+- **[@kevintyj/design/color-generation-css](../color-generation-css)** - CSS output generation
+- **[@kevintyj/design/cli](../cli)** - Command-line interface
 
 ## 📄 License
 

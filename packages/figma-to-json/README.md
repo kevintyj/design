@@ -1,6 +1,6 @@
 ![Figma to JSON](../../assets/banner-core.svg)
 
-# @design/figma-to-json
+# @kevintyj/design/figma-to-json
 
 Export Figma variables and design tokens to JSON format. Convert Figma variable collections into design system compatible JSON files for use with build tools and development workflows.
 
@@ -17,7 +17,7 @@ Export Figma variables and design tokens to JSON format. Convert Figma variable 
 ## 📦 Installation
 
 ```bash
-bun add @design/figma-to-json
+bun add @kevintyj/design/figma-to-json
 ```
 
 ## 🚀 Quick Start
@@ -25,7 +25,7 @@ bun add @design/figma-to-json
 ### Using with Figma Plugin API
 
 ```typescript
-import { exportVariablesToJSON } from '@design/figma-to-json';
+import { exportVariablesToJSON } from '@kevintyj/design/figma-to-json';
 
 // In a Figma plugin
 const collections = figma.variables.getLocalVariableCollections();
@@ -42,7 +42,7 @@ jsonFiles.forEach(file => {
 ### Using with Exported Data
 
 ```typescript
-import { convertFigmaVariables } from '@design/figma-to-json';
+import { convertFigmaVariables } from '@kevintyj/design/figma-to-json';
 
 // With exported Figma variable data
 const figmaData = {
@@ -266,7 +266,7 @@ Preserves Figma collection structure:
 ### Export All Collections
 
 ```typescript
-import { exportVariablesToJSON } from '@design/figma-to-json';
+import { exportVariablesToJSON } from '@kevintyj/design/figma-to-json';
 
 // Export all variable collections
 const collections = figma.variables.getLocalVariableCollections();
@@ -314,7 +314,7 @@ module.exports = {
 ### Batch Processing
 
 ```typescript
-import { processMultipleFiles } from '@design/figma-to-json';
+import { processMultipleFiles } from '@kevintyj/design/figma-to-json';
 
 const figmaFiles = [
   { id: 'file1', collections: [...] },
@@ -333,7 +333,7 @@ const allExports = await processMultipleFiles(figmaFiles, {
 
 ```typescript
 // build-script.ts
-import { exportVariablesToJSON } from '@design/figma-to-json';
+import { exportVariablesToJSON } from '@kevintyj/design/figma-to-json';
 import { writeFileSync } from 'fs';
 
 async function buildDesignTokens() {
@@ -384,7 +384,7 @@ jobs:
 
 ```typescript
 // style-dictionary.config.js
-import { exportVariablesToJSON } from '@design/figma-to-json';
+import { exportVariablesToJSON } from '@kevintyj/design/figma-to-json';
 
 const figmaTokens = await exportVariablesToJSON(collections, {
   format: 'tokens'
@@ -487,10 +487,10 @@ bun run format
 
 ## 🤝 Related Packages
 
-- **[@design/color-generation-core](../color-generation-core)** - Core color generation
-- **[@design/color-generation-json](../color-generation-json)** - Color JSON generation
-- **[@design/spacing-generation-json](../spacing-generation-json)** - Spacing JSON generation
-- **[@design/figma-plugin](../figma-plugin)** - Figma plugin interface
+- **[@kevintyj/design/color-generation-core](../color-generation-core)** - Core color generation
+- **[@kevintyj/design/color-generation-json](../color-generation-json)** - Color JSON generation
+- **[@kevintyj/design/spacing-generation-json](../spacing-generation-json)** - Spacing JSON generation
+- **[@kevintyj/design/figma-plugin](../figma-plugin)** - Figma plugin interface
 
 ## 📄 License
 

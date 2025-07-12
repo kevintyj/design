@@ -1,5 +1,5 @@
-import type { ColorSystem as GeneratedColorSystem } from "@design/color-generation-core";
-import type { SpacingSystem as GeneratedSpacingSystem } from "@design/spacing-generation-core";
+import type { ColorSystem as GeneratedColorSystem } from "@kevintyj/design/color-generation-core";
+import type { SpacingSystem as GeneratedSpacingSystem } from "@kevintyj/design/spacing-generation-core";
 import type React from "react";
 import type { ColorSystem, SpacingSystem } from "../types";
 import { StatusMessage } from "./StatusMessage";

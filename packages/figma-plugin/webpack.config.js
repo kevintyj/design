@@ -18,7 +18,7 @@ module.exports = (_env, argv) => ({
 			// Converts TypeScript code to JavaScript with Babel for better compatibility
 			{
 				test: /\.(tsx?|jsx?|mjs|js)$/,
-				exclude: /node_modules\/(?!(@design)\/).*/,
+				exclude: /node_modules\/(?!(@kevintyj)\/).*/,
 				use: [
 					{
 						loader: "babel-loader",

@@ -1,6 +1,6 @@
 ![Spacing Generation JSON](../../assets/banner-spacing-generation-json.svg)
 
-# @design/spacing-generation-json
+# @kevintyj/design/spacing-generation-json
 
 JSON generation utilities for design system spacing. Converts spacing systems into various JSON formats including design tokens, Tailwind config, and Figma collections.
 
@@ -17,14 +17,14 @@ JSON generation utilities for design system spacing. Converts spacing systems in
 ## 📦 Installation
 
 ```bash
-bun add @design/spacing-generation-json
+bun add @kevintyj/design/spacing-generation-json
 ```
 
 ## 🚀 Quick Start
 
 ```typescript
-import { generateJSONFiles } from '@design/spacing-generation-json';
-import { generateSpacingSystem } from '@design/spacing-generation-core';
+import { generateJSONFiles } from '@kevintyj/design/spacing-generation-json';
+import { generateSpacingSystem } from '@kevintyj/design/spacing-generation-core';
 
 // Generate spacing system
 const spacingSystem = generateSpacingSystem(spacingInput);
@@ -291,7 +291,7 @@ Figma-compatible variable collections:
 ### Generate All Formats
 
 ```typescript
-import { generateJSONFiles } from '@design/spacing-generation-json';
+import { generateJSONFiles } from '@kevintyj/design/spacing-generation-json';
 
 const jsonFiles = generateJSONFiles(spacingSystem, {
   format: 'all',
@@ -361,7 +361,7 @@ import {
   generateFlatJSON,
   generateTailwindSpacingJSON,
   generateDesignTokensJSON 
-} from '@design/spacing-generation-json';
+} from '@kevintyj/design/spacing-generation-json';
 
 // Generate specific formats
 const flatSpacing = generateFlatJSON(spacingSystem);
@@ -374,7 +374,7 @@ const designTokens = generateDesignTokensJSON(spacingSystem);
 All generated formats are automatically ordered by spacing value (smallest to largest), but you can also apply reordering to any spacing-related object:
 
 ```typescript
-import { reorderSpacingOutput } from '@design/spacing-generation-json';
+import { reorderSpacingOutput } from '@kevintyj/design/spacing-generation-json';
 
 // Reorder any object by spacing values
 const unorderedSpacing = {
@@ -403,7 +403,7 @@ const reorderedComplex = reorderSpacingOutput(complexObject, spacingValues);
 ### With Tailwind CSS
 
 ```typescript
-import { generateTailwindSpacingJSON } from '@design/spacing-generation-json';
+import { generateTailwindSpacingJSON } from '@kevintyj/design/spacing-generation-json';
 
 const tailwindSpacing = JSON.parse(generateTailwindSpacingJSON(spacingSystem));
 
@@ -418,7 +418,7 @@ module.exports = {
 ### With Style Dictionary
 
 ```typescript
-import { generateDesignTokensJSON } from '@design/spacing-generation-json';
+import { generateDesignTokensJSON } from '@kevintyj/design/spacing-generation-json';
 
 const tokens = JSON.parse(generateDesignTokensJSON(spacingSystem));
 
@@ -429,7 +429,7 @@ const tokens = JSON.parse(generateDesignTokensJSON(spacingSystem));
 ### With Figma Plugin
 
 ```typescript
-import { generateFigmaCollectionsJSON } from '@design/spacing-generation-json';
+import { generateFigmaCollectionsJSON } from '@kevintyj/design/spacing-generation-json';
 
 const collections = JSON.parse(generateFigmaCollectionsJSON(spacingSystem, {
   figmaCompatible: true
@@ -443,7 +443,7 @@ figma.variables.importVariableByKeyAsync(collections);
 
 ```typescript
 import { writeFileSync } from 'fs';
-import { generateJSONFiles } from '@design/spacing-generation-json';
+import { generateJSONFiles } from '@kevintyj/design/spacing-generation-json';
 
 const jsonFiles = generateJSONFiles(spacingSystem, {
   format: 'all',
@@ -458,7 +458,7 @@ jsonFiles.forEach(file => {
 ### With CSS-in-JS
 
 ```typescript
-import { generateFlatJSON } from '@design/spacing-generation-json';
+import { generateFlatJSON } from '@kevintyj/design/spacing-generation-json';
 
 const spacingTokens = JSON.parse(generateFlatJSON(spacingSystem));
 
@@ -524,7 +524,7 @@ Generated files include rich metadata:
     "baseMultiplier": 4,
     "remBase": 16,
     "format": "tailwind",
-    "generator": "@design/spacing-generation-json",
+    "generator": "@kevintyj/design/spacing-generation-json",
     "version": "1.0.0"
   }
 }
@@ -548,9 +548,9 @@ Generated files include rich metadata:
 
 ## 🤝 Related Packages
 
-- **[@design/spacing-generation-core](../spacing-generation-core)** - Core spacing generation
-- **[@design/spacing-generation-css](../spacing-generation-css)** - CSS output generation
-- **[@design/cli](../cli)** - Command-line interface
+- **[@kevintyj/design/spacing-generation-core](../spacing-generation-core)** - Core spacing generation
+- **[@kevintyj/design/spacing-generation-css](../spacing-generation-css)** - CSS output generation
+- **[@kevintyj/design/cli](../cli)** - Command-line interface
 
 ## 📄 License
 

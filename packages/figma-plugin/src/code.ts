@@ -1,6 +1,6 @@
 /// <reference types="@figma/plugin-typings" />
 
-import { exportFigmaVariablesAsCollections, exportFigmaVariablesRaw } from "@design/figma-to-json";
+import { exportFigmaVariablesAsCollections, exportFigmaVariablesRaw } from "@kevintyj/design/figma-to-json";
 
 interface ColorDefinition {
 	[colorName: string]: string;
@@ -395,7 +395,7 @@ async function handleJSONExport(colorSystem: ColorSystem) {
 	}
 }
 
-// Export current Figma variables as collections format using @design/figma-to-json
+// Export current Figma variables as collections format using @kevintyj/design/figma-to-json
 async function handleFigmaVariablesExportAsCollections() {
 	try {
 		// Use the new package to export all collections with full transparency support

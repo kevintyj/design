@@ -1,5 +1,5 @@
-import type { ColorSystem as ColorSystemCore } from "@design/color-generation-core";
-import type { SpacingSystem as SpacingSystemCore } from "@design/spacing-generation-core";
+import type { ColorSystem as ColorSystemCore } from "@kevintyj/design/color-generation-core";
+import type { SpacingSystem as SpacingSystemCore } from "@kevintyj/design/spacing-generation-core";
 import type React from "react";
 import { FileDropzone } from "./FileDropzone";
 

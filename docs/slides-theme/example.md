@@ -2,7 +2,9 @@
 theme: ./
 ---
 
-# Slidev Theme Starter
+## Introducing
+
+# [Presentation Title]{style="color: var(--color-yellow-a10);"}!
 
 Presentation slides for developers
 
@@ -11,6 +13,14 @@ Presentation slides for developers
     Press Space for next page <div class="i-carbon:arrow-right inline-block"/>
   </span>
 </div>
+
+<template v-slot:footer>
+
+### hello
+
+Hello
+
+</template>
 
 ---
 
