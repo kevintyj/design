@@ -1,5 +1,5 @@
 {
-	"name": "@design/figma-to-json",
+	"name": "@kevintyj/design/figma-to-json",
 	"version": "1.0.0",
 	"description": "Utilities for converting Figma variables to JSON collections format",
 	"main": "dist/index.js",
@@ -39,10 +39,12 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/your-username/design-system",
+		"url": "https://github.com/kevintyj/design",
 		"directory": "packages/figma-to-json"
 	},
-	"license": "MIT",
+	"author": "Kevin Taeyoon Jin <hello@kevintyj.com>",
+	"license": "BSD-3-Clause",
+	"private": false,
 	"publishConfig": {
 		"access": "public"
 	}

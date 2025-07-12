@@ -1,5 +1,5 @@
 {
-	"name": "@design/examples",
+	"name": "@kevintyj/design/examples",
 	"version": "1.0.0",
 	"description": "Example usage of the design color generation system",
 	"private": true,
@@ -12,10 +12,10 @@
 		"all": "bun run basic && bun run advanced && bun run css-only && bun run json-only"
 	},
 	"dependencies": {
-		"@design/color-generation-core": "workspace:*",
-		"@design/color-generation-css": "workspace:*",
-		"@design/color-generation-json": "workspace:*",
-		"@design/cli": "workspace:*"
+		"@kevintyj/design/color-generation-core": "workspace:*",
+		"@kevintyj/design/color-generation-css": "workspace:*",
+		"@kevintyj/design/color-generation-json": "workspace:*",
+		"@kevintyj/design/cli": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
@@ -30,8 +30,9 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/your-username/design-system",
+		"url": "https://github.com/kevintyj/design",
 		"directory": "packages/examples"
 	},
-	"license": "MIT"
+	"author": "Kevin Taeyoon Jin <hello@kevintyj.com>",
+	"license": "BSD-3-Clause"
 }

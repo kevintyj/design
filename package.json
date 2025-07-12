@@ -1,10 +1,11 @@
 {
-	"name": "@design/monorepo",
+	"name": "@kevintyj/design/monorepo",
 	"version": "1.0.0",
 	"description": "Comprehensive design system with color and spacing generation based on Radix UI colors",
 	"private": true,
 	"workspaces": [
-		"packages/*"
+		"packages/*",
+		"docs/*"
 	],
 	"scripts": {
 		"build": "bun build.ts",
@@ -15,6 +16,8 @@
 		"dev": "bun run --filter='./packages/*' dev",
 		"test": "bun run --filter='./packages/*' test",
 		"lint": "bun run --filter='./packages/*' lint",
+		"doc:dev": "bun run --filter='./docs/*' dev",
+		"doc:build": "bun run --filter='./docs/*' build",
 		"clean": "bun build.ts clean",
 		"precommit": "bun run --filter='./packages/*' format",
 		"generate": "bun packages/cli/dist/index.js",
@@ -70,6 +73,6 @@
 		"monorepo",
 		"typescript"
 	],
-	"author": "Your Name",
-	"license": "MIT"
+	"author": "Kevin Taeyoon Jin <hello@kevintyj.com>",
+	"license": "BSD-3-Clause"
 }

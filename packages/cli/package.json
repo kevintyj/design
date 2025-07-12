@@ -1,5 +1,5 @@
 {
-	"name": "@design/cli",
+	"name": "@kevintyj/design/cli",
 	"version": "1.0.0",
 	"description": "CLI tool for generating design systems with colors and spacing from definitions",
 	"main": "dist/index.js",
@@ -16,12 +16,12 @@
 		"format": "biome format --write src/"
 	},
 	"dependencies": {
-		"@design/color-generation-core": "workspace:*",
-		"@design/color-generation-css": "workspace:*",
-		"@design/color-generation-json": "workspace:*",
-		"@design/spacing-generation-core": "workspace:*",
-		"@design/spacing-generation-css": "workspace:*",
-		"@design/spacing-generation-json": "workspace:*",
+		"@kevintyj/design/color-generation-core": "workspace:*",
+		"@kevintyj/design/color-generation-css": "workspace:*",
+		"@kevintyj/design/color-generation-json": "workspace:*",
+		"@kevintyj/design/spacing-generation-core": "workspace:*",
+		"@kevintyj/design/spacing-generation-css": "workspace:*",
+		"@kevintyj/design/spacing-generation-json": "workspace:*",
 		"commander": "^11.0.0",
 		"chalk": "^5.3.0",
 		"ora": "^7.0.1"
@@ -44,10 +44,12 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/your-username/design-system",
+		"url": "https://github.com/kevintyj/design",
 		"directory": "packages/cli"
 	},
-	"license": "MIT",
+	"author": "Kevin Taeyoon Jin <hello@kevintyj.com>",
+	"license": "BSD-3-Clause",
+	"private": false,
 	"publishConfig": {
 		"access": "public"
 	}

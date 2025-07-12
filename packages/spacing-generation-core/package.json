@@ -1,5 +1,5 @@
 {
-	"name": "@design/spacing-generation-core",
+	"name": "@kevintyj/design/spacing-generation-core",
 	"version": "1.0.0",
 	"description": "Core spacing generation logic for design systems",
 	"main": "dist/index.js",
@@ -35,10 +35,12 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/your-username/design-system",
+		"url": "https://github.com/kevintyj/design",
 		"directory": "packages/spacing-generation-core"
 	},
-	"license": "MIT",
+	"author": "Kevin Taeyoon Jin <hello@kevintyj.com>",
+	"license": "BSD-3-Clause",
+	"private": false,
 	"publishConfig": {
 		"access": "public"
 	}

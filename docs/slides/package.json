@@ -1,0 +1,17 @@
+{
+	"name": "@kevintyj/design/docs/slides",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "slidev build",
+		"dev": "slidev --open --port 3030",
+		"export": "slidev export"
+	},
+	"dependencies": {
+		"@slidev/cli": "^52.0.0",
+		"@slidev/theme-default": "latest",
+		"@slidev/theme-seriph": "latest",
+		"@kevintyj/design/docs/slides-theme": "workspace:*",
+		"vue": "^3.5.17"
+	}
+}

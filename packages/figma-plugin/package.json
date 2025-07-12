@@ -1,5 +1,5 @@
 {
-	"name": "@design/figma-plugin",
+	"name": "@kevintyj/design/figma-plugin",
 	"version": "1.0.0",
 	"description": "Design System Manager | @kevintyj/design - Figma plugin for design system management and variable import/export",
 	"main": "dist/code.js",
@@ -10,13 +10,13 @@
 		"format": "biome format --write src/"
 	},
 	"dependencies": {
-		"@design/color-generation-core": "workspace:*",
-		"@design/color-generation-css": "workspace:*",
-		"@design/color-generation-json": "workspace:*",
-		"@design/figma-to-json": "workspace:*",
-		"@design/spacing-generation-core": "workspace:*",
-		"@design/spacing-generation-json": "workspace:*",
-		"@design/spacing-generation-css": "workspace:*",
+		"@kevintyj/design/color-generation-core": "workspace:*",
+		"@kevintyj/design/color-generation-css": "workspace:*",
+		"@kevintyj/design/color-generation-json": "workspace:*",
+		"@kevintyj/design/figma-to-json": "workspace:*",
+		"@kevintyj/design/spacing-generation-core": "workspace:*",
+		"@kevintyj/design/spacing-generation-json": "workspace:*",
+		"@kevintyj/design/spacing-generation-css": "workspace:*",
 		"@figma/plugin-typings": "^1.115.0",
 		"@headlessui/react": "^2.2.0",
 		"jszip": "^3.10.1",
@@ -59,6 +59,15 @@
 		"design-system",
 		"variables"
 	],
-	"author": "Design System Team",
-	"license": "MIT"
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/kevintyj/design",
+		"directory": "packages/figma-plugin"
+	},
+	"author": "Kevin Taeyoon Jin <hello@kevintyj.com>",
+	"license": "BSD-3-Clause",
+	"private": false,
+	"publishConfig": {
+		"access": "public"
+	}
 }

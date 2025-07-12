@@ -1,5 +1,5 @@
 {
-	"name": "@design/spacing-generation-css",
+	"name": "@kevintyj/design/spacing-generation-css",
 	"version": "1.0.0",
 	"description": "CSS generation for spacing scales",
 	"main": "dist/index.js",
@@ -23,7 +23,7 @@
 		"format": "biome format --write src/"
 	},
 	"dependencies": {
-		"@design/spacing-generation-core": "workspace:*"
+		"@kevintyj/design/spacing-generation-core": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
@@ -38,10 +38,12 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/your-username/design-system",
+		"url": "https://github.com/kevintyj/design",
 		"directory": "packages/spacing-generation-css"
 	},
-	"license": "MIT",
+	"author": "Kevin Taeyoon Jin <hello@kevintyj.com>",
+	"license": "BSD-3-Clause",
+	"private": false,
 	"publishConfig": {
 		"access": "public"
 	}
