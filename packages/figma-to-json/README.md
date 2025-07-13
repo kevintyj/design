@@ -1,4 +1,4 @@
-![Figma to JSON](../../assets/banner-core.svg)
+![Figma to JSON](../../assets/banner-figma-to-json.svg)
 
 # @kevintyj/design/figma-to-json
 
