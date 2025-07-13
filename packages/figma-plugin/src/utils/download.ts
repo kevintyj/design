@@ -1,6 +1,6 @@
-import { generateCSSForColorSystem } from "@kevintyj/design/color-css";
-import type { ColorSystem } from "@kevintyj/design/color-generation-core";
-import { convertColorToJSON } from "@kevintyj/design/color-json";
+import type { ColorSystem } from "@kevintyj/design-color-core";
+import { generateCSSForColorSystem } from "@kevintyj/design-color-css";
+import { convertColorToJSON } from "@kevintyj/design-color-json";
 import JSZip from "jszip";
 import type { ExportData } from "../types";
 

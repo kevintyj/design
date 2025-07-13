@@ -1,6 +1,6 @@
 /// <reference types="@figma/plugin-typings" />
 
-import { exportFigmaVariablesAsCollections, exportFigmaVariablesRaw } from "@kevintyj/design/figma-to-json";
+import { exportFigmaVariablesAsCollections, exportFigmaVariablesRaw } from "@kevintyj/design-figma-json";
 
 interface ColorDefinition {
 	[colorName: string]: string;
@@ -83,7 +83,10 @@ figma.ui.onmessage = async (msg) => {
 					);
 
 					if (!preferencesKey || !colorSystemKey) {
-						console.error("Missing required keys:", { preferencesKey, colorSystemKey });
+						console.error("Missing required keys:", {
+							preferencesKey,
+							colorSystemKey,
+						});
 						return;
 					}
 
@@ -223,7 +226,9 @@ async function handleColorImport(colorSystem: ColorSystem) {
 
 		figma.ui.postMessage({
 			type: "colors-imported",
-			data: { message: `Imported ${Object.keys(colorSystem.light).length + 2} color variables` },
+			data: {
+				message: `Imported ${Object.keys(colorSystem.light).length + 2} color variables`,
+			},
 		});
 	} catch (error) {
 		throw new Error(`Failed to import colors: ${error}`);
@@ -395,7 +400,6 @@ async function handleJSONExport(colorSystem: ColorSystem) {
 	}
 }
 
-// Export current Figma variables as collections format using @kevintyj/design/figma-to-json
 async function handleFigmaVariablesExportAsCollections() {
 	try {
 		// Use the new package to export all collections with full transparency support

@@ -1,6 +1,6 @@
 ![Spacing Generation CSS](../../assets/banner-spacing-generation-css.svg)
 
-# @kevintyj/design/spacing-generation-css
+# @kevintyj/design-spacing-css
 
 CSS generation utilities for design system spacing. Converts spacing systems into CSS custom properties and utility classes for margin, padding, and gap.
 
@@ -18,14 +18,14 @@ CSS generation utilities for design system spacing. Converts spacing systems int
 ## 📦 Installation
 
 ```bash
-bun add @kevintyj/design/spacing-generation-css
+bun add @kevintyj/design-spacing-css
 ```
 
 ## 🚀 Quick Start
 
 ```typescript
-import { generateCSSFiles } from '@kevintyj/design/spacing-generation-css';
-import { generateSpacingSystem } from '@kevintyj/design/spacing-generation-core';
+import { generateCSSFiles } from '@kevintyj/design-spacing-css';
+import { generateSpacingSystem } from '@kevintyj/design-spacing-core';
 
 // Generate spacing system
 const spacingSystem = generateSpacingSystem(spacingInput);
@@ -363,7 +363,7 @@ Generates responsive variants of utility classes.
 ### Basic CSS Generation
 
 ```typescript
-import { generateCSSFiles } from '@kevintyj/design/spacing-generation-css';
+import { generateCSSFiles } from '@kevintyj/design-spacing-css';
 
 const cssFiles = generateCSSFiles(spacingSystem);
 
@@ -464,7 +464,7 @@ const cssFiles = generateCSSFiles(spacingSystem, {
 import { 
   generateSpacingCustomProperties, 
   generateSpacingUtilityClasses 
-} from '@kevintyj/design/spacing-generation-css';
+} from '@kevintyj/design-spacing-css';
 
 // Generate only custom properties
 const customProperties = generateSpacingCustomProperties(spacingSystem, {
@@ -656,7 +656,7 @@ const responsiveConfig = {
 
 ```typescript
 // Webpack integration
-import { generateCSSFiles } from '@kevintyj/design/spacing-generation-css';
+import { generateCSSFiles } from '@kevintyj/design-spacing-css';
 
 const cssFiles = generateCSSFiles(spacingSystem, {
   variant: 'combined',
@@ -699,7 +699,7 @@ function SpacedComponent() {
 ```typescript
 // Generate spacing CSS files script
 import { writeFile } from 'fs/promises';
-import { generateCSSFiles } from '@kevintyj/design/spacing-generation-css';
+import { generateCSSFiles } from '@kevintyj/design-spacing-css';
 
 async function generateSpacingCSS() {
   const cssFiles = generateCSSFiles(spacingSystem, {
@@ -725,7 +725,7 @@ async function generateSpacingCSS() {
 
 ```typescript
 // PostCSS plugin for spacing generation
-import { generateSpacingCustomProperties } from '@kevintyj/design/spacing-generation-css';
+import { generateSpacingCustomProperties } from '@kevintyj/design-spacing-css';
 
 const spacingPlugin = (spacingSystem) => {
   return {
@@ -745,7 +745,7 @@ import {
   generateCSSFiles, 
   generateSpacingUtilityClasses,
   generateSpacingCustomProperties 
-} from '@kevintyj/design/spacing-generation-css';
+} from '@kevintyj/design-spacing-css';
 
 // Test CSS generation
 const cssFiles = generateCSSFiles(testSpacingSystem);
@@ -765,8 +765,8 @@ console.assert(properties.includes('--spacing-'));
 
 ## 🤝 Related Packages
 
-- **[@kevintyj/design/spacing-generation-core](../spacing-generation-core)** - Core spacing generation logic
-- **[@kevintyj/design/spacing-generation-json](../spacing-generation-json)** - JSON format generation
+- **[@kevintyj/design-spacing-core](../spacing-generation-core)** - Core spacing generation logic
+- **[@kevintyj/design-spacing-json](../spacing-generation-json)** - JSON format generation
 - **[@kevintyj/design/cli](../cli)** - Command-line interface
 
 ## 📄 License

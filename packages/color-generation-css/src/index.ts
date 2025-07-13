@@ -1,5 +1,5 @@
-import type { ColorScale, ColorSystem, GenerationConfig } from "@kevintyj/design/color-core";
-import { generateOverlayColors } from "@kevintyj/design/color-core";
+import type { ColorScale, ColorSystem, GenerationConfig } from "@kevintyj/design-color-core";
+import { generateOverlayColors } from "@kevintyj/design-color-core";
 
 // CSS-specific configuration (removed outputDir and file-related options)
 export interface CSSGenerationConfig extends GenerationConfig {

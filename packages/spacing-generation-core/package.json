@@ -1,5 +1,5 @@
 {
-	"name": "@kevintyj/design/spacing-core",
+	"name": "@kevintyj/design-spacing-core",
 	"version": "1.0.0",
 	"description": "Core spacing generation logic for design systems",
 	"main": "dist/index.js",

@@ -2,11 +2,10 @@
 
 import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-
 // Color generation imports
-import { generateColorSystem, loadColorDefinitions, validateColorInput } from "@kevintyj/design/color-core";
-import { type CSSGenerationConfig, generateColorCSSFiles } from "@kevintyj/design/color-css";
-import { generateColorJSONFiles, type JSONGenerationConfig } from "@kevintyj/design/color-json";
+import { generateColorSystem, loadColorDefinitions, validateColorInput } from "@kevintyj/design-color-core";
+import { type CSSGenerationConfig, generateColorCSSFiles } from "@kevintyj/design-color-css";
+import { generateColorJSONFiles, type JSONGenerationConfig } from "@kevintyj/design-color-json";
 
 // Spacing generation imports
 import {
@@ -15,13 +14,13 @@ import {
 	type SpacingGenerationConfig,
 	type SpacingInput,
 	validateSpacingInput,
-} from "@kevintyj/design/spacing-core";
-import { type CSSSpacingGenerationConfig, generateSpacingCSSFiles } from "@kevintyj/design/spacing-css";
+} from "@kevintyj/design-spacing-core";
+import { type CSSSpacingGenerationConfig, generateSpacingCSSFiles } from "@kevintyj/design-spacing-css";
 import {
 	generateSpacingJSONFiles,
 	type JSONSpacingGenerationConfig,
 	reorderSpacingOutput,
-} from "@kevintyj/design/spacing-generation-json";
+} from "@kevintyj/design-spacing-json";
 
 import chalk from "chalk";
 import { Command } from "commander";

@@ -1,8 +1,9 @@
-import { type ColorSystem as CoreColorSystem, generateColorSystem } from "@kevintyj/design/color-core";
-import { convertColorToJSON, generateCollectionsJSON } from "@kevintyj/design/color-json";
-import { type SpacingSystem as CoreSpacingSystem, generateSpacingSystem } from "@kevintyj/design/spacing-core";
-import { generateSpacingCSSFiles } from "@kevintyj/design/spacing-css";
-import { generateSpacingJSONFiles } from "@kevintyj/design/spacing-json";
+import { type ColorSystem as CoreColorSystem, generateColorSystem } from "@kevintyj/design-color-core";
+import { convertColorToJSON, generateCollectionsJSON } from "@kevintyj/design-color-json";
+
+import { type SpacingSystem as CoreSpacingSystem, generateSpacingSystem } from "@kevintyj/design-spacing-core";
+import { generateSpacingCSSFiles } from "@kevintyj/design-spacing-css";
+import { generateSpacingJSONFiles } from "@kevintyj/design-spacing-json";
 
 import { useCallback, useEffect, useState } from "react";
 import { useFileHandling } from "../hooks/useFileHandling";

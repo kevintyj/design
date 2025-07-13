@@ -1,5 +1,5 @@
 {
-	"name": "@kevintyj/design/figma-plugin",
+	"name": "@kevintyj/design-figma-plugin",
 	"version": "1.0.0",
 	"description": "Design System Manager | @kevintyj/design - Figma plugin for design system management and variable import/export",
 	"main": "dist/code.js",
@@ -10,13 +10,13 @@
 		"format": "biome format --write src/"
 	},
 	"dependencies": {
-		"@kevintyj/design/color-core": "workspace:*",
-		"@kevintyj/design/color-css": "workspace:*",
-		"@kevintyj/design/color-json": "workspace:*",
-		"@kevintyj/design/figma-json": "workspace:*",
-		"@kevintyj/design/spacing-core": "workspace:*",
-		"@kevintyj/design/spacing-json": "workspace:*",
-		"@kevintyj/design/spacing-css": "workspace:*",
+		"@kevintyj/design-color-core": "workspace:*",
+		"@kevintyj/design-color-css": "workspace:*",
+		"@kevintyj/design-color-json": "workspace:*",
+		"@kevintyj/design-figma-json": "workspace:*",
+		"@kevintyj/design-spacing-core": "workspace:*",
+		"@kevintyj/design-spacing-json": "workspace:*",
+		"@kevintyj/design-spacing-css": "workspace:*",
 		"@figma/plugin-typings": "^1.115.0",
 		"@headlessui/react": "^2.2.0",
 		"jszip": "^3.10.1",

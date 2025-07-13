@@ -1,6 +1,6 @@
 ![Spacing Generation Core](../../assets/banner-spacing-generation-core.svg)
 
-# @kevintyj/design/spacing-generation-core
+# @kevintyj/design-spacing-core
 
 Core spacing generation logic for design system spacing scales with 4px base multiplier system and comprehensive utilities.
 
@@ -17,7 +17,7 @@ Core spacing generation logic for design system spacing scales with 4px base mul
 ## 📦 Installation
 
 ```bash
-bun add @kevintyj/design/spacing-generation-core
+bun add @kevintyj/design-spacing-core
 ```
 
 ## 🚀 Quick Start
@@ -27,7 +27,7 @@ import {
   loadSpacingDefinitions,
   generateSpacingSystem,
   validateSpacingInput 
-} from '@kevintyj/design/spacing-generation-core';
+} from '@kevintyj/design-spacing-core';
 
 // Load spacing from file
 const spacingInput = await loadSpacingDefinitions('./base.ts');
@@ -330,7 +330,7 @@ spacing.remValues = {
 ### Basic Generation
 
 ```typescript
-import { createSpacingInput, generateSpacingSystem } from '@kevintyj/design/spacing-generation-core';
+import { createSpacingInput, generateSpacingSystem } from '@kevintyj/design-spacing-core';
 
 const spacingInput = createSpacingInput(
   {
@@ -423,7 +423,7 @@ Object.entries(allValues).forEach(([key, value]) => {
 ### Validation and Error Handling
 
 ```typescript
-import { validateSpacingInput, loadSpacingDefinitions } from '@kevintyj/design/spacing-generation-core';
+import { validateSpacingInput, loadSpacingDefinitions } from '@kevintyj/design-spacing-core';
 
 try {
   const spacingInput = await loadSpacingDefinitions('./spacing.ts');
@@ -445,7 +445,7 @@ try {
 ### Advanced Spacing Manipulation
 
 ```typescript
-import { generateSpacingSystem, getSpacingMetadata, mergeSpacingSystems } from '@kevintyj/design/spacing-generation-core';
+import { generateSpacingSystem, getSpacingMetadata, mergeSpacingSystems } from '@kevintyj/design-spacing-core';
 
 // Generate base spacing system
 const baseInput = createSpacingInput(
@@ -622,7 +622,7 @@ const desktopSpacing = {
 ## 🧪 Testing
 
 ```typescript
-import { generateSpacingSystem, validateSpacingInput } from '@kevintyj/design/spacing-generation-core';
+import { generateSpacingSystem, validateSpacingInput } from '@kevintyj/design-spacing-core';
 
 // Test spacing generation
 const testInput = createSpacingInput(
@@ -642,8 +642,8 @@ console.assert(system.spacing.remValues["4"] === "1rem");
 
 ## 🤝 Related Packages
 
-- **[@kevintyj/design/spacing-generation-css](../spacing-generation-css)** - CSS output generation
-- **[@kevintyj/design/spacing-generation-json](../spacing-generation-json)** - JSON output generation
+- **[@kevintyj/design-spacing-css](../spacing-generation-css)** - CSS output generation
+- **[@kevintyj/design-spacing-json](../spacing-generation-json)** - JSON output generation
 - **[@kevintyj/design/cli](../cli)** - Command-line interface
 
 ## 📄 License

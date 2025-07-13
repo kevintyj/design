@@ -1,5 +1,5 @@
-import type { ColorSystem, GenerationConfig } from "@kevintyj/design/color-generation-core";
-import { generateOverlayColors } from "@kevintyj/design/color-generation-core";
+import type { ColorSystem, GenerationConfig } from "@kevintyj/design-color-core";
+import { generateOverlayColors } from "@kevintyj/design-color-core";
 import Color from "colorjs.io";
 
 // JSON-specific configuration (removed outputDir and file-related options)

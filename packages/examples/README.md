@@ -111,8 +111,8 @@ bun packages/examples/src/build-tools.ts
 
 ```typescript
 // basic.ts example
-import { loadColorDefinitions, generateColorSystem } from '@kevintyj/design/color-generation-core';
-import { generateCSSFiles } from '@kevintyj/design/color-generation-css';
+import { loadColorDefinitions, generateColorSystem } from '@kevintyj/design-color-core';
+import { generateCSSFiles } from '@kevintyj/design-color-css';
 
 const colorInput = await loadColorDefinitions('./base.ts');
 const colorSystem = generateColorSystem(colorInput);
@@ -145,7 +145,7 @@ const cssFiles = generateCSSFiles(colorSystem, {
 
 ```typescript
 // json-formats.ts example
-import { generateJSONFiles } from '@kevintyj/design/color-generation-json';
+import { generateJSONFiles } from '@kevintyj/design-color-json';
 
 const jsonFiles = generateJSONFiles(colorSystem, {
   format: 'all',
@@ -320,7 +320,7 @@ bun run format
 
 ```typescript
 // new-example.ts template
-import { generateColorSystem } from '@kevintyj/design/color-generation-core';
+import { generateColorSystem } from '@kevintyj/design-color-core';
 
 console.log('🎨 New Example: [Description]');
 
@@ -333,10 +333,10 @@ console.log(`Generated: ${result.metadata.totalScales} color scales`);
 
 ## 🤝 Related Packages
 
-- **[@kevintyj/design/color-generation-core](../color-generation-core)** - Core color generation
-- **[@kevintyj/design/color-generation-css](../color-generation-css)** - CSS output generation
-- **[@kevintyj/design/color-generation-json](../color-generation-json)** - JSON output generation
-- **[@kevintyj/design/spacing-generation-core](../spacing-generation-core)** - Core spacing generation
+- **[@kevintyj/design-color-core](../color-generation-core)** - Core color generation
+- **[@kevintyj/design-color-css](../color-generation-css)** - CSS output generation
+- **[@kevintyj/design-color-json](../color-generation-json)** - JSON output generation
+- **[@kevintyj/design-spacing-core](../spacing-generation-core)** - Core spacing generation
 - **[@kevintyj/design/cli](../cli)** - Command-line interface
 
 ## 📄 License

@@ -1,5 +1,5 @@
 // Import types from spacing core
-import type { SpacingGenerationConfig, SpacingSystem } from "@kevintyj/design/spacing-core";
+import type { SpacingGenerationConfig, SpacingSystem } from "@kevintyj/design-spacing-core";
 
 // JSON-specific configuration
 export interface JSONSpacingGenerationConfig extends SpacingGenerationConfig {

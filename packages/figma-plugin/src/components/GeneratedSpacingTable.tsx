@@ -1,4 +1,4 @@
-import type { SpacingSystem } from "@kevintyj/design/spacing-generation-core";
+import type { SpacingSystem } from "@kevintyj/design-spacing-core";
 import type React from "react";
 import { spacingList } from "./SpacingConfigureTab";
 

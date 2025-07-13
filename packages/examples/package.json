@@ -1,5 +1,5 @@
 {
-	"name": "@kevintyj/design/examples",
+	"name": "@kevintyj/design-examples",
 	"version": "1.0.0",
 	"description": "Example usage of the design color generation system",
 	"private": true,
@@ -12,10 +12,10 @@
 		"all": "bun run basic && bun run advanced && bun run css-only && bun run json-only"
 	},
 	"dependencies": {
-		"@kevintyj/design/color-core": "workspace:*",
-		"@kevintyj/design/color-css": "workspace:*",
-		"@kevintyj/design/color-json": "workspace:*",
-		"@kevintyj/design/cli": "workspace:*"
+		"@kevintyj/design-color-core": "workspace:*",
+		"@kevintyj/design-color-css": "workspace:*",
+		"@kevintyj/design-color-json": "workspace:*",
+		"@kevintyj/design-cli": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",

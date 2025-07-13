@@ -1,6 +1,6 @@
 ![Figma to JSON](../../assets/banner-figma-to-json.svg)
 
-# @kevintyj/design/figma-to-json
+# @kevintyj/design-figma-json
 
 Export Figma variables and design tokens to JSON format. Convert Figma variable collections into design system compatible JSON files for use with build tools and development workflows.
 
@@ -17,7 +17,7 @@ Export Figma variables and design tokens to JSON format. Convert Figma variable 
 ## 📦 Installation
 
 ```bash
-bun add @kevintyj/design/figma-to-json
+bun add @kevintyj/design-figma-json
 ```
 
 ## 🚀 Quick Start
@@ -25,7 +25,7 @@ bun add @kevintyj/design/figma-to-json
 ### Using with Figma Plugin API
 
 ```typescript
-import { exportVariablesToJSON } from '@kevintyj/design/figma-to-json';
+import { exportVariablesToJSON } from '@kevintyj/design-figma-json';
 
 // In a Figma plugin
 const collections = figma.variables.getLocalVariableCollections();
@@ -42,7 +42,7 @@ jsonFiles.forEach(file => {
 ### Using with Exported Data
 
 ```typescript
-import { convertFigmaVariables } from '@kevintyj/design/figma-to-json';
+import { convertFigmaVariables } from '@kevintyj/design-figma-json';
 
 // With exported Figma variable data
 const figmaData = {
@@ -75,7 +75,7 @@ interface FigmaExportConfig {
 
 #### `JSONFormat`
 ```typescript
-type JSONFormat = 
+type JSONFormat =
   | "flat"        // Flat key-value pairs
   | "nested"      // Nested object structure
   | "tokens"      // W3C Design Tokens format
@@ -85,7 +85,7 @@ type JSONFormat =
 
 #### `ColorFormat`
 ```typescript
-type ColorFormat = 
+type ColorFormat =
   | "hex"         // #FF0000
   | "rgb"         // rgb(255, 0, 0)
   | "rgba"        // rgba(255, 0, 0, 1)
@@ -190,7 +190,7 @@ W3C Design Tokens specification:
         "description": "Primary color light variant"
       },
       "500": {
-        "value": "#3b82f6", 
+        "value": "#3b82f6",
         "type": "color",
         "description": "Primary brand color"
       }
@@ -266,7 +266,7 @@ Preserves Figma collection structure:
 ### Export All Collections
 
 ```typescript
-import { exportVariablesToJSON } from '@kevintyj/design/figma-to-json';
+import { exportVariablesToJSON } from '@kevintyj/design-figma-json';
 
 // Export all variable collections
 const collections = figma.variables.getLocalVariableCollections();
@@ -314,7 +314,7 @@ module.exports = {
 ### Batch Processing
 
 ```typescript
-import { processMultipleFiles } from '@kevintyj/design/figma-to-json';
+import { processMultipleFiles } from '@kevintyj/design-figma-json';
 
 const figmaFiles = [
   { id: 'file1', collections: [...] },
@@ -333,7 +333,7 @@ const allExports = await processMultipleFiles(figmaFiles, {
 
 ```typescript
 // build-script.ts
-import { exportVariablesToJSON } from '@kevintyj/design/figma-to-json';
+import { exportVariablesToJSON } from '@kevintyj/design-figma-json';
 import { writeFileSync } from 'fs';
 
 async function buildDesignTokens() {
@@ -364,14 +364,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: oven-sh/setup-bun@v1
-      
+
       - name: Export Figma Variables
         run: |
           bun install
           bun run export-figma-variables
         env:
           FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
-          
+
       - name: Commit Changes
         run: |
           git config --global user.name 'Design Token Bot'
@@ -384,7 +384,7 @@ jobs:
 
 ```typescript
 // style-dictionary.config.js
-import { exportVariablesToJSON } from '@kevintyj/design/figma-to-json';
+import { exportVariablesToJSON } from '@kevintyj/design-figma-json';
 
 const figmaTokens = await exportVariablesToJSON(collections, {
   format: 'tokens'
@@ -487,11 +487,11 @@ bun run format
 
 ## 🤝 Related Packages
 
-- **[@kevintyj/design/color-generation-core](../color-generation-core)** - Core color generation
-- **[@kevintyj/design/color-generation-json](../color-generation-json)** - Color JSON generation
-- **[@kevintyj/design/spacing-generation-json](../spacing-generation-json)** - Spacing JSON generation
+- **[@kevintyj/design-color-core](../color-generation-core)** - Core color generation
+- **[@kevintyj/design-color-json](../color-generation-json)** - Color JSON generation
+- **[@kevintyj/design-spacing-json](../spacing-generation-json)** - Spacing JSON generation
 - **[@kevintyj/design/figma-plugin](../figma-plugin)** - Figma plugin interface
 
 ## 📄 License
 
-MIT License - see the [LICENSE](../../LICENSE) file for details. 
+MIT License - see the [LICENSE](../../LICENSE) file for details.

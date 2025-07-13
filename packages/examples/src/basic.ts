@@ -1,9 +1,4 @@
-import {
-	createColorInput,
-	generateColorSystem,
-	getColorScale,
-	validateColorInput,
-} from "@kevintyj/design/color-generation-core";
+import { createColorInput, generateColorSystem, getColorScale, validateColorInput } from "@kevintyj/design-color-core";
 
 console.log("🎨 Basic Color Generation Example\n");
 

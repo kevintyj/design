@@ -1,4 +1,4 @@
-import type { SpacingSystem as SpacingSystemCore } from "@kevintyj/design/spacing-generation-core";
+import type { SpacingSystem as SpacingSystemCore } from "@kevintyj/design-spacing-core";
 import { TrashIcon } from "lucide-react";
 import type React from "react";
 import { useCallback } from "react";

@@ -1,6 +1,6 @@
 ![Color Generation Core](../../assets/banner-color-generation-core.svg)
 
-# @kevintyj/design/color-generation-core
+# @kevintyj/design-color-core
 
 Core color generation logic using Radix UI color methodology for generating comprehensive color scales.
 
@@ -18,7 +18,7 @@ Core color generation logic using Radix UI color methodology for generating comp
 ## 📦 Installation
 
 ```bash
-bun add @kevintyj/design/color-generation-core
+bun add @kevintyj/design-color-core
 ```
 
 ## 🚀 Quick Start
@@ -28,7 +28,7 @@ import {
   loadColorDefinitions,
   generateColorSystem,
   validateColorInput 
-} from '@kevintyj/design/color-generation-core';
+} from '@kevintyj/design-color-core';
 
 // Load colors from file
 const colorInput = await loadColorDefinitions('./base.ts');
@@ -290,7 +290,7 @@ Each generated color scale follows the Radix UI methodology:
 ### Basic Generation
 
 ```typescript
-import { createColorInput, generateColorSystem } from '@kevintyj/design/color-generation-core';
+import { createColorInput, generateColorSystem } from '@kevintyj/design-color-core';
 
 const colorInput = createColorInput(
   { primary: '#0066CC', secondary: '#6366F1' },
@@ -365,7 +365,7 @@ const primaryP3 = primaryScale['p3-9'];     // P3 primary action color
 ### Validation and Error Handling
 
 ```typescript
-import { validateColorInput, loadColorDefinitions } from '@kevintyj/design/color-generation-core';
+import { validateColorInput, loadColorDefinitions } from '@kevintyj/design-color-core';
 
 try {
   const colorInput = await loadColorDefinitions('./colors.ts');
@@ -387,7 +387,7 @@ try {
 ### Advanced Color Manipulation
 
 ```typescript
-import { generateColorSystem, getColorScale, mergeColorSystems } from '@kevintyj/design/color-generation-core';
+import { generateColorSystem, getColorScale, mergeColorSystems } from '@kevintyj/design-color-core';
 
 // Generate brand colors
 const brandInput = createColorInput(
@@ -494,7 +494,7 @@ const fullConfig = {
 ## 🧪 Testing
 
 ```typescript
-import { generateColorSystem, validateColorInput } from '@kevintyj/design/color-generation-core';
+import { generateColorSystem, validateColorInput } from '@kevintyj/design-color-core';
 
 // Test color generation
 const testInput = createColorInput(
@@ -511,8 +511,8 @@ console.assert(system.light.test[9] === '#FF0000');
 
 ## 🤝 Related Packages
 
-- **[@kevintyj/design/color-generation-css](../color-generation-css)** - CSS output generation
-- **[@kevintyj/design/color-generation-json](../color-generation-json)** - JSON output generation
+- **[@kevintyj/design-color-css](../color-generation-css)** - CSS output generation
+- **[@kevintyj/design-color-json](../color-generation-json)** - JSON output generation
 - **[@kevintyj/design/cli](../cli)** - Command-line interface
 
 ## 📄 License

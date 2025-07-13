@@ -1,5 +1,5 @@
 {
-	"name": "@kevintyj/design/spacing-css",
+	"name": "@kevintyj/design-spacing-css",
 	"version": "1.0.0",
 	"description": "CSS generation for spacing scales",
 	"main": "dist/index.js",
@@ -23,7 +23,7 @@
 		"format": "biome format --write src/"
 	},
 	"dependencies": {
-		"@kevintyj/design/spacing-core": "workspace:*"
+		"@kevintyj/design-spacing-core": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",

@@ -19,7 +19,7 @@ A comprehensive design system with color and spacing generation based on Radix U
 ### 🎨 Color System
 - **12-step color progressions** for each color using Radix UI methodology
 - **Alpha channel variants** for transparency effects
-- **Wide gamut P3 support** for modern displays  
+- **Wide gamut P3 support** for modern displays
 - **Gray scale variants** contextual to each color
 - **Special colors** (contrast, surface, indicator)
 
@@ -42,17 +42,17 @@ A comprehensive design system with color and spacing generation based on Radix U
 
 | Package | Description | Status |
 |---------|-------------|---------|
-| **[@kevintyj/design/color-generation-core](./packages/color-generation-core)** | Core color generation logic | ✅ Complete |
-| **[@kevintyj/design/spacing-generation-core](./packages/spacing-generation-core)** | Core spacing generation logic | ✅ Complete |
+| **[@kevintyj/design-color-core](./packages/color-generation-core)** | Core color generation logic | ✅ Complete |
+| **[@kevintyj/design-spacing-core](./packages/spacing-generation-core)** | Core spacing generation logic | ✅ Complete |
 
 ### Generation Packages
 
 | Package | Description | Status |
 |---------|-------------|---------|
-| **[@kevintyj/design/color-generation-css](./packages/color-generation-css)** | CSS generation utilities | ✅ Complete |
-| **[@kevintyj/design/color-generation-json](./packages/color-generation-json)** | JSON format generation | ✅ Complete |
-| **[@kevintyj/design/spacing-generation-css](./packages/spacing-generation-css)** | Spacing CSS utilities | ✅ Complete |
-| **[@kevintyj/design/spacing-generation-json](./packages/spacing-generation-json)** | Spacing JSON formats | ✅ Complete |
+| **[@kevintyj/design-color-css](./packages/color-generation-css)** | CSS generation utilities | ✅ Complete |
+| **[@kevintyj/design-color-json](./packages/color-generation-json)** | JSON format generation | ✅ Complete |
+| **[@kevintyj/design-spacing-css](./packages/spacing-generation-css)** | Spacing CSS utilities | ✅ Complete |
+| **[@kevintyj/design-spacing-json](./packages/spacing-generation-json)** | Spacing JSON formats | ✅ Complete |
 
 ### Application Packages
 
@@ -60,7 +60,7 @@ A comprehensive design system with color and spacing generation based on Radix U
 |---------|-------------|---------|
 | **[@kevintyj/design/cli](./packages/cli)** | Command-line interface | ✅ Complete |
 | **[@kevintyj/design/figma-plugin](./packages/figma-plugin)** | Figma plugin for design system management | ✅ Complete |
-| **[@kevintyj/design/figma-to-json](./packages/figma-to-json)** | Export Figma variables to JSON | ✅ Complete |
+| **[@kevintyj/design/figma-json](./packages/figma-to-json)** | Export Figma variables to JSON | ✅ Complete |
 | **[@kevintyj/design/examples](./packages/examples)** | Usage examples and demos | ✅ Complete |
 
 ## 🚀 Quick Start
@@ -117,7 +117,7 @@ bun run system:generate --verbose --output ./styles
 Your `base.ts` currently includes:
 
 - **🔥 blaze** - Vibrant orange-red (`#FC4B32` / `#FD563D`)
-- **🍂 autumn** - Warm brown (`#311318` / `#30181B`) 
+- **🍂 autumn** - Warm brown (`#311318` / `#30181B`)
 - **🌸 pink** - Bright pink (`#F9486F` / `#F55776`)
 - **🌊 teal** - Blue-green (`#00A77F` / `#17AD85`)
 - **💙 blue** - Primary blue (`#286EDC` / `#3A80E0`)
@@ -242,12 +242,12 @@ output/
 ### Color Generation
 
 ```typescript
-import { 
+import {
   loadColorDefinitions,
-  generateColorSystem 
-} from '@kevintyj/design/color-generation-core';
-import { generateCSSFiles } from '@kevintyj/design/color-generation-css';
-import { generateJSONFiles } from '@kevintyj/design/color-generation-json';
+  generateColorSystem
+} from '@kevintyj/design-color-core';
+import { generateCSSFiles } from '@kevintyj/design-color-css';
+import { generateJSONFiles } from '@kevintyj/design-color-json';
 
 // Load from base.ts
 const colorInput = await loadColorDefinitions('./base.ts');
@@ -259,7 +259,7 @@ const cssFiles = generateCSSFiles(colorSystem, {
   includeWideGamut: true
 });
 
-// Generate JSON files  
+// Generate JSON files
 const jsonFiles = generateJSONFiles(colorSystem, {
   format: 'all'
 });
@@ -268,12 +268,12 @@ const jsonFiles = generateJSONFiles(colorSystem, {
 ### Spacing Generation
 
 ```typescript
-import { 
+import {
   loadSpacingDefinitions,
-  generateSpacingSystem 
-} from '@kevintyj/design/spacing-generation-core';
-import { generateCSSFiles } from '@kevintyj/design/spacing-generation-css';
-import { generateJSONFiles } from '@kevintyj/design/spacing-generation-json';
+  generateSpacingSystem
+} from '@kevintyj/design-spacing-core';
+import { generateCSSFiles } from '@kevintyj/design-spacing-css';
+import { generateJSONFiles } from '@kevintyj/design-spacing-json';
 
 // Load from base.ts
 const spacingInput = await loadSpacingDefinitions('./base.ts');
@@ -294,12 +294,12 @@ const jsonFiles = generateJSONFiles(spacingSystem, {
 ### Combined System Generation
 
 ```typescript
-import { 
+import {
   loadColorDefinitions,
   loadSpacingDefinitions,
   generateColorSystem,
   generateSpacingSystem
-} from '@kevintyj/design/color-generation-core';
+} from '@kevintyj/design-color-core';
 
 // Load definitions
 const colorInput = await loadColorDefinitions('./base.ts');
@@ -331,14 +331,14 @@ const designSystem = {
   --color-blue-1: #fcfdff;
   --color-blue-2: #f6f9ff;
   --color-blue-12: #113161;
-  
+
   /* Alpha variants */
   --color-blue-a1: rgba(40, 110, 220, 0.05);
   --color-blue-a12: rgba(40, 110, 220, 0.95);
-  
+
   /* Wide gamut P3 */
   --color-blue-p3-1: oklch(99.4% 0.0025 259.5);
-  
+
   /* Special colors */
   --color-blue-contrast: #ffffff;
   --color-blue-surface: rgba(40, 110, 220, 0.1);
@@ -353,7 +353,7 @@ const designSystem = {
   --spacing-1: 4px;
   --spacing-2: 8px;
   --spacing-4: 16px;
-  
+
   /* REM values */
   --spacing-1-rem: 0.25rem;
   --spacing-2-rem: 0.5rem;
@@ -457,7 +457,7 @@ export const light = {
 };
 
 export const dark = {
-  // ... existing colors  
+  // ... existing colors
   brand: '#FF7F59',      // Add dark variant
   accent: '#45B7B8'
 };
@@ -515,7 +515,7 @@ design/
 ### Color Scale (Radix UI)
 
 - **Steps 1-2**: Backgrounds, subtle borders
-- **Steps 3-5**: UI component backgrounds  
+- **Steps 3-5**: UI component backgrounds
 - **Steps 6-8**: Borders, separators
 - **Steps 9-10**: Solid backgrounds, primary actions
 - **Steps 11-12**: High contrast text, active states
@@ -571,7 +571,7 @@ This project uses a custom TypeScript build system with advanced features:
 ### Build Process
 
 1. **Core Packages**: Color and spacing generation cores
-2. **Extension Packages**: CSS, JSON, and Figma integrations  
+2. **Extension Packages**: CSS, JSON, and Figma integrations
 3. **Application Packages**: CLI and examples
 
 ### Build Features
@@ -587,7 +587,7 @@ This project uses a custom TypeScript build system with advanced features:
 
 The build system provides detailed statistics:
 - Individual package build times
-- Group build summaries  
+- Group build summaries
 - Performance rankings
 - Total build time and package counts
 
@@ -616,7 +616,7 @@ BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
 ## 🔮 Roadmap
 
 - ✅ Complete color generation system
-- ✅ Complete spacing generation system  
+- ✅ Complete spacing generation system
 - ✅ CLI integration for colors
 - ✅ CLI integration for spacing
 - ✅ Combined system generation

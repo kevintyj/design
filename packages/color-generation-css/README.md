@@ -1,6 +1,6 @@
 ![Color Generation CSS](../../assets/banner-color-generation-css.svg)
 
-# @kevintyj/design/color-generation-css
+# @kevintyj/design-color-css
 
 CSS generation utilities for design system colors. Converts color systems into CSS custom properties, utility classes, and theme files.
 
@@ -18,14 +18,14 @@ CSS generation utilities for design system colors. Converts color systems into C
 ## 📦 Installation
 
 ```bash
-bun add @kevintyj/design/color-generation-css
+bun add @kevintyj/design-color-css
 ```
 
 ## 🚀 Quick Start
 
 ```typescript
-import { generateCSSFiles } from '@kevintyj/design/color-generation-css';
-import { generateColorSystem } from '@kevintyj/design/color-generation-core';
+import { generateCSSFiles } from '@kevintyj/design-color-css';
+import { generateColorSystem } from '@kevintyj/design-color-core';
 
 // Generate color system
 const colorSystem = generateColorSystem(colorInput);
@@ -288,7 +288,7 @@ Generates CSS with light/dark modes using media queries.
 ### Basic CSS Generation
 
 ```typescript
-import { generateCSSFiles } from '@kevintyj/design/color-generation-css';
+import { generateCSSFiles } from '@kevintyj/design-color-css';
 
 const cssFiles = generateCSSFiles(colorSystem);
 
@@ -350,7 +350,7 @@ const cssFiles = generateCSSFiles(colorSystem, {
 ### Programmatic CSS Generation
 
 ```typescript
-import { generateCSSForColorSystem } from '@kevintyj/design/color-generation-css';
+import { generateCSSForColorSystem } from '@kevintyj/design-color-css';
 
 const cssContent = generateCSSForColorSystem(colorSystem, {
   includeAlpha: true,
@@ -520,7 +520,7 @@ const styledComponentsConfig = {
 
 ```typescript
 // Webpack integration
-import { generateCSSFiles } from '@kevintyj/design/color-generation-css';
+import { generateCSSFiles } from '@kevintyj/design-color-css';
 
 const cssFiles = generateCSSFiles(colorSystem);
 cssFiles.forEach(file => {
@@ -549,7 +549,7 @@ function useColorCSS(colorSystem: ColorSystem) {
 ```typescript
 // Generate CSS files script
 import { writeFile } from 'fs/promises';
-import { generateCSSFiles } from '@kevintyj/design/color-generation-css';
+import { generateCSSFiles } from '@kevintyj/design-color-css';
 
 async function generateColorCSS() {
   const cssFiles = generateCSSFiles(colorSystem, {
@@ -570,7 +570,7 @@ async function generateColorCSS() {
 ## 🧪 Testing
 
 ```typescript
-import { generateCSSFiles, generateUtilityClasses } from '@kevintyj/design/color-generation-css';
+import { generateCSSFiles, generateUtilityClasses } from '@kevintyj/design-color-css';
 
 // Test CSS generation
 const cssFiles = generateCSSFiles(testColorSystem);
@@ -585,8 +585,8 @@ console.assert(utilities.includes('.text-'));
 
 ## 🤝 Related Packages
 
-- **[@kevintyj/design/color-generation-core](../color-generation-core)** - Core color generation logic
-- **[@kevintyj/design/color-generation-json](../color-generation-json)** - JSON format generation
+- **[@kevintyj/design-color-core](../color-generation-core)** - Core color generation logic
+- **[@kevintyj/design-color-json](../color-generation-json)** - JSON format generation
 - **[@kevintyj/design/cli](../cli)** - Command-line interface
 
 ## 📄 License

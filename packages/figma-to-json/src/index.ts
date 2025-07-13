@@ -6,7 +6,7 @@ import type {
 	CollectionVariableValue,
 	SimpleCollectionFormat,
 	SimpleCollectionOutput,
-} from "@kevintyj/design/color-json";
+} from "@kevintyj/design-color-json";
 
 export interface FigmaToJsonConfig {
 	includeAllVariableTypes?: boolean;

@@ -411,7 +411,7 @@ module.exports = {
 
 ```typescript
 // Generate color system within plugin
-import { generateColorSystem } from '@kevintyj/design/color-generation-core';
+import { generateColorSystem } from '@kevintyj/design-color-core';
 
 const colorSystem = generateColorSystem(colorInput, {
   includeAlpha: preferences.includeAlpha,
@@ -430,7 +430,7 @@ await createColorVariables(colorSystem, {
 
 ```typescript
 // Generate spacing system within plugin
-import { generateSpacingSystem } from '@kevintyj/design/spacing-generation-core';
+import { generateSpacingSystem } from '@kevintyj/design-spacing-core';
 
 const spacingSystem = generateSpacingSystem(spacingInput, {
   generateRem: preferences.generateRem,
@@ -447,8 +447,8 @@ await createSpacingVariables(spacingSystem, {
 
 ```typescript
 // Export to multiple formats
-import { generateCSSFiles } from '@kevintyj/design/color-generation-css';
-import { generateJSONFiles } from '@kevintyj/design/color-generation-json';
+import { generateCSSFiles } from '@kevintyj/design-color-css';
+import { generateJSONFiles } from '@kevintyj/design-color-json';
 
 const cssFiles = generateCSSFiles(colorSystem, exportOptions.css);
 const jsonFiles = generateJSONFiles(colorSystem, exportOptions.json);
@@ -600,7 +600,7 @@ interface ExportOptions {
 
 ```typescript
 // Test color generation
-import { generateColorSystem } from '@kevintyj/design/color-generation-core';
+import { generateColorSystem } from '@kevintyj/design-color-core';
 
 const testInput = {
   light: { test: '#FF0000' },
@@ -644,10 +644,10 @@ node scripts/validate-manifest.js
 
 ## 🤝 Related Packages
 
-- **[@kevintyj/design/color-generation-core](../color-generation-core)** - Core color generation logic
-- **[@kevintyj/design/spacing-generation-core](../spacing-generation-core)** - Core spacing generation logic
-- **[@kevintyj/design/color-generation-css](../color-generation-css)** - CSS output generation
-- **[@kevintyj/design/color-generation-json](../color-generation-json)** - JSON output generation
+- **[@kevintyj/design-color-core](../color-generation-core)** - Core color generation logic
+- **[@kevintyj/design-spacing-core](../spacing-generation-core)** - Core spacing generation logic
+- **[@kevintyj/design-color-css](../color-generation-css)** - CSS output generation
+- **[@kevintyj/design-color-json](../color-generation-json)** - JSON output generation
 - **[@kevintyj/design/cli](../cli)** - Command-line interface
 
 ## 🔮 Roadmap

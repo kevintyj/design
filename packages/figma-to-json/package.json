@@ -1,5 +1,5 @@
 {
-	"name": "@kevintyj/design/figma-json",
+	"name": "@kevintyj/design-figma-json",
 	"version": "1.0.0",
 	"description": "Utilities for converting Figma variables to JSON collections format",
 	"main": "dist/index.js",
