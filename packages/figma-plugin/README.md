@@ -2,9 +2,18 @@
 
 # Design System Manager | @kevintyj/design/figma-plugin
 
+[**Figma plugin**](https://www.figma.com/community/plugin/1525022875622896761/design-system-manager-kevintyj-design)
+
 Figma plugin for design system management. Generate, import, and manage color and spacing systems directly within Figma using the design system generation tools.
 
 ## 🎨 Features
+
+<p align="center">
+  <img src="../../assets/figmademo.gif" alt="Figma Demo" />
+</p>
+
+[Youtube Demo](https://www.youtube.com/watch?v=RBG1NTVvytk)
+
 
 - **Color System Import** from base.ts configuration files
 - **Spacing System Import** with utility class generation

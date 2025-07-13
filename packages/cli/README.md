@@ -6,6 +6,10 @@ Command-line interface for design system generation. Generate colors, spacing, a
 
 ## 🚀 Features
 
+<p align="center">
+  <img src="../../assets/termdemo.gif" alt="Terminal Demo" />
+</p>
+
 - **Color Generation** with Radix UI methodology (12-step progressions)
 - **Spacing Generation** with 4px base multiplier system (26 spacing values)
 - **System Generation** for complete design systems

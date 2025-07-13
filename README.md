@@ -2,9 +2,19 @@
 
 # Design System Generation Monorepo
 
+[**Blog post**](https://labtwofour.com/blog/post/design)
+
+[**Figma plugin**](https://www.figma.com/community/plugin/1525022875622896761/design-system-manager-kevintyj-design)
+
 A comprehensive design system with color and spacing generation based on Radix UI colors, built as a modular TypeScript monorepo with Bun.
 
 ## ✨ Features
+
+<p align="center">
+  <img src="./assets/termdemo.gif" alt="Terminal Demo" />
+</p>
+
+[Youtube Demo](https://www.youtube.com/watch?v=RBG1NTVvytk)
 
 ### 🎨 Color System
 - **12-step color progressions** for each color using Radix UI methodology
