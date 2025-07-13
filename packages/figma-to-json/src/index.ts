@@ -1,20 +1,12 @@
 /// <reference types="@figma/plugin-typings" />
 
-// Output format interfaces - matching color-generation-json format
-export interface CollectionVariable {
-	type: string;
-	values: Record<string, string>;
-}
-
-export interface SimpleCollectionFormat {
-	name: string;
-	modes: string[];
-	variables: Record<string, Record<string, CollectionVariable>>;
-}
-
-export interface SimpleCollectionOutput {
-	collections: SimpleCollectionFormat[];
-}
+// Import shared types from color-generation-json
+import type {
+	CollectionVariable,
+	CollectionVariableValue,
+	SimpleCollectionFormat,
+	SimpleCollectionOutput,
+} from "@kevintyj/design/color-json";
 
 export interface FigmaToJsonConfig {
 	includeAllVariableTypes?: boolean;
@@ -246,15 +238,18 @@ export function convertSimpleCollectionOutputToRawFormat(data: SimpleCollectionO
 			modes: modes,
 		});
 
-		const addVariables = (variables: Record<string, CollectionVariable>, prefix: string = "") => {
+		const addVariables = (variables: Record<string, CollectionVariableValue>, prefix: string = "") => {
 			Object.entries(variables).forEach(([key, value]) => {
-				if (value?.type && value?.values) {
+				// Handle CollectionVariableValue union type
+				if (value && typeof value === "object" && "type" in value && "values" in value) {
+					// This is a CollectionVariable - cast to ensure type safety
+					const variable = value as CollectionVariable;
 					const variableName = prefix ? `${prefix}/${key}` : key;
 					const variableId = `${variableName.replace(/[/\s]/g, "-")}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
 					const valuesByMode: Record<string, any> = {};
 
 					modes.forEach((mode) => {
-						const modeValue = value.values[mode.name];
+						const modeValue = variable.values[mode.name];
 						if (modeValue !== undefined) {
 							valuesByMode[mode.modeId] = modeValue;
 						}
@@ -264,7 +259,7 @@ export function convertSimpleCollectionOutputToRawFormat(data: SimpleCollectionO
 						id: variableId,
 						name: variableName,
 						variableCollectionId: collectionId,
-						resolvedType: value.type.toUpperCase(),
+						resolvedType: variable.type.toUpperCase(),
 						valuesByMode: valuesByMode,
 						collection: {
 							id: collectionId,
@@ -272,6 +267,10 @@ export function convertSimpleCollectionOutputToRawFormat(data: SimpleCollectionO
 							modes: modes,
 						},
 					});
+				} else if (value && typeof value === "object") {
+					// This is a Record<string, CollectionVariable> - recurse
+					const newPrefix = prefix ? `${prefix}/${key}` : key;
+					addVariables(value as Record<string, CollectionVariable>, newPrefix);
 				}
 			});
 		};

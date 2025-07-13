@@ -1,5 +1,5 @@
 {
-	"name": "@kevintyj/design/color-generation-json",
+	"name": "@kevintyj/design/color-json",
 	"version": "1.0.0",
 	"description": "JSON generation utilities for color scales",
 	"main": "dist/index.js",
@@ -23,7 +23,7 @@
 		"format": "biome format --write src/"
 	},
 	"dependencies": {
-		"@kevintyj/design/color-generation-core": "workspace:*",
+		"@kevintyj/design/color-core": "workspace:*",
 		"colorjs.io": "^0.5.0"
 	},
 	"devDependencies": {
@@ -41,7 +41,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/kevintyj/design",
-		"directory": "packages/color-generation-json"
+		"directory": "packages/color-json"
 	},
 	"author": "Kevin Taeyoon Jin <hello@kevintyj.com>",
 	"license": "BSD-3-Clause",

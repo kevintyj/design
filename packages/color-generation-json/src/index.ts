@@ -1,47 +1,6 @@
+import type { ColorSystem, GenerationConfig } from "@kevintyj/design/color-generation-core";
 import { generateOverlayColors } from "@kevintyj/design/color-generation-core";
 import Color from "colorjs.io";
-
-// Import types (will be resolved when packages are built)
-export interface ColorScale {
-	accentScale: string[];
-	accentScaleAlpha: string[];
-	accentScaleWideGamut: string[];
-	accentScaleAlphaWideGamut: string[];
-	accentContrast: string;
-	grayScale: string[];
-	grayScaleAlpha: string[];
-	grayScaleWideGamut: string[];
-	grayScaleAlphaWideGamut: string[];
-	graySurface: string;
-	graySurfaceWideGamut: string;
-	accentSurface: string;
-	accentSurfaceWideGamut: string;
-	background: string;
-	overlays: {
-		black: string[];
-		white: string[];
-	};
-}
-
-export interface ColorSystem {
-	light: Record<string, ColorScale>;
-	dark: Record<string, ColorScale>;
-	colorNames: string[];
-	sourceColors: any;
-	metadata: {
-		generatedAt: string;
-		totalColors: number;
-		totalScales: number;
-		config: any;
-	};
-}
-
-export interface GenerationConfig {
-	includeAlpha?: boolean;
-	includeWideGamut?: boolean;
-	includeGrayScale?: boolean;
-	includeOverlays?: boolean;
-}
 
 // JSON-specific configuration (removed outputDir and file-related options)
 export interface JSONGenerationConfig extends GenerationConfig {
@@ -57,7 +16,7 @@ export interface JSONGenerationConfig extends GenerationConfig {
 }
 
 // File data interface for pure functions
-export interface JSONFileData {
+export interface JSONColorFileData {
 	name: string;
 	content: string;
 }
@@ -823,9 +782,12 @@ export function generateTailwindJSON(colorSystem: ColorSystem, config: JSONGener
  * Returns an array of file objects with name and content properties.
  * Consumers are responsible for writing to filesystem or handling download.
  */
-export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerationConfig = {}): JSONFileData[] {
+export function generateColorJSONFiles(
+	colorSystem: ColorSystem,
+	config: JSONGenerationConfig = {},
+): JSONColorFileData[] {
 	const fullConfig = { ...defaultJSONConfig, ...config };
-	const files: JSONFileData[] = [];
+	const files: JSONColorFileData[] = [];
 	const formats =
 		fullConfig.format === "all"
 			? (["flat", "nested", "tokens", "tailwind", "collections"] as const)
@@ -916,7 +878,7 @@ export function generateJSONFiles(colorSystem: ColorSystem, config: JSONGenerati
 /**
  * Convert color system to various JSON formats
  */
-export function convertToJSON(
+export function convertColorToJSON(
 	colorSystem: ColorSystem,
 	format: "flat" | "nested" | "tokens" | "tailwind" | "collections",
 	appearance?: "light" | "dark",

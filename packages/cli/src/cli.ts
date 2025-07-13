@@ -4,15 +4,9 @@ import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path";
 
 // Color generation imports
-import {
-	type ColorInput,
-	type GenerationConfig,
-	generateColorSystem,
-	loadColorDefinitions,
-	validateColorInput,
-} from "@kevintyj/design/color-generation-core";
-import { type CSSGenerationConfig, generateCSSFiles } from "@kevintyj/design/color-generation-css";
-import { generateJSONFiles, type JSONGenerationConfig } from "@kevintyj/design/color-generation-json";
+import { generateColorSystem, loadColorDefinitions, validateColorInput } from "@kevintyj/design/color-core";
+import { type CSSGenerationConfig, generateColorCSSFiles } from "@kevintyj/design/color-css";
+import { generateColorJSONFiles, type JSONGenerationConfig } from "@kevintyj/design/color-json";
 
 // Spacing generation imports
 import {
@@ -21,13 +15,10 @@ import {
 	type SpacingGenerationConfig,
 	type SpacingInput,
 	validateSpacingInput,
-} from "@kevintyj/design/spacing-generation-core";
+} from "@kevintyj/design/spacing-core";
+import { type CSSSpacingGenerationConfig, generateSpacingCSSFiles } from "@kevintyj/design/spacing-css";
 import {
-	type CSSSpacingGenerationConfig,
-	generateCSSFiles as generateSpacingCSSFiles,
-} from "@kevintyj/design/spacing-generation-css";
-import {
-	generateJSONFiles as generateSpacingJSONFiles,
+	generateSpacingJSONFiles,
 	type JSONSpacingGenerationConfig,
 	reorderSpacingOutput,
 } from "@kevintyj/design/spacing-generation-json";
@@ -317,13 +308,13 @@ async function generateColors(config: CLIConfig): Promise<void> {
 
 		if (config.verbose) spinner.text = `Loading colors from ${inputFile}`;
 
-		const colorInput: ColorInput = await loadColorDefinitions(inputFile);
+		const colorInput = await loadColorDefinitions(inputFile);
 		validateColorInput(colorInput);
 
 		spinner.succeed(`Loaded ${Object.keys(colorInput.light).length} colors from ${inputFile}`);
 
 		const generationSpinner = ora("Generating color scales...").start();
-		const generationConfig: GenerationConfig = {
+		const generationConfig = {
 			includeAlpha: config.includeAlpha,
 			includeWideGamut: config.includeWideGamut,
 			includeGrayScale: config.includeGrayScale,
@@ -343,7 +334,7 @@ async function generateColors(config: CLIConfig): Promise<void> {
 
 				if (!existsSync(cssOutputDir)) mkdirSync(cssOutputDir, { recursive: true });
 
-				const cssFileData = generateCSSFiles(colorSystem, cssConfig);
+				const cssFileData = generateColorCSSFiles(colorSystem, cssConfig);
 				for (const fileData of cssFileData) {
 					const filePath = join(cssOutputDir, fileData.name);
 					writeFileSync(filePath, fileData.content);
@@ -359,7 +350,7 @@ async function generateColors(config: CLIConfig): Promise<void> {
 
 				if (!existsSync(jsonOutputDir)) mkdirSync(jsonOutputDir, { recursive: true });
 
-				const jsonFileData = generateJSONFiles(colorSystem, jsonConfig);
+				const jsonFileData = generateColorJSONFiles(colorSystem, jsonConfig);
 				for (const fileData of jsonFileData) {
 					const filePath = join(jsonOutputDir, fileData.name);
 					writeFileSync(filePath, fileData.content);
@@ -515,7 +506,7 @@ async function generateSystem(config: SystemCLIConfig): Promise<void> {
 		if (config.verbose) spinner.text = `Loading design system from ${inputFile}`;
 
 		// Load both color and spacing definitions
-		const colorInput: ColorInput = await loadColorDefinitions(inputFile);
+		const colorInput = await loadColorDefinitions(inputFile);
 		const spacingInput: SpacingInput = await loadSpacingDefinitions(inputFile);
 
 		validateColorInput(colorInput);
@@ -528,7 +519,7 @@ async function generateSystem(config: SystemCLIConfig): Promise<void> {
 		// Generate both systems
 		const generationSpinner = ora("Generating design system...").start();
 
-		const colorGenerationConfig: GenerationConfig = {
+		const colorGenerationConfig = {
 			includeAlpha: config.includeAlpha,
 			includeWideGamut: config.includeWideGamut,
 			includeGrayScale: config.includeGrayScale,
@@ -557,7 +548,7 @@ async function generateSystem(config: SystemCLIConfig): Promise<void> {
 				if (!existsSync(colorCSSOutputDir)) mkdirSync(colorCSSOutputDir, { recursive: true });
 
 				const colorCSSConfig: CSSGenerationConfig = colorGenerationConfig;
-				const colorCSSFileData = generateCSSFiles(colorSystem, colorCSSConfig);
+				const colorCSSFileData = generateColorCSSFiles(colorSystem, colorCSSConfig);
 				for (const fileData of colorCSSFileData) {
 					const filePath = join(colorCSSOutputDir, fileData.name);
 					writeFileSync(filePath, fileData.content);
@@ -592,7 +583,7 @@ async function generateSystem(config: SystemCLIConfig): Promise<void> {
 				if (!existsSync(colorJSONOutputDir)) mkdirSync(colorJSONOutputDir, { recursive: true });
 
 				const colorJSONConfig: JSONGenerationConfig = colorGenerationConfig;
-				const colorJSONFileData = generateJSONFiles(colorSystem, colorJSONConfig);
+				const colorJSONFileData = generateColorJSONFiles(colorSystem, colorJSONConfig);
 				for (const fileData of colorJSONFileData) {
 					const filePath = join(colorJSONOutputDir, fileData.name);
 					writeFileSync(filePath, fileData.content);

@@ -1,5 +1,5 @@
 {
-	"name": "@kevintyj/design/color-generation-css",
+	"name": "@kevintyj/design/color-css",
 	"version": "1.0.0",
 	"description": "CSS generation utilities for color scales",
 	"main": "dist/index.js",
@@ -23,7 +23,7 @@
 		"format": "biome format --write src/"
 	},
 	"dependencies": {
-		"@kevintyj/design/color-generation-core": "workspace:*"
+		"@kevintyj/design/color-core": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
@@ -40,7 +40,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/kevintyj/design",
-		"directory": "packages/color-generation-css"
+		"directory": "packages/color-css"
 	},
 	"author": "Kevin Taeyoon Jin <hello@kevintyj.com>",
 	"license": "BSD-3-Clause",

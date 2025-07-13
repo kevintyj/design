@@ -1,46 +1,5 @@
-import { generateOverlayColors } from "@kevintyj/design/color-generation-core";
-
-// Import types (will be resolved when packages are built)
-export interface ColorScale {
-	accentScale: string[];
-	accentScaleAlpha: string[];
-	accentScaleWideGamut: string[];
-	accentScaleAlphaWideGamut: string[];
-	accentContrast: string;
-	grayScale: string[];
-	grayScaleAlpha: string[];
-	grayScaleWideGamut: string[];
-	grayScaleAlphaWideGamut: string[];
-	graySurface: string;
-	graySurfaceWideGamut: string;
-	accentSurface: string;
-	accentSurfaceWideGamut: string;
-	background: string;
-	overlays: {
-		black: string[];
-		white: string[];
-	};
-}
-
-export interface ColorSystem {
-	light: Record<string, ColorScale>;
-	dark: Record<string, ColorScale>;
-	colorNames: string[];
-	sourceColors: any;
-	metadata: {
-		generatedAt: string;
-		totalColors: number;
-		totalScales: number;
-		config: any;
-	};
-}
-
-export interface GenerationConfig {
-	includeAlpha?: boolean;
-	includeWideGamut?: boolean;
-	includeGrayScale?: boolean;
-	includeOverlays?: boolean;
-}
+import type { ColorScale, ColorSystem, GenerationConfig } from "@kevintyj/design/color-core";
+import { generateOverlayColors } from "@kevintyj/design/color-core";
 
 // CSS-specific configuration (removed outputDir and file-related options)
 export interface CSSGenerationConfig extends GenerationConfig {
@@ -52,7 +11,7 @@ export interface CSSGenerationConfig extends GenerationConfig {
 }
 
 // File data interface for pure functions
-export interface CSSFileData {
+export interface CSSColorFileData {
 	name: string;
 	content: string;
 }
@@ -471,9 +430,9 @@ export function generateCSSForColorSystem(
  * Returns an array of file objects with name and content properties.
  * Consumers are responsible for writing to filesystem or handling download.
  */
-export function generateCSSFiles(colorSystem: ColorSystem, config: CSSGenerationConfig = {}): CSSFileData[] {
+export function generateColorCSSFiles(colorSystem: ColorSystem, config: CSSGenerationConfig = {}): CSSColorFileData[] {
 	const fullConfig = { ...defaultCSSConfig, ...config };
-	const files: CSSFileData[] = [];
+	const files: CSSColorFileData[] = [];
 
 	// Generate all four versions
 	const versions = [

@@ -14,12 +14,5 @@
 		"forceConsistentCasingInFileNames": true,
 		"allowJs": true,
 		"types": ["bun-types"]
-	},
-	"references": [
-		{ "path": "./packages/color-generation-core" },
-		{ "path": "./packages/color-generation-css" },
-		{ "path": "./packages/color-generation-json" },
-		{ "path": "./packages/cli" },
-		{ "path": "./packages/examples" }
-	]
+	}
 }

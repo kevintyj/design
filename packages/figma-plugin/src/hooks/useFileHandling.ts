@@ -1,7 +1,7 @@
-import type { ColorSystem as ColorSystemCore } from "@kevintyj/design/color-generation-core";
-import { generateCollectionsJSON } from "@kevintyj/design/color-generation-json";
-import { isSimpleCollectionOutputFormat } from "@kevintyj/design/figma-to-json";
-import type { SpacingSystem as SpacingSystemCore } from "@kevintyj/design/spacing-generation-core";
+import type { ColorSystem as ColorSystemCore } from "@kevintyj/design/color-core";
+import { generateCollectionsJSON } from "@kevintyj/design/color-json";
+import { isSimpleCollectionOutputFormat } from "@kevintyj/design/figma-json";
+import type { SpacingSystem as SpacingSystemCore } from "@kevintyj/design/spacing-core";
 import { generateCollectionsSpacingJSON } from "@kevintyj/design/spacing-generation-json";
 import { useCallback } from "react";
 import type { ColorSystem, SpacingSystem } from "../types";

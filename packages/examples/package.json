@@ -12,9 +12,9 @@
 		"all": "bun run basic && bun run advanced && bun run css-only && bun run json-only"
 	},
 	"dependencies": {
-		"@kevintyj/design/color-generation-core": "workspace:*",
-		"@kevintyj/design/color-generation-css": "workspace:*",
-		"@kevintyj/design/color-generation-json": "workspace:*",
+		"@kevintyj/design/color-core": "workspace:*",
+		"@kevintyj/design/color-css": "workspace:*",
+		"@kevintyj/design/color-json": "workspace:*",
 		"@kevintyj/design/cli": "workspace:*"
 	},
 	"devDependencies": {

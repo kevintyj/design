@@ -1,8 +1,8 @@
-import type { ColorSystem as GeneratedColorSystem } from "@kevintyj/design/color-generation-core";
-import { generateCSSForColorSystem } from "@kevintyj/design/color-generation-css";
-import { convertToJSON } from "@kevintyj/design/color-generation-json";
+import { generateCSSForColorSystem } from "@kevintyj/design/color-css";
+import type { ColorSystem } from "@kevintyj/design/color-generation-core";
+import { convertColorToJSON } from "@kevintyj/design/color-json";
 import JSZip from "jszip";
-import type { ColorSystem, ExportData } from "../types";
+import type { ExportData } from "../types";
 
 export const downloadFile = (content: string, filename: string, contentType: string) => {
 	const blob = new Blob([content], { type: contentType });
@@ -84,7 +84,7 @@ export const downloadZip = async (data: ExportData, colorSystem: ColorSystem | n
 /**
  * Create a ZIP file containing generated color scales as CSS with multiple variants
  */
-export const createGeneratedColorScalesCSS = async (generatedColorSystem: GeneratedColorSystem): Promise<Blob> => {
+export const createGeneratedColorScalesCSS = async (generatedColorSystem: ColorSystem): Promise<Blob> => {
 	const zip = new JSZip();
 
 	// Generate all CSS variants
@@ -167,21 +167,20 @@ ${new Date().toISOString()}
 /**
  * Create a ZIP file containing generated color scales as JSON in multiple formats
  */
-export const createGeneratedColorScalesJSON = async (generatedColorSystem: GeneratedColorSystem): Promise<Blob> => {
+export const createGeneratedColorScalesJSON = async (generatedColorSystem: ColorSystem): Promise<Blob> => {
 	const zip = new JSZip();
 
 	const formats = ["flat", "nested", "tokens", "tailwind", "collections"] as const;
 	const modes = ["light", "dark"] as const;
 
 	for (const format of formats) {
-		if (format === "tailwind" || format === "collections") {
-			// These formats include both modes
-			const data = convertToJSON(generatedColorSystem, format, undefined, { prettyPrint: true });
+		if (format === "collections" || format === "tailwind") {
+			const data = convertColorToJSON(generatedColorSystem, format, undefined, { prettyPrint: true });
 			zip.file(`colors-${format}.json`, JSON.stringify(data, null, 2));
 		} else {
 			// These formats are mode-specific
 			for (const mode of modes) {
-				const data = convertToJSON(generatedColorSystem, format, mode, { prettyPrint: true });
+				const data = convertColorToJSON(generatedColorSystem, format, mode, { prettyPrint: true });
 				zip.file(`colors-${format}-${mode}.json`, JSON.stringify(data, null, 2));
 			}
 		}
@@ -230,10 +229,7 @@ ${new Date().toISOString()}
 /**
  * Download generated color scales as a ZIP file
  */
-export const downloadGeneratedColorScalesZip = async (
-	generatedColorSystem: GeneratedColorSystem,
-	type: "css" | "json",
-) => {
+export const downloadGeneratedColorScalesZip = async (generatedColorSystem: ColorSystem, type: "css" | "json") => {
 	try {
 		const blob =
 			type === "css"

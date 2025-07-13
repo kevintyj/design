@@ -1,11 +1,9 @@
-import type { ColorSystem as ColorSystemCore } from "@kevintyj/design/color-generation-core";
-import { generateColorSystem } from "@kevintyj/design/color-generation-core";
-import { convertToJSON, generateCollectionsJSON } from "@kevintyj/design/color-generation-json";
-import type { SpacingSystem as SpacingSystemCore } from "@kevintyj/design/spacing-generation-core";
-import { generateSpacingSystem } from "@kevintyj/design/spacing-generation-core";
-import { generateCSSFiles } from "@kevintyj/design/spacing-generation-css";
-import { generateJSONFiles } from "@kevintyj/design/spacing-generation-json";
-import type React from "react";
+import { type ColorSystem as CoreColorSystem, generateColorSystem } from "@kevintyj/design/color-core";
+import { convertColorToJSON, generateCollectionsJSON } from "@kevintyj/design/color-json";
+import { type SpacingSystem as CoreSpacingSystem, generateSpacingSystem } from "@kevintyj/design/spacing-core";
+import { generateSpacingCSSFiles } from "@kevintyj/design/spacing-css";
+import { generateSpacingJSONFiles } from "@kevintyj/design/spacing-json";
+
 import { useCallback, useEffect, useState } from "react";
 import { useFileHandling } from "../hooks/useFileHandling";
 import { usePluginMessaging } from "../hooks/usePluginMessaging";
@@ -34,7 +32,7 @@ const tabButton = (label: string, onClick: () => void, active?: boolean) => (
 	</button>
 );
 
-const returnGeneratedColorSystem = async (colorSystem: ColorSystem) => {
+const returnGeneratedColorSystem = async (colorSystem: ColorSystem): Promise<CoreColorSystem> => {
 	const colorInput = {
 		light: colorSystem.light,
 		dark: colorSystem.dark,
@@ -52,7 +50,7 @@ const returnGeneratedColorSystem = async (colorSystem: ColorSystem) => {
 	console.log("Available colors:", generatedColorSystem.colorNames);
 
 	// Example: Get a specific color scale
-	generatedColorSystem.colorNames.forEach((colorName) => {
+	generatedColorSystem.colorNames.forEach((colorName: string) => {
 		const lightScale = generatedColorSystem.light[colorName];
 		const darkScale = generatedColorSystem.dark[colorName];
 
@@ -63,15 +61,18 @@ const returnGeneratedColorSystem = async (colorSystem: ColorSystem) => {
 	return generatedColorSystem;
 };
 
-const returnGeneratedSpacingSystem = async (spacingSystem: SpacingSystem) => {
+const returnGeneratedSpacingSystem = async (spacingSystem: SpacingSystem): Promise<CoreSpacingSystem> => {
 	const spacingInput = {
 		spacing: spacingSystem.spacing,
 		multiplier: spacingSystem.multiplier,
-		remValue: spacingSystem.remValue ?? 16,
 	};
 
 	// Generate the complete spacing system with scales
-	const generatedSpacingSystem = generateSpacingSystem(spacingInput);
+	const generatedSpacingSystem = generateSpacingSystem(spacingInput, {
+		includeRem: true,
+		includePx: true,
+		remBase: spacingSystem.remValue ?? 16,
+	});
 	console.log("Generated Spacing System:", generatedSpacingSystem);
 
 	// You can also log specific scales
@@ -175,11 +176,11 @@ export const SystemManagerPlugin: React.FC = () => {
 
 	// Color System
 	const [colorSystem, setColorSystem] = useState<ColorSystem | null>(null);
-	const [generatedColorSystem, setGeneratedColorSystem] = useState<ColorSystemCore | null>(null);
+	const [generatedColorSystem, setGeneratedColorSystem] = useState<CoreColorSystem | null>(null);
 
 	// Spacing System
 	const [spacingSystem, setSpacingSystem] = useState<SpacingSystem | null>(null);
-	const [generatedSpacingSystem, setGeneratedSpacingSystem] = useState<SpacingSystemCore | null>(null);
+	const [generatedSpacingSystem, setGeneratedSpacingSystem] = useState<CoreSpacingSystem | null>(null);
 
 	// Preferences
 	const [preferences, setPreferences] = useState<UserPreferences>({
@@ -514,7 +515,7 @@ export const SystemManagerPlugin: React.FC = () => {
 
 		setIsLoading(true);
 		try {
-			const tailwindConfig = convertToJSON(generatedColorSystem, "tailwind", undefined, { prettyPrint: true });
+			const tailwindConfig = convertColorToJSON(generatedColorSystem, "tailwind", undefined, { prettyPrint: true });
 			const jsonContent = JSON.stringify(tailwindConfig, null, 2);
 
 			downloadFile(jsonContent, "tailwind-colors.json", "application/json");
@@ -542,7 +543,7 @@ export const SystemManagerPlugin: React.FC = () => {
 			console.log("Dark Colors Keys:", Object.keys(generatedColorSystem.dark));
 
 			// Log first few colors to check data integrity
-			generatedColorSystem.colorNames.forEach((colorName, index) => {
+			generatedColorSystem.colorNames.forEach((colorName: string, index: number) => {
 				if (index < 5) {
 					// Log first 5 colors
 					console.log(`Color ${colorName}:`, {
@@ -607,7 +608,7 @@ export const SystemManagerPlugin: React.FC = () => {
 
 		setIsLoading(true);
 		try {
-			const cssFiles = generateCSSFiles(generatedSpacingSystem, {
+			const cssFiles = generateSpacingCSSFiles(generatedSpacingSystem, {
 				variant: "full",
 				includeRem: true,
 			});
@@ -669,7 +670,7 @@ ${new Date().toISOString()}
 
 		setIsLoading(true);
 		try {
-			const jsonFiles = generateJSONFiles(generatedSpacingSystem, {
+			const jsonFiles = generateSpacingJSONFiles(generatedSpacingSystem, {
 				format: "all",
 				prettyPrint: true,
 				includeMetadata: true,
@@ -718,7 +719,7 @@ ${new Date().toISOString()}
 
 		setIsLoading(true);
 		try {
-			const jsonFiles = generateJSONFiles(generatedSpacingSystem, {
+			const jsonFiles = generateSpacingJSONFiles(generatedSpacingSystem, {
 				format: "tailwind",
 				prettyPrint: true,
 				includeRem: false, // Tailwind typically uses px values
@@ -747,7 +748,7 @@ ${new Date().toISOString()}
 
 		setIsLoading(true);
 		try {
-			const jsonFiles = generateJSONFiles(generatedSpacingSystem, {
+			const jsonFiles = generateSpacingJSONFiles(generatedSpacingSystem, {
 				format: "collections",
 				prettyPrint: true,
 			});

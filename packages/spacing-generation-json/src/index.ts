@@ -1,29 +1,5 @@
 // Import types from spacing core
-export interface SpacingSystem {
-	spacing: {
-		values: Record<string, number>;
-		remValues: Record<string, string>;
-		pxValues: Record<string, string>;
-		multiplier: number;
-		metadata: {
-			unit: "px";
-			baseMultiplier: number;
-			totalValues: number;
-		};
-	};
-	sourceSpacing: any;
-	metadata: {
-		generatedAt: string;
-		totalValues: number;
-		config: any;
-	};
-}
-
-export interface SpacingGenerationConfig {
-	includeRem?: boolean;
-	includePx?: boolean;
-	remBase?: number;
-}
+import type { SpacingGenerationConfig, SpacingSystem } from "@kevintyj/design/spacing-core";
 
 // JSON-specific configuration
 export interface JSONSpacingGenerationConfig extends SpacingGenerationConfig {
@@ -36,7 +12,7 @@ export interface JSONSpacingGenerationConfig extends SpacingGenerationConfig {
 }
 
 // File data interface for pure functions
-export interface JSONFileData {
+export interface JSONSpacingFileData {
 	name: string;
 	content: string;
 }
@@ -474,18 +450,18 @@ export function generateCollectionsSpacingJSON(
 /**
  * Generate JSON files from spacing system
  */
-export function generateJSONFiles(
+export function generateSpacingJSONFiles(
 	spacingSystem: SpacingSystem,
 	config: JSONSpacingGenerationConfig = {},
-): JSONFileData[] {
+): JSONSpacingFileData[] {
 	const fullConfig = { ...defaultJSONSpacingConfig, ...config };
-	const files: JSONFileData[] = [];
+	const files: JSONSpacingFileData[] = [];
 
 	const formats =
 		fullConfig.format === "all" ? ["flat", "nested", "tokens", "tailwind", "collections"] : [fullConfig.format];
 
 	for (const format of formats) {
-		const jsonData = convertToJSON(spacingSystem, format as any, fullConfig);
+		const jsonData = convertSpacingToJSON(spacingSystem, format as any, fullConfig);
 		const content = fullConfig.prettyPrint ? JSON.stringify(jsonData, null, 2) : JSON.stringify(jsonData);
 
 		files.push({
@@ -513,7 +489,7 @@ export function generateJSONFiles(
 /**
  * Convert spacing system to specific JSON format
  */
-export function convertToJSON(
+export function convertSpacingToJSON(
 	spacingSystem: SpacingSystem,
 	format: "flat" | "nested" | "tokens" | "tailwind" | "collections",
 	config: JSONSpacingGenerationConfig = {},

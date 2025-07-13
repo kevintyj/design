@@ -41,12 +41,12 @@
         "generate-colors": "./dist/index.js",
       },
       "dependencies": {
-        "@kevintyj/design/color-generation-core": "workspace:*",
-        "@kevintyj/design/color-generation-css": "workspace:*",
-        "@kevintyj/design/color-generation-json": "workspace:*",
-        "@kevintyj/design/spacing-generation-core": "workspace:*",
-        "@kevintyj/design/spacing-generation-css": "workspace:*",
-        "@kevintyj/design/spacing-generation-json": "workspace:*",
+        "@kevintyj/design/color-core": "workspace:*",
+        "@kevintyj/design/color-css": "workspace:*",
+        "@kevintyj/design/color-json": "workspace:*",
+        "@kevintyj/design/spacing-core": "workspace:*",
+        "@kevintyj/design/spacing-css": "workspace:*",
+        "@kevintyj/design/spacing-json": "workspace:*",
         "chalk": "^5.3.0",
         "commander": "^11.0.0",
         "ora": "^7.0.1",
@@ -58,7 +58,7 @@
       },
     },
     "packages/color-generation-core": {
-      "name": "@kevintyj/design/color-generation-core",
+      "name": "@kevintyj/design/color-core",
       "version": "1.0.0",
       "dependencies": {
         "@radix-ui/colors": "^3.0.0",
@@ -71,10 +71,10 @@
       },
     },
     "packages/color-generation-css": {
-      "name": "@kevintyj/design/color-generation-css",
+      "name": "@kevintyj/design/color-css",
       "version": "1.0.0",
       "dependencies": {
-        "@kevintyj/design/color-generation-core": "workspace:*",
+        "@kevintyj/design/color-core": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -83,10 +83,10 @@
       },
     },
     "packages/color-generation-json": {
-      "name": "@kevintyj/design/color-generation-json",
+      "name": "@kevintyj/design/color-json",
       "version": "1.0.0",
       "dependencies": {
-        "@kevintyj/design/color-generation-core": "workspace:*",
+        "@kevintyj/design/color-core": "workspace:*",
         "colorjs.io": "^0.5.0",
       },
       "devDependencies": {
@@ -100,9 +100,9 @@
       "version": "1.0.0",
       "dependencies": {
         "@kevintyj/design/cli": "workspace:*",
-        "@kevintyj/design/color-generation-core": "workspace:*",
-        "@kevintyj/design/color-generation-css": "workspace:*",
-        "@kevintyj/design/color-generation-json": "workspace:*",
+        "@kevintyj/design/color-core": "workspace:*",
+        "@kevintyj/design/color-css": "workspace:*",
+        "@kevintyj/design/color-json": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -116,13 +116,13 @@
       "dependencies": {
         "@figma/plugin-typings": "^1.115.0",
         "@headlessui/react": "^2.2.0",
-        "@kevintyj/design/color-generation-core": "workspace:*",
-        "@kevintyj/design/color-generation-css": "workspace:*",
-        "@kevintyj/design/color-generation-json": "workspace:*",
-        "@kevintyj/design/figma-to-json": "workspace:*",
-        "@kevintyj/design/spacing-generation-core": "workspace:*",
-        "@kevintyj/design/spacing-generation-css": "workspace:*",
-        "@kevintyj/design/spacing-generation-json": "workspace:*",
+        "@kevintyj/design/color-core": "workspace:*",
+        "@kevintyj/design/color-css": "workspace:*",
+        "@kevintyj/design/color-json": "workspace:*",
+        "@kevintyj/design/figma-json": "workspace:*",
+        "@kevintyj/design/spacing-core": "workspace:*",
+        "@kevintyj/design/spacing-css": "workspace:*",
+        "@kevintyj/design/spacing-json": "workspace:*",
         "jszip": "^3.10.1",
         "lucide-react": "^0.525.0",
         "path-browserify": "^1.0.1",
@@ -158,7 +158,7 @@
       },
     },
     "packages/figma-to-json": {
-      "name": "@kevintyj/design/figma-to-json",
+      "name": "@kevintyj/design/figma-json",
       "version": "1.0.0",
       "devDependencies": {
         "@figma/plugin-typings": "^1.115.0",
@@ -168,7 +168,7 @@
       },
     },
     "packages/spacing-generation-core": {
-      "name": "@kevintyj/design/spacing-generation-core",
+      "name": "@kevintyj/design/spacing-core",
       "version": "1.0.0",
       "devDependencies": {
         "@types/bun": "latest",
@@ -176,10 +176,10 @@
       },
     },
     "packages/spacing-generation-css": {
-      "name": "@kevintyj/design/spacing-generation-css",
+      "name": "@kevintyj/design/spacing-css",
       "version": "1.0.0",
       "dependencies": {
-        "@kevintyj/design/spacing-generation-core": "workspace:*",
+        "@kevintyj/design/spacing-core": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -187,10 +187,10 @@
       },
     },
     "packages/spacing-generation-json": {
-      "name": "@kevintyj/design/spacing-generation-json",
+      "name": "@kevintyj/design/spacing-json",
       "version": "1.0.0",
       "dependencies": {
-        "@kevintyj/design/spacing-generation-core": "workspace:*",
+        "@kevintyj/design/spacing-core": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -581,11 +581,11 @@
 
     "@kevintyj/design/cli": ["@kevintyj/design/cli@workspace:packages/cli"],
 
-    "@kevintyj/design/color-generation-core": ["@kevintyj/design/color-generation-core@workspace:packages/color-generation-core"],
+    "@kevintyj/design/color-core": ["@kevintyj/design/color-core@workspace:packages/color-generation-core"],
 
-    "@kevintyj/design/color-generation-css": ["@kevintyj/design/color-generation-css@workspace:packages/color-generation-css"],
+    "@kevintyj/design/color-css": ["@kevintyj/design/color-css@workspace:packages/color-generation-css"],
 
-    "@kevintyj/design/color-generation-json": ["@kevintyj/design/color-generation-json@workspace:packages/color-generation-json"],
+    "@kevintyj/design/color-json": ["@kevintyj/design/color-json@workspace:packages/color-generation-json"],
 
     "@kevintyj/design/docs/slides": ["@kevintyj/design/docs/slides@workspace:docs/slides"],
 
@@ -593,15 +593,15 @@
 
     "@kevintyj/design/examples": ["@kevintyj/design/examples@workspace:packages/examples"],
 
+    "@kevintyj/design/figma-json": ["@kevintyj/design/figma-json@workspace:packages/figma-to-json"],
+
     "@kevintyj/design/figma-plugin": ["@kevintyj/design/figma-plugin@workspace:packages/figma-plugin"],
 
-    "@kevintyj/design/figma-to-json": ["@kevintyj/design/figma-to-json@workspace:packages/figma-to-json"],
+    "@kevintyj/design/spacing-core": ["@kevintyj/design/spacing-core@workspace:packages/spacing-generation-core"],
 
-    "@kevintyj/design/spacing-generation-core": ["@kevintyj/design/spacing-generation-core@workspace:packages/spacing-generation-core"],
+    "@kevintyj/design/spacing-css": ["@kevintyj/design/spacing-css@workspace:packages/spacing-generation-css"],
 
-    "@kevintyj/design/spacing-generation-css": ["@kevintyj/design/spacing-generation-css@workspace:packages/spacing-generation-css"],
-
-    "@kevintyj/design/spacing-generation-json": ["@kevintyj/design/spacing-generation-json@workspace:packages/spacing-generation-json"],
+    "@kevintyj/design/spacing-json": ["@kevintyj/design/spacing-json@workspace:packages/spacing-generation-json"],
 
     "@leichtgewicht/ip-codec": ["@leichtgewicht/ip-codec@2.0.5", "", {}, "sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw=="],
 

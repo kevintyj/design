@@ -1,29 +1,5 @@
 // Import types from spacing core
-export interface SpacingSystem {
-	spacing: {
-		values: Record<string, number>;
-		remValues: Record<string, string>;
-		pxValues: Record<string, string>;
-		multiplier: number;
-		metadata: {
-			unit: "px";
-			baseMultiplier: number;
-			totalValues: number;
-		};
-	};
-	sourceSpacing: any;
-	metadata: {
-		generatedAt: string;
-		totalValues: number;
-		config: any;
-	};
-}
-
-export interface SpacingGenerationConfig {
-	includeRem?: boolean;
-	includePx?: boolean;
-	remBase?: number;
-}
+import type { SpacingGenerationConfig, SpacingSystem } from "@kevintyj/design/spacing-core";
 
 // CSS-specific configuration
 export interface CSSSpacingGenerationConfig extends SpacingGenerationConfig {
@@ -35,7 +11,7 @@ export interface CSSSpacingGenerationConfig extends SpacingGenerationConfig {
 }
 
 // File data interface for pure functions
-export interface CSSFileData {
+export interface CSSSpacingFileData {
 	name: string;
 	content: string;
 }
@@ -153,9 +129,12 @@ function generateRemOnlySpacingScale(
 /**
  * Generate CSS files from spacing system
  */
-export function generateCSSFiles(spacingSystem: SpacingSystem, config: CSSSpacingGenerationConfig = {}): CSSFileData[] {
+export function generateSpacingCSSFiles(
+	spacingSystem: SpacingSystem,
+	config: CSSSpacingGenerationConfig = {},
+): CSSSpacingFileData[] {
 	const fullConfig = { ...defaultCSSSpacingConfig, ...config };
-	const files: CSSFileData[] = [];
+	const files: CSSSpacingFileData[] = [];
 
 	// Generate main spacing CSS
 	const spacingCSS = generateCSSForSpacingSystem(spacingSystem, fullConfig);
