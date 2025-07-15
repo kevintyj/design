@@ -1,6 +1,7 @@
 /// <reference types="@figma/plugin-typings" />
 
 import { exportFigmaVariablesAsCollections, exportFigmaVariablesRaw } from "@kevintyj/design-figma-json";
+import { WINDOW_CONFIG } from "./utils/constants";
 
 interface ColorDefinition {
 	[colorName: string]: string;
@@ -35,7 +36,10 @@ interface FigmaVariableExport {
 }
 
 // Initialize the plugin UI
-figma.showUI(__html__, { width: 720, height: 640 });
+figma.showUI(__html__, {
+	width: WINDOW_CONFIG.default.width,
+	height: WINDOW_CONFIG.default.height,
+});
 
 // Handle messages from the UI
 figma.ui.onmessage = async (msg) => {
@@ -83,10 +87,7 @@ figma.ui.onmessage = async (msg) => {
 					);
 
 					if (!preferencesKey || !colorSystemKey) {
-						console.error("Missing required keys:", {
-							preferencesKey,
-							colorSystemKey,
-						});
+						console.error("Missing required keys:", { preferencesKey, colorSystemKey });
 						return;
 					}
 
@@ -155,6 +156,14 @@ figma.ui.onmessage = async (msg) => {
 					await figma.clientStorage.deleteAsync(msg.data.key);
 				} catch (error) {
 					console.error("Error removing generated colors:", error);
+				}
+				break;
+			case "resize":
+				try {
+					const { width, height } = msg.size;
+					figma.ui.resize(width, height);
+				} catch (error) {
+					console.error("Error resizing UI:", error);
 				}
 				break;
 			default:
@@ -226,9 +235,7 @@ async function handleColorImport(colorSystem: ColorSystem) {
 
 		figma.ui.postMessage({
 			type: "colors-imported",
-			data: {
-				message: `Imported ${Object.keys(colorSystem.light).length + 2} color variables`,
-			},
+			data: { message: `Imported ${Object.keys(colorSystem.light).length + 2} color variables` },
 		});
 	} catch (error) {
 		throw new Error(`Failed to import colors: ${error}`);
@@ -246,9 +253,8 @@ async function importColorVariable(
 ) {
 	try {
 		// Check if variable already exists
-		let variable = figma.variables
-			.getLocalVariables()
-			.find((v) => v.name === name && v.variableCollectionId === collection.id);
+		const localVariables = await figma.variables.getLocalVariablesAsync();
+		let variable = localVariables.find((v) => v.name === name && v.variableCollectionId === collection.id);
 
 		if (!variable) {
 			variable = figma.variables.createVariable(name, collection, "COLOR");
@@ -400,6 +406,7 @@ async function handleJSONExport(colorSystem: ColorSystem) {
 	}
 }
 
+// Export current Figma variables as collections format using @kevintyj/design-figma-to-json
 async function handleFigmaVariablesExportAsCollections() {
 	try {
 		// Use the new package to export all collections with full transparency support
@@ -515,10 +522,12 @@ async function handleFigmaVariablesImport(variablesData: any) {
 				}
 			}
 
+			console.log("importVariable", importVariable);
 			// Check if variable already exists
-			let variable = figma.variables
-				.getLocalVariables()
-				.find((v) => v.name === importVariable.name && v.variableCollectionId === collection.id);
+			const localVariables = await figma.variables.getLocalVariablesAsync();
+			let variable = localVariables.find(
+				(v) => v.name === importVariable.name && v.variableCollectionId === collection.id,
+			);
 
 			if (!variable) {
 				variable = figma.variables.createVariable(importVariable.name, collection, variableType);

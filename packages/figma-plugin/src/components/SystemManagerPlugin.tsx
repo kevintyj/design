@@ -1,6 +1,5 @@
 import { type ColorSystem as CoreColorSystem, generateColorSystem } from "@kevintyj/design-color-core";
 import { convertColorToJSON, generateCollectionsJSON } from "@kevintyj/design-color-json";
-
 import { type SpacingSystem as CoreSpacingSystem, generateSpacingSystem } from "@kevintyj/design-spacing-core";
 import { generateSpacingCSSFiles } from "@kevintyj/design-spacing-css";
 import { generateSpacingJSONFiles } from "@kevintyj/design-spacing-json";
@@ -9,17 +8,15 @@ import { useCallback, useEffect, useState } from "react";
 import { useFileHandling } from "../hooks/useFileHandling";
 import { usePluginMessaging } from "../hooks/usePluginMessaging";
 import type { ColorSystem, SpacingSystem, Tab, UserPreferences } from "../types";
+import { STORAGE_KEYS } from "../utils/constants";
 import { downloadFile, downloadGeneratedColorScalesZip } from "../utils/download";
 import { ColorConfigureTab } from "./ColorConfigureTab";
 import { ExportTab } from "./ExportTab";
 import { PreferencesTab } from "./PreferencesTab";
+import { Resizer } from "./Resizer";
 import { SpacingConfigureTab } from "./SpacingConfigureTab";
 import { StatusMessage } from "./StatusMessage";
 import { VariablesTab } from "./VariablesTab";
-
-const CLIENT_STORAGE_KEY = "figma-color-system";
-const _SPACING_STORAGE_KEY = "figma-spacing-system";
-const PREFERENCES_KEY = "figma-preferences";
 
 const tabButton = (label: string, onClick: () => void, active?: boolean) => (
 	<button
@@ -259,15 +256,15 @@ export const SystemManagerPlugin: React.FC = () => {
 	// Load saved preferences and data from figma.clientStorage on component mount
 	useEffect(() => {
 		console.log("Sending load-client-storage message with keys:", {
-			preferencesKey: PREFERENCES_KEY,
-			colorSystemKey: CLIENT_STORAGE_KEY,
-			spacingSystemKey: _SPACING_STORAGE_KEY,
+			preferencesKey: STORAGE_KEYS.PREFERENCES,
+			colorSystemKey: STORAGE_KEYS.CLIENT_STORAGE,
+			spacingSystemKey: STORAGE_KEYS.SPACING_STORAGE,
 		});
 
 		sendPluginMessage("load-client-storage", {
-			preferencesKey: PREFERENCES_KEY,
-			colorSystemKey: CLIENT_STORAGE_KEY,
-			spacingSystemKey: _SPACING_STORAGE_KEY,
+			preferencesKey: STORAGE_KEYS.PREFERENCES,
+			colorSystemKey: STORAGE_KEYS.CLIENT_STORAGE,
+			spacingSystemKey: STORAGE_KEYS.SPACING_STORAGE,
 		});
 	}, [sendPluginMessage]);
 
@@ -275,7 +272,7 @@ export const SystemManagerPlugin: React.FC = () => {
 	useEffect(() => {
 		if (preferences.saveColorSystem && colorSystem) {
 			sendPluginMessage("save-color-system", {
-				key: CLIENT_STORAGE_KEY,
+				key: STORAGE_KEYS.CLIENT_STORAGE,
 				colorSystem: colorSystem,
 			});
 			setMessageWithKey("Color system saved to Figma storage");
@@ -286,7 +283,7 @@ export const SystemManagerPlugin: React.FC = () => {
 	useEffect(() => {
 		if (preferences.saveSpacingSystem && spacingSystem) {
 			sendPluginMessage("save-spacing-system", {
-				key: _SPACING_STORAGE_KEY,
+				key: STORAGE_KEYS.SPACING_STORAGE,
 				spacingSystem: spacingSystem,
 			});
 			setMessageWithKey("Spacing system saved to Figma storage");
@@ -296,7 +293,7 @@ export const SystemManagerPlugin: React.FC = () => {
 	// Save preferences to figma.clientStorage when they change
 	useEffect(() => {
 		sendPluginMessage("save-preferences", {
-			key: PREFERENCES_KEY,
+			key: STORAGE_KEYS.PREFERENCES,
 			preferences: preferences,
 		});
 	}, [preferences, sendPluginMessage]);
@@ -310,14 +307,14 @@ export const SystemManagerPlugin: React.FC = () => {
 				if (enabled && colorSystem) {
 					// Immediately save the current color system when checkbox is checked
 					sendPluginMessage("save-color-system", {
-						key: CLIENT_STORAGE_KEY,
+						key: STORAGE_KEYS.CLIENT_STORAGE,
 						colorSystem: colorSystem,
 					});
 					setMessageWithKey("Color system saved to Figma storage");
 				} else if (!enabled) {
 					// Clear saved color system when disabled
 					sendPluginMessage("remove-color-system", {
-						key: CLIENT_STORAGE_KEY,
+						key: STORAGE_KEYS.CLIENT_STORAGE,
 					});
 					setMessageWithKey("Color system removed from Figma storage");
 				}
@@ -327,14 +324,14 @@ export const SystemManagerPlugin: React.FC = () => {
 				if (enabled && spacingSystem) {
 					// Immediately save the current spacing system when checkbox is checked
 					sendPluginMessage("save-spacing-system", {
-						key: _SPACING_STORAGE_KEY,
+						key: STORAGE_KEYS.SPACING_STORAGE,
 						spacingSystem: spacingSystem,
 					});
 					setMessageWithKey("Spacing system saved to Figma storage");
 				} else if (!enabled) {
 					// Clear saved spacing system when disabled
 					sendPluginMessage("remove-spacing-system", {
-						key: _SPACING_STORAGE_KEY,
+						key: STORAGE_KEYS.SPACING_STORAGE,
 					});
 					setMessageWithKey("Spacing system removed from Figma storage");
 				}
@@ -448,7 +445,7 @@ export const SystemManagerPlugin: React.FC = () => {
 		// Also clear from Figma storage if save is enabled
 		if (preferences.saveColorSystem) {
 			sendPluginMessage("remove-color-system", {
-				key: CLIENT_STORAGE_KEY,
+				key: STORAGE_KEYS.CLIENT_STORAGE,
 			});
 			setMessageWithKey("Color system reset and removed from Figma storage");
 		} else {
@@ -463,7 +460,7 @@ export const SystemManagerPlugin: React.FC = () => {
 		// Also clear from Figma storage if save is enabled
 		if (preferences.saveSpacingSystem) {
 			sendPluginMessage("remove-spacing-system", {
-				key: _SPACING_STORAGE_KEY,
+				key: STORAGE_KEYS.SPACING_STORAGE,
 			});
 			setMessageWithKey("Spacing system reset and removed from Figma storage");
 		} else {
@@ -844,8 +841,8 @@ ${new Date().toISOString()}
 	return (
 		<div className="w-full h-full bg-white">
 			{/* Header */}
-			<div className="fixed top-0 left-0 right-0 px-5 pt-2 border-b border-gray-7 bg-gray-2 z-50">
-				<div className="flex items-start justify-between">
+			<div className="fixed top-0 left-0 right-0 px-5 pt-2 border-b border-gray-7 bg-gray-2 z-50 h-24 flex flex-col justify-between items-center">
+				<div className="flex items-start justify-between w-full">
 					<div>
 						<h1 className="text-lg font-serif font-medium text-gray-12">Design System Manager</h1>
 						<a
@@ -889,7 +886,7 @@ ${new Date().toISOString()}
 					</div>
 				</div>
 
-				<nav className="flex gap-x-2 pt-2">
+				<nav className="flex gap-x-2 pt-2 w-full">
 					{tabButton("Color", () => setActiveTab("color"), activeTab === "color")}
 					{tabButton("Spacing", () => setActiveTab("spacing"), activeTab === "spacing")}
 					{tabButton("Export", () => setActiveTab("export"), activeTab === "export")}
@@ -927,6 +924,7 @@ ${new Date().toISOString()}
 					<StatusMessage message={message} messageKey={messageKey} />
 				</div>
 			</div>
+			<Resizer />
 		</div>
 	);
 };

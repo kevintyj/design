@@ -52,3 +52,11 @@ export interface ExportData {
 	filename: string;
 	type: "css" | "json";
 }
+
+export interface ResizeMessage {
+	type: "resize";
+	size: {
+		width: number;
+		height: number;
+	};
+}

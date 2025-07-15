@@ -1,3 +1,7 @@
+#!/usr/bin/env bun
+
+import { cli } from "./cli";
+
 // Re-export CLI functionality
 export * from "./cli";
 
@@ -11,4 +15,12 @@ export interface CLIConfig {
 	includeGrayScale: boolean;
 	verbose: boolean;
 	watch?: boolean;
+}
+
+// Only run CLI if this script is being executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+	cli().catch((error) => {
+		console.error("❌ Error:", error instanceof Error ? error.message : error);
+		process.exit(1);
+	});
 }

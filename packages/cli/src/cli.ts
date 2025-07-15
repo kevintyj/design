@@ -1537,5 +1537,23 @@ program.action(() => {
 	console.log("  design-system system validate");
 });
 
-// Parse CLI arguments
-program.parse();
+// Export the main CLI function
+export function cli(): Promise<void> {
+	return new Promise((resolve, reject) => {
+		try {
+			// Parse CLI arguments
+			program.parse();
+			resolve();
+		} catch (error) {
+			reject(error);
+		}
+	});
+}
+
+// Parse CLI arguments when run directly
+if (import.meta.main) {
+	cli().catch((error) => {
+		console.error("❌ Error:", error instanceof Error ? error.message : error);
+		process.exit(1);
+	});
+}

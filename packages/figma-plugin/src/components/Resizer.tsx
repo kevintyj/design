@@ -1,13 +1,21 @@
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
 import type { ResizeMessage } from "../types";
+import { WINDOW_CONFIG } from "../utils/constants";
 
 interface ResizerProps {
 	minWidth?: number;
 	minHeight?: number;
+	maxWidth?: number;
+	maxHeight?: number;
 }
 
-export const Resizer: React.FC<ResizerProps> = ({ minWidth = 240, minHeight = 180 }) => {
+export const Resizer: React.FC<ResizerProps> = ({
+	minWidth = WINDOW_CONFIG.min?.width,
+	minHeight = WINDOW_CONFIG.min?.height,
+	maxWidth = WINDOW_CONFIG.max?.width,
+	maxHeight = WINDOW_CONFIG.max?.height,
+}) => {
 	const [isDragging, setIsDragging] = useState(false);
 	const animationFrameRef = useRef<number>(0);
 
@@ -25,18 +33,23 @@ export const Resizer: React.FC<ResizerProps> = ({ minWidth = 240, minHeight = 18
 			e.preventDefault();
 			setIsDragging(true);
 
-			// Capture pointer to ensure we get all move events
 			(e.target as HTMLElement).setPointerCapture(e.pointerId);
 
 			const handlePointerMove = (moveEvent: PointerEvent) => {
-				// Throttle with requestAnimationFrame to prevent UI jitter
 				if (animationFrameRef.current) {
 					cancelAnimationFrame(animationFrameRef.current);
 				}
 
 				animationFrameRef.current = requestAnimationFrame(() => {
-					const newWidth = Math.max(minWidth, Math.floor(moveEvent.clientX + 16));
-					const newHeight = Math.max(minHeight, Math.floor(moveEvent.clientY + 16));
+					let newWidth = Math.floor(moveEvent.clientX);
+					let newHeight = Math.floor(moveEvent.clientY);
+
+					// Apply constraints
+					if (minWidth) newWidth = Math.max(minWidth, newWidth);
+					if (minHeight) newHeight = Math.max(minHeight, newHeight);
+
+					if (maxWidth) newWidth = Math.min(maxWidth, newWidth);
+					if (maxHeight) newHeight = Math.min(maxHeight, newHeight);
 
 					sendResizeMessage(newWidth, newHeight);
 				});
@@ -44,48 +57,81 @@ export const Resizer: React.FC<ResizerProps> = ({ minWidth = 240, minHeight = 18
 
 			const handlePointerUp = () => {
 				setIsDragging(false);
-
-				// Clean up event listeners
 				document.removeEventListener("pointermove", handlePointerMove);
 				document.removeEventListener("pointerup", handlePointerUp);
 
-				// Clean up animation frame
 				if (animationFrameRef.current) {
 					cancelAnimationFrame(animationFrameRef.current);
 				}
 			};
 
-			// Add global event listeners for smoother dragging
 			document.addEventListener("pointermove", handlePointerMove);
 			document.addEventListener("pointerup", handlePointerUp);
 		},
-		[minWidth, minHeight, sendResizeMessage],
+		[minWidth, minHeight, maxWidth, maxHeight, sendResizeMessage],
 	);
+
+	const [isHovering, setIsHovering] = useState(false);
+
+	const getFillColor = () => {
+		if (isDragging) return "rgb(251 138 118 / 0.32)";
+		if (isHovering) return "rgb(251 138 118 / 0.16)";
+		return "rgb(0 0 0 / 0.08)";
+	};
 
 	return (
 		<div
-			className={`
-				fixed bottom-0 right-0 w-4 h-4 
-				cursor-nw-resize select-none
-				${isDragging ? "bg-blue-500/20" : "hover:bg-gray-100/50"}
+			className="
+				fixed bottom-0 right-0 w-5 h-5
+				cursor-nwse-resize select-none z-50
 				transition-colors duration-150
-			`}
+				opacity-40 hover:opacity-80
+			"
 			onPointerDown={handlePointerDown}
+			onPointerEnter={() => setIsHovering(true)}
+			onPointerLeave={() => setIsHovering(false)}
 			style={{ touchAction: "none" }}
 		>
-			{/* SVG Triangle Icon */}
-			<svg
-				width="16"
-				height="16"
-				viewBox="0 0 16 16"
-				className="absolute bottom-0 right-0 pointer-events-none"
-				fill="none"
-				xmlns="http://www.w3.org/2000/svg"
-				aria-label="Resize handle"
-			>
+			<svg width="100%" height="100%" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
 				<title>Resize handle</title>
-				<path d="M16 16L16 10L10 16L16 16Z" fill="white" stroke="#666" strokeWidth="1" />
-				<path d="M16 16L16 6L6 16L16 16Z" fill="white" stroke="#666" strokeWidth="1" />
+				<g clip-path="url(#clip0_71_1140)">
+					<path
+						d="M38 40C39.1046 40 40 39.1046 40 38V2.82843C40 1.04662 37.8457 0.154284 36.5858 1.41421L1.41421 36.5858C0.154283 37.8457 1.04662 40 2.82843 40H38Z"
+						fill={getFillColor()}
+					/>
+					<line
+						x1="26.2713"
+						y1="34.1161"
+						x2="34.1162"
+						y2="26.2712"
+						stroke="black"
+						stroke-opacity="0.36"
+						stroke-width="2.5"
+					/>
+					<line
+						x1="13.8501"
+						y1="34.1161"
+						x2="34.1161"
+						y2="13.8501"
+						stroke="black"
+						stroke-opacity="0.36"
+						stroke-width="2.5"
+					/>
+					<line
+						x1="20.3875"
+						y1="34.1161"
+						x2="34.1161"
+						y2="20.3875"
+						stroke="black"
+						stroke-opacity="0.36"
+						stroke-width="2.5"
+					/>
+				</g>
+				<defs>
+					<clipPath id="clip0_71_1140">
+						<rect width="40" height="40" fill="transparent" />
+					</clipPath>
+				</defs>
 			</svg>
 		</div>
 	);

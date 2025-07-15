@@ -1,6 +1,6 @@
 ![CLI Tool](../../assets/banner-cli.svg)
 
-# @kevintyj/design-cli
+# @kevintyj/design/cli
 
 Command-line interface for design system generation. Generate colors, spacing, and complete design systems from your `base.ts` configuration file.
 
@@ -22,30 +22,30 @@ Command-line interface for design system generation. Generate colors, spacing, a
 ## 📦 Installation
 
 ```bash
-bun add @kevintyj/design-cli
+bun add @kevintyj/design/cli
 ```
 
 ## 🚀 Quick Start
 
 ```bash
 # Help
-bun @kevintyj/design-cli help
+bun @kevintyj/design/cli help
 
 # Generate complete design system
-bun @kevintyj/design-cli system quick
+bun @kevintyj/design/cli system quick
 
 # Generate colors from base.ts
-bun @kevintyj/design-cli colors quick
+bun @kevintyj/design/cli colors quick
 
 # Generate spacing from base.ts
-bun @kevintyj/design-cli spacing quick
+bun @kevintyj/design/cli spacing quick
 
 # Validate definitions
-bun @kevintyj/design-cli system validate
+bun @kevintyj/design/cli system validate
 
 # List available colors and spacing
-bun @kevintyj/design-cli colors list
-bun @kevintyj/design-cli spacing list
+bun @kevintyj/design/cli colors list
+bun @kevintyj/design/cli spacing list
 ```
 
 ## 📖 Commands Overview
@@ -56,7 +56,7 @@ bun @kevintyj/design-cli spacing list
 Generate complete design system with all features enabled.
 
 ```bash
-bun @kevintyj/design-cli system quick [options]
+bun @kevintyj/design/cli system quick [options]
 
 Options:
   --input <file>     Input file path (default: "./base.ts")
@@ -68,7 +68,7 @@ Options:
 Quick color generation with all features enabled.
 
 ```bash
-bun @kevintyj/design-cli colors quick [options]
+bun @kevintyj/design/cli colors quick [options]
 
 Options:
   --input <file>     Input file path (default: "./base.ts")
@@ -80,7 +80,7 @@ Options:
 Quick spacing generation with all features enabled.
 
 ```bash
-bun @kevintyj/design-cli spacing quick [options]
+bun @kevintyj/design/cli spacing quick [options]
 
 Options:
   --input <file>     Input file path (default: "./base.ts")
@@ -94,7 +94,7 @@ Options:
 Validates both color and spacing definitions in `base.ts`.
 
 ```bash
-bun @kevintyj/design-cli system validate [options]
+bun @kevintyj/design/cli system validate [options]
 
 Options:
   --input <file>    Input file path (default: "./base.ts")
@@ -105,7 +105,7 @@ Options:
 Validates color definitions in `base.ts`.
 
 ```bash
-bun @kevintyj/design-cli colors validate [options]
+bun @kevintyj/design/cli colors validate [options]
 
 Options:
   --input <file>    Input file path (default: "./base.ts")
@@ -116,7 +116,7 @@ Options:
 Validates spacing definitions in `base.ts`.
 
 ```bash
-bun @kevintyj/design-cli spacing validate [options]
+bun @kevintyj/design/cli spacing validate [options]
 
 Options:
   --input <file>    Input file path (default: "./base.ts")
@@ -129,7 +129,7 @@ Options:
 Lists all available colors with visual preview.
 
 ```bash
-bun @kevintyj/design-cli colors list [options]
+bun @kevintyj/design/cli colors list [options]
 
 Options:
   --input <file>    Input file path (default: "./base.ts")
@@ -140,7 +140,7 @@ Options:
 Lists all available spacing values with visual preview.
 
 ```bash
-bun @kevintyj/design-cli spacing list [options]
+bun @kevintyj/design/cli spacing list [options]
 
 Options:
   --input <file>    Input file path (default: "./base.ts")
@@ -153,7 +153,7 @@ Options:
 Full control system generation.
 
 ```bash
-bun @kevintyj/design-cli system generate [options]
+bun @kevintyj/design/cli system generate [options]
 
 Options:
   --input <file>         Input file path (default: "./base.ts")
@@ -166,7 +166,7 @@ Options:
 Full control color generation.
 
 ```bash
-bun @kevintyj/design-cli colors generate [options]
+bun @kevintyj/design/cli colors generate [options]
 
 Options:
   --input <file>         Input file path (default: "./base.ts")
@@ -185,7 +185,7 @@ Options:
 Full control spacing generation.
 
 ```bash
-bun @kevintyj/design-cli spacing generate [options]
+bun @kevintyj/design/cli spacing generate [options]
 
 Options:
   --input <file>         Input file path (default: "./base.ts")
@@ -204,7 +204,7 @@ Options:
 Generate complete Figma-compatible JSON.
 
 ```bash
-bun @kevintyj/design-cli system figma [options]
+bun @kevintyj/design/cli system figma [options]
 
 Options:
   --input <file>     Input file path (default: "./base.ts")
@@ -217,7 +217,7 @@ Options:
 Generate Figma-compatible color JSON.
 
 ```bash
-bun @kevintyj/design-cli colors figma [options]
+bun @kevintyj/design/cli colors figma [options]
 
 Options:
   --input <file>     Input file path (default: "./base.ts")
@@ -230,7 +230,7 @@ Options:
 Generate Figma-compatible spacing JSON.
 
 ```bash
-bun @kevintyj/design-cli spacing figma [options]
+bun @kevintyj/design/cli spacing figma [options]
 
 Options:
   --input <file>     Input file path (default: "./base.ts")
@@ -295,89 +295,89 @@ output/
 
 ```bash
 # Quick generation of complete design system
-bun @kevintyj/design-cli system quick
+bun @kevintyj/design/cli system quick
 
 # Generate to specific directory
-bun @kevintyj/design-cli system quick --output ./dist/design-system
+bun @kevintyj/design/cli system quick --output ./dist/design-system
 
 # Generate with verbose output
-bun @kevintyj/design-cli system generate --verbose
+bun @kevintyj/design/cli system generate --verbose
 
 # Generate only CSS files for the entire system
-bun @kevintyj/design-cli system generate --formats css --output ./styles
+bun @kevintyj/design/cli system generate --formats css --output ./styles
 ```
 
 ### Color Generation
 
 ```bash
 # Quick color generation with default settings
-bun @kevintyj/design-cli colors quick
+bun @kevintyj/design/cli colors quick
 
 # Generate only CSS files
-bun @kevintyj/design-cli colors generate --formats css --output ./styles
+bun @kevintyj/design/cli colors generate --formats css --output ./styles
 
 # Generate minimal colors (no alpha, no P3)
-bun @kevintyj/design-cli colors generate --no-alpha --no-wide-gamut --output ./minimal
+bun @kevintyj/design/cli colors generate --no-alpha --no-wide-gamut --output ./minimal
 
 # Generate with custom CSS prefix
-bun @kevintyj/design-cli colors generate --css-prefix "--theme" --formats css
+bun @kevintyj/design/cli colors generate --css-prefix "--theme" --formats css
 
 # Generate pretty JSON tokens
-bun @kevintyj/design-cli colors generate --formats json --json-format tokens --json-pretty
+bun @kevintyj/design/cli colors generate --formats json --json-format tokens --json-pretty
 ```
 
 ### Spacing Generation
 
 ```bash
 # Quick spacing generation
-bun @kevintyj/design-cli spacing quick
+bun @kevintyj/design/cli spacing quick
 
 # Generate only CSS files
-bun @kevintyj/design-cli spacing generate --formats css --output ./styles
+bun @kevintyj/design/cli spacing generate --formats css --output ./styles
 
 # Generate without utility classes
-bun @kevintyj/design-cli spacing generate --no-utilities --formats css
+bun @kevintyj/design/cli spacing generate --no-utilities --formats css
 
 # Generate Tailwind-compatible JSON
-bun @kevintyj/design-cli spacing generate --formats json --json-format tailwind
+bun @kevintyj/design/cli spacing generate --formats json --json-format tailwind
 
 # Generate with custom CSS prefix
-bun @kevintyj/design-cli spacing generate --css-prefix "--space" --formats css
+bun @kevintyj/design/cli spacing generate --css-prefix "--space" --formats css
 ```
 
 ### Validation and Inspection
 
 ```bash
 # Validate complete system
-bun @kevintyj/design-cli system validate --verbose
+bun @kevintyj/design/cli system validate --verbose
 
 # Validate colors only
-bun @kevintyj/design-cli colors validate --verbose
+bun @kevintyj/design/cli colors validate --verbose
 
 # Validate spacing only
-bun @kevintyj/design-cli spacing validate --verbose
+bun @kevintyj/design/cli spacing validate --verbose
 
 # List colors with details
-bun @kevintyj/design-cli colors list
+bun @kevintyj/design/cli colors list
 
 # List spacing values
-bun @kevintyj/design-cli spacing list
+bun @kevintyj/design/cli spacing list
 
 # Check definitions from different file
-bun @kevintyj/design-cli system validate --input ./design-tokens.ts
+bun @kevintyj/design/cli system validate --input ./design-tokens.ts
 ```
 
 ### Figma Integration
 
 ```bash
 # Generate complete Figma export
-bun @kevintyj/design-cli system figma --output ./figma-export
+bun @kevintyj/design/cli system figma --output ./figma-export
 
 # Generate color collections for Figma
-bun @kevintyj/design-cli colors figma --format collections --verbose
+bun @kevintyj/design/cli colors figma --format collections --verbose
 
 # Generate spacing variables for Figma
-bun @kevintyj/design-cli spacing figma --format variables
+bun @kevintyj/design/cli spacing figma --format variables
 ```
 
 ## 🎨 Expected Input Format
@@ -601,9 +601,9 @@ bun run build:clean && bun run build
 # Add to package.json scripts
 {
   "scripts": {
-    "design:build": "bun @kevintyj/design-cli system quick --output ./src/styles",
-    "design:colors": "bun @kevintyj/design-cli colors generate --formats css --output ./src/styles/colors",
-    "design:spacing": "bun @kevintyj/design-cli spacing generate --formats css --output ./src/styles/spacing"
+    "design:build": "bun @kevintyj/design/cli system quick --output ./src/styles",
+    "design:colors": "bun @kevintyj/design/cli colors generate --formats css --output ./src/styles/colors",
+    "design:spacing": "bun @kevintyj/design/cli spacing generate --formats css --output ./src/styles/spacing"
   }
 }
 ```
@@ -615,18 +615,18 @@ bun run build:clean && bun run build
 - name: Generate Design System
   run: |
     bun install
-    bun @kevintyj/design-cli system generate --output ./dist/design-system
-    bun @kevintyj/design-cli system validate
+    bun @kevintyj/design/cli system generate --output ./dist/design-system
+    bun @kevintyj/design/cli system validate
 ```
 
 ### With CSS Frameworks
 
 ```bash
 # Generate Tailwind-compatible config
-bun @kevintyj/design-cli system generate --formats json --json-format tailwind --output ./tailwind
+bun @kevintyj/design/cli system generate --formats json --json-format tailwind --output ./tailwind
 
 # Generate CSS custom properties for any framework
-bun @kevintyj/design-cli system generate --formats css --output ./src/styles
+bun @kevintyj/design/cli system generate --formats css --output ./src/styles
 ```
 
 ## 📄 License

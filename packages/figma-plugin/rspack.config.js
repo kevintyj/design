@@ -1,7 +1,7 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const InlineChunkHtmlPlugin = require("react-dev-utils/InlineChunkHtmlPlugin");
 const path = require("node:path");
-const webpack = require("webpack");
+const { rspack } = require("@rspack/core");
 
 module.exports = (_env, argv) => ({
 	mode: argv.mode === "production" ? "production" : "development",
@@ -15,43 +15,28 @@ module.exports = (_env, argv) => ({
 
 	module: {
 		rules: [
-			// Converts TypeScript code to JavaScript with Babel for better compatibility
+			// Converts TypeScript code to JavaScript with SWC for better performance
 			{
 				test: /\.(tsx?|jsx?|mjs|js)$/,
 				exclude: /node_modules\/(?!(@kevintyj)\/).*/,
-				use: [
-					{
-						loader: "babel-loader",
-						options: {
-							presets: [
-								[
-									"@babel/preset-env",
-									{
-										targets: {
-											browsers: ["ie >= 11"],
-										},
-										modules: false,
-										useBuiltIns: "usage",
-										corejs: 3,
-									},
-								],
-								"@babel/preset-typescript",
-								[
-									"@babel/preset-react",
-									{
-										runtime: "automatic",
-									},
-								],
-							],
-							plugins: [
-								"@babel/plugin-proposal-class-properties",
-								"@babel/plugin-proposal-object-rest-spread",
-								"@babel/plugin-proposal-nullish-coalescing-operator",
-								"@babel/plugin-proposal-optional-chaining",
-							],
+				loader: "builtin:swc-loader",
+				options: {
+					jsc: {
+						parser: {
+							syntax: "typescript",
+							tsx: true,
+							decorators: true,
 						},
+						transform: {
+							react: {
+								runtime: "automatic",
+								development: argv.mode !== "production",
+							},
+						},
+						target: "es5",
+						externalHelpers: true,
 					},
-				],
+				},
 			},
 
 			// Enables including CSS by doing "import './file.css'" in your TypeScript code
@@ -84,7 +69,7 @@ module.exports = (_env, argv) => ({
 
 	// Tells Webpack to generate "ui.html" and to inline "ui.ts" into it
 	plugins: [
-		new webpack.DefinePlugin({
+		new rspack.DefinePlugin({
 			global: {}, // Fix missing symbol error when running in developer VM
 		}),
 		new HtmlWebpackPlugin({
