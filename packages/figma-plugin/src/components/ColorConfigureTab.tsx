@@ -3,6 +3,7 @@ import { TrashIcon } from "lucide-react";
 import type React from "react";
 import { useCallback } from "react";
 import type { ColorSystem } from "../types";
+import { Alert } from "./Alert";
 import { FileDropzone } from "./FileDropzone";
 import GeneratedColorTable from "./GeneratedColorTable";
 
@@ -93,15 +94,13 @@ export const ColorConfigureTab: React.FC<ConfigureTabProps> = ({
 
 				{colorSystem && (
 					<>
-						<div className="bg-green-3 border border-green-7 px-4 py-2">
-							<p className="text-xs font-mono text-green-11">
-								Color system loaded:
-								<br />
-								{Object.keys(colorSystem.light).length} colors
-								<br />
-								{Object.keys(colorSystem.constants.light).length} constants
-							</p>
-						</div>
+						<Alert variant="success" size="sm">
+							Color system loaded:
+							<br />
+							{Object.keys(colorSystem.light).length} colors
+							<br />
+							{Object.keys(colorSystem.constants.light).length} constants
+						</Alert>
 						<div>
 							<h3 className="text-sm font-medium text-gray-12 pb-1">Loaded colors:</h3>
 							{colorList(colorSystem)}

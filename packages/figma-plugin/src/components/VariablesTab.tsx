@@ -1,8 +1,8 @@
 import type { ColorSystem as ColorSystemCore } from "@kevintyj/design-color-core";
 import type { SpacingSystem as SpacingSystemCore } from "@kevintyj/design-spacing-core";
 import type React from "react";
+import { Alert } from "./Alert";
 import { FileDropzone } from "./FileDropzone";
-import { StatusMessage } from "./StatusMessage";
 
 interface VariablesTabProps {
 	isLoading: boolean;
@@ -107,11 +107,7 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 
 							{!generatedColorSystem && (
 								<div className="mt-3">
-									<StatusMessage
-										message="Please generate a color system first to enable color variable import."
-										type="warning"
-										dismissible={false}
-									/>
+									<Alert variant="warning">Please generate a color system first to enable color variable import.</Alert>
 								</div>
 							)}
 						</div>
@@ -149,11 +145,9 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 
 							{!generatedSpacingSystem && (
 								<div className="mt-3">
-									<StatusMessage
-										message="Please generate a spacing system first to enable spacing variable import."
-										type="warning"
-										dismissible={false}
-									/>
+									<Alert variant="warning">
+										Please generate a spacing system first to enable spacing variable import.
+									</Alert>
 								</div>
 							)}
 						</div>
@@ -220,7 +214,13 @@ export const VariablesTab: React.FC<VariablesTabProps> = ({
 						)}
 					</div>
 				) : (
-					<StatusMessage message="No variables to import" type="info" dismissible={false} />
+					<div className="bg-blue-3 hover:bg-blue-4 border border-blue-7 transition-all duration-300 ease-out transform">
+						<div className="flex items-center justify-between">
+							<p className="font-mono text-xs py-1.5 px-3 flex-1 text-blue-11 border-l-2 border-blue-11">
+								No variables to import
+							</p>
+						</div>
+					</div>
 				)}
 				<button
 					type="button"

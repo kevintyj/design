@@ -9,8 +9,8 @@ module.exports = (_env, argv) => ({
 	cache: false,
 
 	entry: {
-		ui: "./src/ui.tsx", // The entry point for our UI
-		code: "./src/code.ts", // The entry point for our figma code
+		ui: "./src/ui.tsx",
+		code: "./src/code.ts",
 	},
 
 	module: {

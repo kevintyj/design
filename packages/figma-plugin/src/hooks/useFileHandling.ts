@@ -1,16 +1,16 @@
 import type { ColorSystem as ColorSystemCore } from "@kevintyj/design-color-core";
 import { generateCollectionsJSON } from "@kevintyj/design-color-json";
-import { isSimpleCollectionOutputFormat } from "@kevintyj/design-figma-json";
+import { convertSimpleCollectionOutputToRawFormat, isSimpleCollectionOutputFormat } from "@kevintyj/design-figma-json";
 import type { SpacingSystem as SpacingSystemCore } from "@kevintyj/design-spacing-core";
 import { generateCollectionsSpacingJSON } from "@kevintyj/design-spacing-json";
 import { useCallback } from "react";
+import { toast } from "../hooks/useToast";
 import type { ColorSystem, SpacingSystem } from "../types";
 
 interface UseFileHandlingProps {
 	setColorSystem: (system: ColorSystem | null) => void;
 	setSpacingSystem: (system: SpacingSystem | null) => void;
 	setIsLoading: (loading: boolean) => void;
-	setMessage: (message: string) => void;
 	sendPluginMessage: (type: string, data?: any) => void;
 	setParsedVariables?: (variables: any) => void;
 }
@@ -159,113 +159,6 @@ function isSimpleCollectionFormat(data: any): boolean {
 		);
 	}
 	return false;
-}
-
-// Helper function to convert SimpleCollectionFormat to raw Figma format
-function convertSimpleCollectionToRawFormat(data: any): any {
-	const collection = data.collections;
-	const collectionId = `collection-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-	// Create modes from the collection modes
-	const modes = collection.modes.map((mode: string, index: number) => ({
-		modeId: `mode-${index}`,
-		name: mode.toLowerCase(),
-	}));
-
-	const rawFormat: {
-		collections: any[];
-		variables: any[];
-	} = {
-		collections: [
-			{
-				id: collectionId,
-				name: collection.name,
-				modes: modes,
-			},
-		],
-		variables: [],
-	};
-
-	// Helper function to add variables from a variable group
-	const addVariables = (variables: any, prefix: string = "", isRoot: boolean = false) => {
-		Object.entries(variables).forEach(([key, value]: [string, any]) => {
-			if (value && typeof value === "object") {
-				// Check if this is a variable definition (has type and values)
-				if (value.type && value.values) {
-					const variableName = prefix ? `${prefix}/${key}` : key;
-					const variableId = `${variableName.replace(/[/\s]/g, "-")}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-
-					// Create valuesByMode from the values object
-					const valuesByMode: any = {};
-					modes.forEach((mode: { modeId: string; name: string }) => {
-						const modeValue = value.values[mode.name];
-						if (modeValue !== undefined) {
-							valuesByMode[mode.modeId] = modeValue;
-						}
-					});
-
-					rawFormat.variables.push({
-						id: variableId,
-						name: variableName,
-						variableCollectionId: collectionId,
-						resolvedType: value.type.toUpperCase(),
-						valuesByMode: valuesByMode,
-						collection: {
-							id: collectionId,
-							name: collection.name,
-							modes: modes,
-						},
-					});
-				} else {
-					// Recursively process nested objects
-					// For root-level variables, don't add any prefix - flatten completely
-					const newPrefix = isRoot ? "" : prefix ? `${prefix}/${key}` : key;
-					addVariables(value, newPrefix, isRoot);
-				}
-			}
-		});
-	};
-
-	// Process all variable categories dynamically
-	if (collection.variables) {
-		Object.entries(collection.variables).forEach(([categoryKey, categoryValue]: [string, any]) => {
-			if (categoryValue && typeof categoryValue === "object") {
-				// Special handling for root-level variables from figma-to-json
-				if (categoryKey === "__ROOT__") {
-					// Process root variables without any prefix and flatten completely
-					addVariables(categoryValue, "", true);
-				} else if (categoryKey === "solid") {
-					// Special handling for 'solid' category - check for single vs grouped variables
-					// Separate single variables (no prefix) from grouped variables (with prefix)
-					const singleVariables: any = {};
-					const groupedVariables: any = {};
-
-					Object.entries(categoryValue).forEach(([key, value]: [string, any]) => {
-						if (value && typeof value === "object") {
-							// Check if this is a single variable (has type and values directly)
-							if (value.type && value.values) {
-								singleVariables[key] = value;
-							} else {
-								// This is a grouped variable (contains nested objects)
-								groupedVariables[key] = value;
-							}
-						}
-					});
-
-					// Process single variables without prefix
-					addVariables(singleVariables, "");
-
-					// Process grouped variables with category prefix
-					addVariables(groupedVariables, categoryKey);
-				} else {
-					// For all other categories (alpha, overlays, etc.), use category as prefix
-					addVariables(categoryValue, categoryKey);
-				}
-			}
-		});
-	}
-
-	return rawFormat;
 }
 
 // Helper function to detect collections format (both old and new W3C format)
@@ -481,7 +374,7 @@ function convertCollectionsToRawFormat(collectionsData: any): any {
 
 	// Check if it's the SimpleCollectionFormat from color-generation-json (single collection)
 	if (isSimpleCollectionFormat(collectionsData)) {
-		return convertSimpleCollectionToRawFormat(collectionsData);
+		return convertSimpleCollectionOutputToRawFormat(collectionsData);
 	}
 
 	// Check if it's the new W3C format
@@ -547,7 +440,6 @@ export const useFileHandling = ({
 	setColorSystem,
 	setSpacingSystem,
 	setIsLoading,
-	setMessage,
 	sendPluginMessage,
 	setParsedVariables,
 }: UseFileHandlingProps) => {
@@ -571,20 +463,20 @@ export const useFileHandling = ({
 						const transformedColors = transformFigmaColorsFormat(parsed);
 						if (transformedColors) {
 							setColorSystem(transformedColors);
-							setMessage("Figma colors file loaded and converted successfully!");
+							toast.success("Figma colors file loaded and converted successfully!");
 						} else if (isValidColorSystem(parsed)) {
 							// Use as-is if it's already in the correct format
 							setColorSystem(parsed);
-							setMessage("JSON colors loaded successfully!");
+							toast.success("JSON colors loaded successfully!");
 						} else {
-							setMessage("Invalid color system format. Please ensure the JSON file contains the correct structure.");
+							toast.error("Invalid color system format. Please ensure the JSON file contains the correct structure.");
 						}
 					} else if (file.name.endsWith(".ts") || file.name.endsWith(".js")) {
 						// For TypeScript/JavaScript files, we'll need to parse the exports
-						setMessage("TypeScript/JavaScript file parsing not yet implemented. Please use JSON format.");
+						toast.info("TypeScript/JavaScript file parsing not yet implemented. Please use JSON format.");
 					}
 				} catch (error) {
-					setMessage(`Error parsing file: ${error}`);
+					toast.error(`Error parsing file: ${error}`);
 				} finally {
 					setIsLoading(false);
 				}
@@ -592,7 +484,7 @@ export const useFileHandling = ({
 
 			reader.readAsText(file);
 		},
-		[setColorSystem, setIsLoading, setMessage],
+		[setColorSystem, setIsLoading],
 	);
 
 	const _handleSpacingFileUpload = useCallback(
@@ -633,21 +525,21 @@ export const useFileHandling = ({
 									}
 								}
 								setSpacingSystem(transformedSpacing);
-								setMessage("Spacing system loaded successfully!");
+								toast.success("Spacing system loaded successfully!");
 							} catch (validationError) {
-								setMessage(`Invalid spacing system: ${validationError}`);
+								toast.error(`Invalid spacing system: ${validationError}`);
 							}
 						} else {
-							setMessage(
+							toast.error(
 								"Invalid spacing system format. Please ensure the JSON file contains spacing definitions and multiplier.",
 							);
 						}
 					} else if (file.name.endsWith(".ts") || file.name.endsWith(".js")) {
 						// For TypeScript/JavaScript files, we'll need to parse the exports
-						setMessage("TypeScript/JavaScript file parsing not yet implemented. Please use JSON format.");
+						toast.info("TypeScript/JavaScript file parsing not yet implemented. Please use JSON format.");
 					}
 				} catch (error) {
-					setMessage(`Error parsing file: ${error}`);
+					toast.error(`Error parsing file: ${error}`);
 				} finally {
 					setIsLoading(false);
 				}
@@ -655,7 +547,7 @@ export const useFileHandling = ({
 
 			reader.readAsText(file);
 		},
-		[setSpacingSystem, setIsLoading, setMessage],
+		[setSpacingSystem, setIsLoading],
 	);
 
 	// Legacy handleFileUpload for backward compatibility (defaults to color)
@@ -680,7 +572,7 @@ export const useFileHandling = ({
 						const rawFormat = convertCollectionsToRawFormat(parsedData);
 						if (setParsedVariables) {
 							setParsedVariables(rawFormat);
-							setMessage(
+							toast.success(
 								`Color Generation JSON format detected! Found ${rawFormat.variables.length} color variables from the generated collections. Review and click "Import to Figma" to proceed.`,
 							);
 						}
@@ -689,7 +581,7 @@ export const useFileHandling = ({
 						const rawFormat = convertCollectionsToRawFormat(parsedData);
 						if (setParsedVariables) {
 							setParsedVariables(rawFormat);
-							setMessage(
+							toast.success(
 								`Spacing Generation JSON format detected! Found ${rawFormat.variables.length} spacing variables from the generated collections. Review and click "Import to Figma" to proceed.`,
 							);
 						}
@@ -698,7 +590,7 @@ export const useFileHandling = ({
 						const rawFormat = convertCollectionsToRawFormat(parsedData);
 						if (setParsedVariables) {
 							setParsedVariables(rawFormat);
-							setMessage(
+							toast.success(
 								`Collections format detected! Found ${rawFormat.variables.length} variables. Review and click "Import to Figma" to proceed.`,
 							);
 						}
@@ -706,26 +598,26 @@ export const useFileHandling = ({
 						// Store raw format for preview
 						if (setParsedVariables) {
 							setParsedVariables(parsedData);
-							setMessage(
+							toast.success(
 								`Raw Figma variables format detected! Found ${parsedData.variables.length} variables. Review and click "Import to Figma" to proceed.`,
 							);
 						}
 					} else if (isSimpleCollectionFormat(parsedData)) {
 						// Handle SimpleCollectionOutput format
-						const rawFormat = convertSimpleCollectionToRawFormat(parsedData);
+						const rawFormat = convertSimpleCollectionOutputToRawFormat(parsedData);
 						if (setParsedVariables) {
 							setParsedVariables(rawFormat);
-							setMessage(
+							toast.success(
 								`Simple Collection format detected! Found ${rawFormat.variables.length} variables. Review and click "Import to Figma" to proceed.`,
 							);
 						}
 					} else {
-						setMessage(
+						toast.error(
 							"Invalid variables file format. Please use either color-generation-json collections, spacing-generation-json collections, other collections JSON, or raw Figma variables JSON format.",
 						);
 					}
 				} catch (error) {
-					setMessage(`Error parsing variables file: ${error}`);
+					toast.error(`Error parsing variables file: ${error}`);
 				} finally {
 					setIsLoading(false);
 				}
@@ -733,13 +625,13 @@ export const useFileHandling = ({
 
 			reader.readAsText(file);
 		},
-		[setIsLoading, setMessage, setParsedVariables],
+		[setIsLoading, setParsedVariables],
 	);
 
 	const handleImportFromGeneratedColors = useCallback(
 		(generatedColorSystem: ColorSystemCore) => {
 			if (!generatedColorSystem) {
-				setMessage("No generated color system available to import.");
+				toast.error("No generated color system available to import.");
 				return;
 			}
 
@@ -760,23 +652,23 @@ export const useFileHandling = ({
 				// Set the parsed variables for preview and import
 				if (setParsedVariables) {
 					setParsedVariables(rawFormat);
-					setMessage(
+					toast.success(
 						`Generated colors prepared for import! Found ${rawFormat.variables.length} color variables from ${generatedColorSystem.colorNames.length} color scales. Review and click "Import to Figma" to proceed.`,
 					);
 				}
 			} catch (error) {
-				setMessage(`Error preparing generated colors for import: ${error}`);
+				toast.error(`Error preparing generated colors for import: ${error}`);
 			} finally {
 				setIsLoading(false);
 			}
 		},
-		[setIsLoading, setMessage, setParsedVariables],
+		[setIsLoading, setParsedVariables],
 	);
 
 	const handleImportFromGeneratedSpacing = useCallback(
 		(generatedSpacingSystem: SpacingSystemCore) => {
 			if (!generatedSpacingSystem) {
-				setMessage("No generated spacing system available to import.");
+				toast.error("No generated spacing system available to import.");
 				return;
 			}
 
@@ -796,30 +688,30 @@ export const useFileHandling = ({
 				// Set the parsed variables for preview and import
 				if (setParsedVariables) {
 					setParsedVariables(rawFormat);
-					setMessage(
+					toast.success(
 						`Generated spacing prepared for import! Found ${rawFormat.variables.length} spacing variables from ${Object.keys(generatedSpacingSystem.spacing.values).length} spacing values. Review and click "Import to Figma" to proceed.`,
 					);
 				}
 			} catch (error) {
-				setMessage(`Error preparing generated spacing for import: ${error}`);
+				toast.error(`Error preparing generated spacing for import: ${error}`);
 			} finally {
 				setIsLoading(false);
 			}
 		},
-		[setIsLoading, setMessage, setParsedVariables],
+		[setIsLoading, setParsedVariables],
 	);
 
 	const handleImportToFigma = useCallback(
 		(parsedVariables: any) => {
 			if (!parsedVariables) {
-				setMessage("No variables data to import.");
+				toast.error("No variables data to import.");
 				return;
 			}
 
 			setIsLoading(true);
 			sendPluginMessage("import-figma-variables", parsedVariables);
 		},
-		[setIsLoading, sendPluginMessage, setMessage],
+		[setIsLoading, sendPluginMessage],
 	);
 
 	return {

@@ -7,15 +7,16 @@ import { generateSpacingJSONFiles } from "@kevintyj/design-spacing-json";
 import { useCallback, useEffect, useState } from "react";
 import { useFileHandling } from "../hooks/useFileHandling";
 import { usePluginMessaging } from "../hooks/usePluginMessaging";
+import { toast } from "../hooks/useToast";
 import type { ColorSystem, SpacingSystem, Tab, UserPreferences } from "../types";
 import { STORAGE_KEYS } from "../utils/constants";
 import { downloadFile, downloadGeneratedColorScalesZip } from "../utils/download";
+import { Badge } from "./Badge";
 import { ColorConfigureTab } from "./ColorConfigureTab";
 import { ExportTab } from "./ExportTab";
 import { PreferencesTab } from "./PreferencesTab";
 import { Resizer } from "./Resizer";
 import { SpacingConfigureTab } from "./SpacingConfigureTab";
-import { StatusMessage } from "./StatusMessage";
 import { VariablesTab } from "./VariablesTab";
 
 const tabButton = (label: string, onClick: () => void, active?: boolean) => (
@@ -84,93 +85,9 @@ const returnGeneratedSpacingSystem = async (spacingSystem: SpacingSystem): Promi
 	return generatedSpacingSystem;
 };
 
-// Helper function to convert SimpleCollectionFormat to raw Figma format (moved from useFileHandling for reuse)
-function _convertSimpleCollectionToRawFormat(data: any): any {
-	const collection = data.collections;
-	const collectionId = `collection-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-	// Create modes from the collection modes
-	const modes = collection.modes.map((mode: string, index: number) => ({
-		modeId: `mode-${index}`,
-		name: mode.toLowerCase(),
-	}));
-
-	const rawFormat: {
-		collections: any[];
-		variables: any[];
-	} = {
-		collections: [
-			{
-				id: collectionId,
-				name: collection.name,
-				modes: modes,
-			},
-		],
-		variables: [],
-	};
-
-	// Helper function to add variables from a variable group
-	const addVariables = (variables: any, prefix: string = "") => {
-		Object.entries(variables).forEach(([key, value]: [string, any]) => {
-			if (value && typeof value === "object") {
-				// Check if this is a variable definition (has type and values)
-				if (value.type && value.values) {
-					const variableName = prefix ? `${prefix}/${key}` : key;
-					const variableId = `${variableName.replace(/[/\s]/g, "-")}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-
-					// Create valuesByMode from the values object
-					const valuesByMode: any = {};
-					modes.forEach((mode: { modeId: string; name: string }) => {
-						const modeValue = value.values[mode.name];
-						if (modeValue !== undefined) {
-							valuesByMode[mode.modeId] = modeValue;
-						}
-					});
-
-					rawFormat.variables.push({
-						id: variableId,
-						name: variableName,
-						variableCollectionId: collectionId,
-						resolvedType: value.type.toUpperCase(),
-						valuesByMode: valuesByMode,
-						collection: {
-							id: collectionId,
-							name: collection.name,
-							modes: modes,
-						},
-					});
-				} else {
-					// Recursively process nested objects
-					const newPrefix = prefix ? `${prefix}/${key}` : key;
-					addVariables(value, newPrefix);
-				}
-			}
-		});
-	};
-
-	// Process solid variables
-	if (collection.variables.solid) {
-		addVariables(collection.variables.solid, "solid");
-	}
-
-	// Process alpha variables
-	if (collection.variables.alpha) {
-		addVariables(collection.variables.alpha, "alpha");
-	}
-
-	// Process overlay variables
-	if (collection.variables.overlays) {
-		addVariables(collection.variables.overlays, "overlays");
-	}
-
-	return rawFormat;
-}
-
 export const SystemManagerPlugin: React.FC = () => {
 	const [activeTab, setActiveTab] = useState<Tab>("color");
 	const [isLoading, setIsLoading] = useState(false);
-	const [message, setMessage] = useState<string>("");
-	const [messageKey, setMessageKey] = useState(0);
 
 	// Color System
 	const [colorSystem, setColorSystem] = useState<ColorSystem | null>(null);
@@ -189,12 +106,6 @@ export const SystemManagerPlugin: React.FC = () => {
 	});
 	const [parsedVariables, setParsedVariables] = useState<any>(null);
 
-	// Wrapper function that increments messageKey every time a message is set
-	const setMessageWithKey = useCallback((newMessage: string) => {
-		setMessageKey((prev) => prev + 1);
-		setMessage(newMessage);
-	}, []);
-
 	// Add client storage loaded handler
 	const handleClientStorageLoaded = useCallback(
 		async (data: {
@@ -208,7 +119,7 @@ export const SystemManagerPlugin: React.FC = () => {
 			}
 			if (data.colorSystem && data.preferences?.saveColorSystem) {
 				setColorSystem(data.colorSystem);
-				setMessageWithKey("Color system loaded from Figma storage");
+				toast.success("Color system loaded from Figma storage");
 
 				// Auto-generate color scales if preference is enabled
 				if (data.preferences?.autoGenerateOnLoad) {
@@ -216,9 +127,9 @@ export const SystemManagerPlugin: React.FC = () => {
 					try {
 						const generatedColorSystem = await returnGeneratedColorSystem(data.colorSystem);
 						setGeneratedColorSystem(generatedColorSystem);
-						setMessageWithKey("Color system loaded and scales auto-generated from Figma storage");
+						toast.success("Color system loaded and scales auto-generated from Figma storage");
 					} catch (error) {
-						setMessageWithKey(`Error auto-generating color scales: ${error}`);
+						toast.error(`Error auto-generating color scales: ${error}`);
 					} finally {
 						setIsLoading(false);
 					}
@@ -226,7 +137,7 @@ export const SystemManagerPlugin: React.FC = () => {
 			}
 			if (data.spacingSystem && data.preferences?.saveSpacingSystem) {
 				setSpacingSystem(data.spacingSystem);
-				setMessageWithKey("Spacing system loaded from Figma storage");
+				toast.success("Spacing system loaded from Figma storage");
 
 				// Auto-generate spacing scales if preference is enabled
 				if (data.preferences?.autoGenerateSpacingOnLoad) {
@@ -234,21 +145,20 @@ export const SystemManagerPlugin: React.FC = () => {
 					try {
 						const generatedSpacingSystem = await returnGeneratedSpacingSystem(data.spacingSystem);
 						setGeneratedSpacingSystem(generatedSpacingSystem);
-						setMessageWithKey("Spacing system loaded and scales auto-generated from Figma storage");
+						toast.success("Spacing system loaded and scales auto-generated from Figma storage");
 					} catch (error) {
-						setMessageWithKey(`Error auto-generating spacing scales: ${error}`);
+						toast.error(`Error auto-generating spacing scales: ${error}`);
 					} finally {
 						setIsLoading(false);
 					}
 				}
 			}
 		},
-		[setMessageWithKey],
+		[],
 	);
 
 	const { sendPluginMessage } = usePluginMessaging({
 		setIsLoading,
-		setMessage: setMessageWithKey,
 		colorSystem,
 		onClientStorageLoaded: handleClientStorageLoaded,
 	});
@@ -275,9 +185,9 @@ export const SystemManagerPlugin: React.FC = () => {
 				key: STORAGE_KEYS.CLIENT_STORAGE,
 				colorSystem: colorSystem,
 			});
-			setMessageWithKey("Color system saved to Figma storage");
+			toast.success("Color system saved to Figma storage");
 		}
-	}, [colorSystem, preferences.saveColorSystem, setMessageWithKey, sendPluginMessage]);
+	}, [colorSystem, preferences.saveColorSystem, sendPluginMessage]);
 
 	// Save spacing system to figma.clientStorage when it changes and save is enabled
 	useEffect(() => {
@@ -286,9 +196,9 @@ export const SystemManagerPlugin: React.FC = () => {
 				key: STORAGE_KEYS.SPACING_STORAGE,
 				spacingSystem: spacingSystem,
 			});
-			setMessageWithKey("Spacing system saved to Figma storage");
+			toast.success("Spacing system saved to Figma storage");
 		}
-	}, [spacingSystem, preferences.saveSpacingSystem, setMessageWithKey, sendPluginMessage]);
+	}, [spacingSystem, preferences.saveSpacingSystem, sendPluginMessage]);
 
 	// Save preferences to figma.clientStorage when they change
 	useEffect(() => {
@@ -310,13 +220,13 @@ export const SystemManagerPlugin: React.FC = () => {
 						key: STORAGE_KEYS.CLIENT_STORAGE,
 						colorSystem: colorSystem,
 					});
-					setMessageWithKey("Color system saved to Figma storage");
+					toast.success("Color system saved to Figma storage");
 				} else if (!enabled) {
 					// Clear saved color system when disabled
 					sendPluginMessage("remove-color-system", {
 						key: STORAGE_KEYS.CLIENT_STORAGE,
 					});
-					setMessageWithKey("Color system removed from Figma storage");
+					toast.success("Color system removed from Figma storage");
 				}
 			}
 
@@ -327,17 +237,17 @@ export const SystemManagerPlugin: React.FC = () => {
 						key: STORAGE_KEYS.SPACING_STORAGE,
 						spacingSystem: spacingSystem,
 					});
-					setMessageWithKey("Spacing system saved to Figma storage");
+					toast.success("Spacing system saved to Figma storage");
 				} else if (!enabled) {
 					// Clear saved spacing system when disabled
 					sendPluginMessage("remove-spacing-system", {
 						key: STORAGE_KEYS.SPACING_STORAGE,
 					});
-					setMessageWithKey("Spacing system removed from Figma storage");
+					toast.success("Spacing system removed from Figma storage");
 				}
 			}
 		},
-		[setMessageWithKey, sendPluginMessage, colorSystem, spacingSystem],
+		[sendPluginMessage, colorSystem, spacingSystem],
 	);
 
 	const {
@@ -352,7 +262,6 @@ export const SystemManagerPlugin: React.FC = () => {
 		setColorSystem,
 		setSpacingSystem,
 		setIsLoading,
-		setMessage: setMessageWithKey,
 		sendPluginMessage,
 		setParsedVariables,
 	});
@@ -360,40 +269,40 @@ export const SystemManagerPlugin: React.FC = () => {
 	// Create a handler that passes the generated color system
 	const handleImportFromGeneratedColorsWithSystem = useCallback(() => {
 		if (!generatedColorSystem) {
-			setMessageWithKey("No generated color system available to import.");
+			toast.error("No generated color system available to import.");
 			return;
 		}
 		handleImportFromGeneratedColors(generatedColorSystem);
-	}, [generatedColorSystem, handleImportFromGeneratedColors, setMessageWithKey]);
+	}, [generatedColorSystem, handleImportFromGeneratedColors]);
 
 	// Create a handler that passes the generated spacing system
 	const _handleImportFromGeneratedSpacingWithSystem = useCallback(() => {
 		if (!generatedSpacingSystem) {
-			setMessageWithKey("No generated spacing system available to import.");
+			toast.error("No generated spacing system available to import.");
 			return;
 		}
 		handleImportFromGeneratedSpacing(generatedSpacingSystem);
-	}, [generatedSpacingSystem, handleImportFromGeneratedSpacing, setMessageWithKey]);
+	}, [generatedSpacingSystem, handleImportFromGeneratedSpacing]);
 
 	// Handle export as CSS
 	const handleExportCSS = useCallback(() => {
 		if (!colorSystem) {
-			setMessageWithKey("Please load a color system first.");
+			toast.error("Please load a color system first.");
 			return;
 		}
 
 		sendPluginMessage("export-css", colorSystem);
-	}, [colorSystem, sendPluginMessage, setMessageWithKey]);
+	}, [colorSystem, sendPluginMessage]);
 
 	// Handle export as JSON
 	const handleExportJSON = useCallback(() => {
 		if (!colorSystem) {
-			setMessageWithKey("Please load a color system first.");
+			toast.error("Please load a color system first.");
 			return;
 		}
 
 		sendPluginMessage("export-json", colorSystem);
-	}, [colorSystem, sendPluginMessage, setMessageWithKey]);
+	}, [colorSystem, sendPluginMessage]);
 
 	// Handle Figma variables export
 	const _handleExportFigmaVariables = useCallback(() => {
@@ -416,26 +325,26 @@ export const SystemManagerPlugin: React.FC = () => {
 	const handleGenerateColorSystem = useCallback(async () => {
 		setIsLoading(true);
 		if (!colorSystem) {
-			setMessageWithKey("Please load a color system first.");
+			toast.error("Please load a color system first.");
 			return;
 		}
 		const generatedColorSystem = await returnGeneratedColorSystem(colorSystem);
 		setGeneratedColorSystem(generatedColorSystem);
 		sendPluginMessage("color-system-generated");
 		setIsLoading(false);
-	}, [colorSystem, setMessageWithKey, sendPluginMessage]);
+	}, [colorSystem, sendPluginMessage]);
 
 	const handleGenerateSpacingSystem = useCallback(async () => {
 		setIsLoading(true);
 		if (!spacingSystem) {
-			setMessageWithKey("Please load a spacing system first.");
+			toast.error("Please load a spacing system first.");
 			return;
 		}
 		const generatedSpacingSystem = await returnGeneratedSpacingSystem(spacingSystem);
 		setGeneratedSpacingSystem(generatedSpacingSystem);
 		sendPluginMessage("spacing-system-generated");
 		setIsLoading(false);
-	}, [spacingSystem, setMessageWithKey, sendPluginMessage]);
+	}, [spacingSystem, sendPluginMessage]);
 
 	// Add reset handler
 	const handleResetColorSystem = useCallback(() => {
@@ -447,11 +356,11 @@ export const SystemManagerPlugin: React.FC = () => {
 			sendPluginMessage("remove-color-system", {
 				key: STORAGE_KEYS.CLIENT_STORAGE,
 			});
-			setMessageWithKey("Color system reset and removed from Figma storage");
+			toast.success("Color system reset and removed from Figma storage");
 		} else {
-			setMessageWithKey("Color system reset");
+			toast.success("Color system reset");
 		}
-	}, [setMessageWithKey, preferences.saveColorSystem, sendPluginMessage]);
+	}, [preferences.saveColorSystem, sendPluginMessage]);
 
 	const handleResetSpacingSystem = useCallback(() => {
 		setSpacingSystem(null);
@@ -462,52 +371,52 @@ export const SystemManagerPlugin: React.FC = () => {
 			sendPluginMessage("remove-spacing-system", {
 				key: STORAGE_KEYS.SPACING_STORAGE,
 			});
-			setMessageWithKey("Spacing system reset and removed from Figma storage");
+			toast.success("Spacing system reset and removed from Figma storage");
 		} else {
-			setMessageWithKey("Spacing system reset");
+			toast.success("Spacing system reset");
 		}
-	}, [setMessageWithKey, preferences.saveSpacingSystem, sendPluginMessage]);
+	}, [preferences.saveSpacingSystem, sendPluginMessage]);
 
 	// Handle export generated color scales as CSS
 	const handleExportGeneratedCSS = useCallback(async () => {
 		if (!generatedColorSystem) {
-			setMessageWithKey("Please generate color scales first.");
+			toast.error("Please generate color scales first.");
 			return;
 		}
 
 		setIsLoading(true);
 		try {
 			const message = await downloadGeneratedColorScalesZip(generatedColorSystem, "css");
-			setMessageWithKey(message);
+			toast.success(message);
 		} catch (error) {
-			setMessageWithKey(`Error exporting generated CSS: ${error}`);
+			toast.error(`Error exporting generated CSS: ${error}`);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [generatedColorSystem, setMessageWithKey]);
+	}, [generatedColorSystem]);
 
 	// Handle export generated color scales as JSON
 	const handleExportGeneratedJSON = useCallback(async () => {
 		if (!generatedColorSystem) {
-			setMessageWithKey("Please generate color scales first.");
+			toast.error("Please generate color scales first.");
 			return;
 		}
 
 		setIsLoading(true);
 		try {
 			const message = await downloadGeneratedColorScalesZip(generatedColorSystem, "json");
-			setMessageWithKey(message);
+			toast.success(message);
 		} catch (error) {
-			setMessageWithKey(`Error exporting generated JSON: ${error}`);
+			toast.error(`Error exporting generated JSON: ${error}`);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [generatedColorSystem, setMessageWithKey]);
+	}, [generatedColorSystem]);
 
 	// Handle export generated color scales as Tailwind JSON
 	const handleExportTailwindJSON = useCallback(async () => {
 		if (!generatedColorSystem) {
-			setMessageWithKey("Please generate color scales first.");
+			toast.error("Please generate color scales first.");
 			return;
 		}
 
@@ -517,18 +426,18 @@ export const SystemManagerPlugin: React.FC = () => {
 			const jsonContent = JSON.stringify(tailwindConfig, null, 2);
 
 			downloadFile(jsonContent, "tailwind-colors.json", "application/json");
-			setMessageWithKey("Tailwind JSON export completed successfully!");
+			toast.success("Tailwind JSON export completed successfully!");
 		} catch (error) {
-			setMessageWithKey(`Error exporting Tailwind JSON: ${error}`);
+			toast.error(`Error exporting Tailwind JSON: ${error}`);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [generatedColorSystem, setMessageWithKey]);
+	}, [generatedColorSystem]);
 
 	// Handle export generated color scales as Collections JSON
 	const handleExportCollectionsJSON = useCallback(async () => {
 		if (!generatedColorSystem) {
-			setMessageWithKey("Please generate color scales first.");
+			toast.error("Please generate color scales first.");
 			return;
 		}
 
@@ -568,39 +477,39 @@ export const SystemManagerPlugin: React.FC = () => {
 			const jsonContent = JSON.stringify(collectionsConfig, null, 2);
 
 			downloadFile(jsonContent, "collections.json", "application/json");
-			setMessageWithKey("Collections JSON export completed successfully!");
+			toast.success("Collections JSON export completed successfully!");
 		} catch (error) {
 			console.error("Collections export error:", error);
-			setMessageWithKey(`Error exporting Collections JSON: ${error}`);
+			toast.error(`Error exporting Collections JSON: ${error}`);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [generatedColorSystem, setMessageWithKey]);
+	}, [generatedColorSystem]);
 
 	// Handle export original spacing system as CSS
 	const handleExportSpacingCSS = useCallback(() => {
 		if (!spacingSystem) {
-			setMessageWithKey("Please load a spacing system first.");
+			toast.error("Please load a spacing system first.");
 			return;
 		}
 
 		sendPluginMessage("export-spacing-css", spacingSystem);
-	}, [spacingSystem, sendPluginMessage, setMessageWithKey]);
+	}, [spacingSystem, sendPluginMessage]);
 
 	// Handle export original spacing system as JSON
 	const handleExportSpacingJSON = useCallback(() => {
 		if (!spacingSystem) {
-			setMessageWithKey("Please load a spacing system first.");
+			toast.error("Please load a spacing system first.");
 			return;
 		}
 
 		sendPluginMessage("export-spacing-json", spacingSystem);
-	}, [spacingSystem, sendPluginMessage, setMessageWithKey]);
+	}, [spacingSystem, sendPluginMessage]);
 
 	// Handle export generated spacing utilities as CSS
 	const handleExportGeneratedSpacingCSS = useCallback(async () => {
 		if (!generatedSpacingSystem) {
-			setMessageWithKey("Please generate spacing utilities first.");
+			toast.error("Please generate spacing utilities first.");
 			return;
 		}
 
@@ -651,18 +560,18 @@ ${new Date().toISOString()}
 			a.click();
 			URL.revokeObjectURL(url);
 
-			setMessageWithKey("Spacing utilities CSS export completed successfully!");
+			toast.success("Spacing utilities CSS export completed successfully!");
 		} catch (error) {
-			setMessageWithKey(`Error exporting spacing utilities CSS: ${error}`);
+			toast.error(`Error exporting spacing utilities CSS: ${error}`);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [generatedSpacingSystem, setMessageWithKey]);
+	}, [generatedSpacingSystem]);
 
 	// Handle export generated spacing utilities as JSON
 	const handleExportGeneratedSpacingJSON = useCallback(async () => {
 		if (!generatedSpacingSystem) {
-			setMessageWithKey("Please generate spacing utilities first.");
+			toast.error("Please generate spacing utilities first.");
 			return;
 		}
 
@@ -700,18 +609,18 @@ ${new Date().toISOString()}
 			a.click();
 			URL.revokeObjectURL(url);
 
-			setMessageWithKey("Spacing utilities JSON export completed successfully!");
+			toast.success("Spacing utilities JSON export completed successfully!");
 		} catch (error) {
-			setMessageWithKey(`Error exporting spacing utilities JSON: ${error}`);
+			toast.error(`Error exporting spacing utilities JSON: ${error}`);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [generatedSpacingSystem, setMessageWithKey]);
+	}, [generatedSpacingSystem]);
 
 	// Handle export generated spacing utilities as Tailwind JSON
 	const handleExportSpacingTailwindJSON = useCallback(async () => {
 		if (!generatedSpacingSystem) {
-			setMessageWithKey("Please generate spacing utilities first.");
+			toast.error("Please generate spacing utilities first.");
 			return;
 		}
 
@@ -729,18 +638,18 @@ ${new Date().toISOString()}
 			}
 
 			downloadFile(tailwindFile.content, "tailwind-spacing.json", "application/json");
-			setMessageWithKey("Tailwind spacing JSON export completed successfully!");
+			toast.success("Tailwind spacing JSON export completed successfully!");
 		} catch (error) {
-			setMessageWithKey(`Error exporting Tailwind spacing JSON: ${error}`);
+			toast.error(`Error exporting Tailwind spacing JSON: ${error}`);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [generatedSpacingSystem, setMessageWithKey]);
+	}, [generatedSpacingSystem]);
 
 	// Handle export generated spacing utilities as Collections JSON
 	const handleExportSpacingCollectionsJSON = useCallback(async () => {
 		if (!generatedSpacingSystem) {
-			setMessageWithKey("Please generate spacing utilities first.");
+			toast.error("Please generate spacing utilities first.");
 			return;
 		}
 
@@ -757,13 +666,13 @@ ${new Date().toISOString()}
 			}
 
 			downloadFile(collectionsFile.content, "spacing-collections.json", "application/json");
-			setMessageWithKey("Spacing collections JSON export completed successfully!");
+			toast.success("Spacing collections JSON export completed successfully!");
 		} catch (error) {
-			setMessageWithKey(`Error exporting spacing collections JSON: ${error}`);
+			toast.error(`Error exporting spacing collections JSON: ${error}`);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [generatedSpacingSystem, setMessageWithKey]);
+	}, [generatedSpacingSystem]);
 
 	const handleConfirmImport = useCallback(() => {
 		handleImportToFigma(parsedVariables);
@@ -840,6 +749,9 @@ ${new Date().toISOString()}
 
 	return (
 		<div className="w-full h-full bg-white">
+			{/* Sonner Toaster positioned at bottom center */}
+			{/* <Toaster position="bottom-center" richColors /> */}
+
 			{/* Header */}
 			<div className="fixed top-0 left-0 right-0 px-5 pt-2 border-b border-gray-7 bg-gray-2 z-50 h-24 flex flex-col justify-between items-center">
 				<div className="flex items-start justify-between w-full">
@@ -858,30 +770,12 @@ ${new Date().toISOString()}
 						<span className="text-xs text-gray-11">Loaded configurations</span>
 						<div className="flex gap-x-2">
 							{!colorSystem && !generatedColorSystem && !spacingSystem && !generatedSpacingSystem && (
-								<span className="bg-red-3 border border-red-7 px-1.5 py-0.5 text-[0.625rem] font-mono font-medium text-red-11">
-									None
-								</span>
+								<Badge variant="error">None</Badge>
 							)}
-							{colorSystem && (
-								<span className="bg-green-3 border border-green-7 px-1.5 py-0.5 text-[0.625rem] font-mono font-medium text-green-11">
-									Color system
-								</span>
-							)}
-							{generatedColorSystem && (
-								<span className="bg-green-3 border border-green-7 px-1.5 py-0.5 text-[0.625rem] font-mono font-medium text-green-11">
-									Color scales
-								</span>
-							)}
-							{spacingSystem && (
-								<span className="bg-blue-3 border border-blue-7 px-1.5 py-0.5 text-[0.625rem] font-mono font-medium text-blue-11">
-									Spacing system
-								</span>
-							)}
-							{generatedSpacingSystem && (
-								<span className="bg-blue-3 border border-blue-7 px-1.5 py-0.5 text-[0.625rem] font-mono font-medium text-blue-11">
-									Spacing scales
-								</span>
-							)}
+							{colorSystem && <Badge variant="success">Color system</Badge>}
+							{generatedColorSystem && <Badge variant="success">Color scales</Badge>}
+							{spacingSystem && <Badge variant="info">Spacing system</Badge>}
+							{generatedSpacingSystem && <Badge variant="info">Spacing scales</Badge>}
 						</div>
 					</div>
 				</div>
@@ -919,9 +813,6 @@ ${new Date().toISOString()}
 						</a>{" "}
 						❤️‍🔥
 					</span>
-				</div>
-				<div className="fixed bottom-0 left-0 right-0 px-5 py-4">
-					<StatusMessage message={message} messageKey={messageKey} />
 				</div>
 			</div>
 			<Resizer />

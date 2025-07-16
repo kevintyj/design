@@ -2,7 +2,7 @@ import type { ColorSystem as GeneratedColorSystem } from "@kevintyj/design-color
 import type { SpacingSystem as GeneratedSpacingSystem } from "@kevintyj/design-spacing-core";
 import type React from "react";
 import type { ColorSystem, SpacingSystem } from "../types";
-import { StatusMessage } from "./StatusMessage";
+import { Alert } from "./Alert";
 
 interface ExportTabProps {
 	colorSystem: ColorSystem | null;
@@ -48,13 +48,7 @@ const ExportSection: React.FC<ExportSectionProps> = ({
 
 		{children}
 
-		{!system && (
-			<StatusMessage
-				message={`Please import a ${systemName} first to enable export.`}
-				type="warning"
-				dismissible={false}
-			/>
-		)}
+		{!system && <Alert variant="warning">Please import a {systemName} first to enable export.</Alert>}
 	</div>
 );
 

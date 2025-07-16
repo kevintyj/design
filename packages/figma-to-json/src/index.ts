@@ -71,7 +71,7 @@ function rgbaToHex(color: RGB | RGBA): string {
  */
 export async function exportFigmaVariablesRaw(): Promise<RawFigmaExport> {
 	const collections = await figma.variables.getLocalVariableCollectionsAsync();
-	const variables = figma.variables.getLocalVariables();
+	const variables = await figma.variables.getLocalVariablesAsync();
 
 	const exportData: RawFigmaExport = {
 		collections: [],
@@ -143,7 +143,7 @@ export async function exportFigmaVariablesAsCollections(
 ): Promise<SimpleCollectionOutput> {
 	const fullConfig = { ...defaultConfig, ...config };
 	const collections = await figma.variables.getLocalVariableCollectionsAsync();
-	const variables = figma.variables.getLocalVariables();
+	const variables = await figma.variables.getLocalVariablesAsync();
 
 	const outputCollections: SimpleCollectionFormat[] = [];
 

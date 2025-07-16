@@ -641,3 +641,9 @@ body {
 	overflow-y: scroll !important;
 	scrollbar-gutter: stable;
 }
+
+/* Custom Toast Styles */
+.toast-item {
+	backdrop-filter: blur(8px);
+	transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}

@@ -1,10 +1,10 @@
 import { useCallback, useEffect } from "react";
+import { toast } from "../hooks/useToast";
 import type { ColorSystem, ExportData, PluginMessage, SpacingSystem, UserPreferences } from "../types";
 import { downloadFile, downloadZip } from "../utils/download";
 
 interface UsePluginMessagingProps {
 	setIsLoading: (loading: boolean) => void;
-	setMessage: (message: string) => void;
 	colorSystem: ColorSystem | null;
 	onClientStorageLoaded?: (data: {
 		preferences: UserPreferences | null;
@@ -13,22 +13,17 @@ interface UsePluginMessagingProps {
 	}) => void;
 }
 
-export const usePluginMessaging = ({
-	setIsLoading,
-	setMessage,
-	colorSystem,
-	onClientStorageLoaded,
-}: UsePluginMessagingProps) => {
+export const usePluginMessaging = ({ setIsLoading, colorSystem, onClientStorageLoaded }: UsePluginMessagingProps) => {
 	const handleExportDownload = useCallback(
 		async (data: ExportData) => {
 			try {
-				const message = await downloadZip(data, colorSystem);
-				setMessage(message);
+				const message = await downloadZip(data, colorSystem as any);
+				toast.success(message);
 			} catch (error) {
-				setMessage(`${error}`);
+				toast.error(`${error}`);
 			}
 		},
-		[colorSystem, setMessage],
+		[colorSystem],
 	);
 
 	useEffect(() => {
@@ -38,13 +33,13 @@ export const usePluginMessaging = ({
 			setIsLoading(false);
 
 			if (error) {
-				setMessage(`Error: ${error}`);
+				toast.error(`Error: ${error}`);
 				return;
 			}
 
 			switch (type) {
 				case "colors-imported":
-					setMessage("Colors imported to Figma successfully!");
+					toast.success("Colors imported to Figma successfully!");
 					break;
 				case "export-complete":
 					handleExportDownload(data);
@@ -52,18 +47,18 @@ export const usePluginMessaging = ({
 				case "variables-exported-collections":
 					// Trigger download of the exported variables in collections format
 					downloadFile(JSON.stringify(data, null, 2), "collections.json", "application/json");
-					setMessage("Figma variables exported as collections JSON successfully!");
+					toast.success("Figma variables exported as collections JSON successfully!");
 					break;
 				case "variables-exported-raw":
 					// Trigger download of the exported variables in raw format
 					downloadFile(JSON.stringify(data, null, 2), "figma-variables.json", "application/json");
-					setMessage("Figma variables exported as raw JSON successfully!");
+					toast.success("Figma variables exported as raw JSON successfully!");
 					break;
 				case "variables-imported":
-					setMessage("Figma variables imported successfully!");
+					toast.success("Figma variables imported successfully!");
 					break;
 				case "color-system-generated":
-					setMessage("Color system generated successfully!");
+					toast.success("Color system generated successfully!");
 					break;
 				case "client-storage-loaded":
 					console.log("Client storage loaded message received:", {
@@ -80,14 +75,14 @@ export const usePluginMessaging = ({
 					break;
 				default:
 					if (data) {
-						setMessage(JSON.stringify(data));
+						toast.info(JSON.stringify(data));
 					}
 			}
 		};
 
 		window.addEventListener("message", handleMessage);
 		return () => window.removeEventListener("message", handleMessage);
-	}, [handleExportDownload, setIsLoading, setMessage, onClientStorageLoaded]);
+	}, [handleExportDownload, setIsLoading, onClientStorageLoaded]);
 
 	const sendPluginMessage = useCallback((type: string, data?: any) => {
 		console.log("Sending message:", { type, data });

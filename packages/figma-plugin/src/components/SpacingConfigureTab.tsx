@@ -3,6 +3,7 @@ import { TrashIcon } from "lucide-react";
 import type React from "react";
 import { useCallback } from "react";
 import type { SpacingSystem } from "../types";
+import { Alert } from "./Alert";
 import { FileDropzone } from "./FileDropzone";
 import GeneratedSpacingTable, { SpacingGraphic } from "./GeneratedSpacingTable";
 
@@ -92,17 +93,15 @@ export const SpacingConfigureTab: React.FC<SpacingConfigureTabProps> = ({
 
 				{spacingSystem && (
 					<>
-						<div className="bg-green-3 border border-green-7 px-4 py-2">
-							<p className="text-xs font-mono text-green-11">
-								Spacing system loaded:
-								<br />
-								{Object.keys(spacingSystem.spacing).length} spacing values
-								<br />
-								Base multiplier: {spacingSystem.multiplier}px
-								<br />
-								REM base: {spacingSystem.remValue}px
-							</p>
-						</div>
+						<Alert variant="success" size="sm">
+							Spacing system loaded:
+							<br />
+							{Object.keys(spacingSystem.spacing).length} spacing values
+							<br />
+							Base multiplier: {spacingSystem.multiplier}px
+							<br />
+							REM base: {spacingSystem.remValue}px
+						</Alert>
 						<div className="space-y-2">
 							<h3 className="text-sm font-medium text-gray-12 pb-1">Loaded spacing values:</h3>
 							{spacingList(spacingSystem.spacing)}
